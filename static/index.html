@@ -1,0 +1,1490 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>dynamic-agent-lab</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        background: #f6f7f9;
+        color: #20242a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+      }
+
+      main {
+        width: min(960px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 48px 0;
+      }
+
+      header {
+        margin-bottom: 24px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: clamp(2rem, 4vw, 3.4rem);
+        line-height: 1.05;
+        letter-spacing: 0;
+      }
+
+      p {
+        margin: 0;
+        color: #5c6672;
+      }
+
+      .workflow {
+        display: grid;
+        gap: 18px;
+      }
+
+      label {
+        display: grid;
+        gap: 10px;
+        font-weight: 700;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 132px;
+        resize: vertical;
+        border: 1px solid #cfd6df;
+        border-radius: 8px;
+        padding: 14px 16px;
+        font: inherit;
+        line-height: 1.5;
+        color: #20242a;
+        background: #ffffff;
+      }
+
+      textarea:focus {
+        outline: 3px solid #b9d9ff;
+        border-color: #367bc3;
+      }
+
+      select {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid #cfd6df;
+        border-radius: 8px;
+        padding: 0 12px;
+        font: inherit;
+        color: #20242a;
+        background: #ffffff;
+      }
+
+      select:focus {
+        outline: 3px solid #b9d9ff;
+        border-color: #367bc3;
+      }
+
+      .condition-card {
+        display: grid;
+        gap: 16px;
+        border: 1px solid #d9dee7;
+        border-radius: 8px;
+        padding: 18px;
+        background: #ffffff;
+      }
+
+      .condition-card h2 {
+        margin: 0;
+        font-size: 1.15rem;
+        line-height: 1.3;
+      }
+
+      .condition-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 14px;
+      }
+
+      .checkbox-group {
+        display: grid;
+        gap: 10px;
+      }
+
+      .checkbox-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px;
+      }
+
+      .checkbox-grid label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 40px;
+        border: 1px solid #d9dee7;
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-weight: 700;
+        background: #fbfcfe;
+      }
+
+      .checkbox-grid input {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+      }
+
+      button {
+        width: fit-content;
+        min-height: 44px;
+        border: 0;
+        border-radius: 8px;
+        padding: 0 18px;
+        font: inherit;
+        font-weight: 800;
+        color: #ffffff;
+        background: #1f6feb;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        background: #8a95a3;
+        cursor: wait;
+      }
+
+      .output {
+        display: grid;
+        gap: 12px;
+        margin-top: 28px;
+      }
+
+      .status {
+        min-height: 24px;
+        color: #5c6672;
+      }
+
+      .result-view {
+        display: grid;
+        gap: 16px;
+      }
+
+      .summary-card,
+      .flow-card,
+      .validation-card,
+      .debug-panel,
+      .agent-card,
+      .tour-card,
+      .weather-card,
+      .transport-card,
+      .raw-response {
+        border: 1px solid #d9dee7;
+        border-radius: 8px;
+        background: #ffffff;
+      }
+
+      .summary-card {
+        padding: 18px 20px;
+        color: #ffffff;
+        background: #10284d;
+      }
+
+      .agent-card,
+      .flow-card,
+      .validation-card,
+      .debug-panel,
+      .tour-card,
+      .weather-card,
+      .transport-card {
+        padding: 18px;
+      }
+
+      .agent-card h2,
+      .flow-card h2,
+      .validation-card h2,
+      .debug-panel h2,
+      .tour-card h2,
+      .weather-card h2,
+      .transport-card h2 {
+        margin: 0 0 10px;
+        font-size: 1.15rem;
+        line-height: 1.3;
+      }
+
+      .agent-card p,
+      .tour-card p,
+      .weather-card p,
+      .transport-card p {
+        line-height: 1.55;
+      }
+
+      .flow-list {
+        display: grid;
+        gap: 8px;
+        margin: 12px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .flow-list li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 40px;
+        border: 1px solid #d9dee7;
+        border-radius: 8px;
+        padding: 8px 10px;
+        color: #20242a;
+        background: #fbfcfe;
+      }
+
+      .agent-name {
+        overflow-wrap: anywhere;
+        font-weight: 800;
+      }
+
+      .status-badge {
+        flex: 0 0 auto;
+        border-radius: 999px;
+        padding: 4px 9px;
+        font-size: 0.8rem;
+        font-weight: 800;
+      }
+
+      .status-badge.complete {
+        color: #075e36;
+        background: #dff7e9;
+      }
+
+      .status-badge.failed {
+        color: #8a1f11;
+        background: #ffe4df;
+      }
+
+      .validation-card.corrected {
+        border-color: #f59f00;
+        background: #fff8e6;
+      }
+
+      .validation-status {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 5px 10px;
+        font-weight: 900;
+        color: #203047;
+        background: #e9eef5;
+      }
+
+      .validation-status.ok {
+        color: #075e36;
+        background: #dff7e9;
+      }
+
+      .validation-status.warning {
+        color: #7a4b00;
+        background: #fff0c2;
+      }
+
+      .validation-status.corrected {
+        color: #8a4d00;
+        background: #ffe0a3;
+      }
+
+      .debug-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .debug-item,
+      .debug-agent {
+        border: 1px solid #d9dee7;
+        border-radius: 8px;
+        padding: 12px;
+        background: #fbfcfe;
+      }
+
+      .debug-label {
+        display: block;
+        color: #5c6672;
+        font-size: 0.8rem;
+        font-weight: 800;
+      }
+
+      .debug-value {
+        display: block;
+        margin-top: 4px;
+        color: #20242a;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+      }
+
+      .debug-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+
+      .debug-badge {
+        border-radius: 999px;
+        padding: 4px 9px;
+        color: #203047;
+        background: #e9eef5;
+        font-size: 0.8rem;
+        font-weight: 800;
+      }
+
+      .debug-badge.kma,
+      .debug-badge.tour {
+        color: #075e36;
+        background: #dff7e9;
+      }
+
+      .debug-badge.mock {
+        color: #7a4b00;
+        background: #fff0c2;
+      }
+
+      .debug-badge.corrected {
+        color: #8a4d00;
+        background: #ffe0a3;
+      }
+
+      .debug-agent-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .debug-agent h3 {
+        margin: 0 0 8px;
+        font-size: 1rem;
+      }
+
+      .debug-agent dl {
+        display: grid;
+        gap: 6px;
+        margin: 8px 0 0;
+      }
+
+      .debug-agent div {
+        display: grid;
+        grid-template-columns: minmax(110px, 0.35fr) 1fr;
+        gap: 10px;
+      }
+
+      .debug-agent dt {
+        color: #5c6672;
+        font-weight: 800;
+      }
+
+      .debug-agent dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+      }
+
+      details.agent-library {
+        border: 1px solid #d9dee7;
+        border-radius: 8px;
+        background: #ffffff;
+      }
+
+      details.agent-library summary {
+        padding: 14px 18px;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .library-body {
+        display: grid;
+        gap: 14px;
+        border-top: 1px solid #d9dee7;
+        padding: 18px;
+      }
+
+      .library-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+      }
+
+      .library-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+      }
+
+      .library-agent-card {
+        display: grid;
+        gap: 10px;
+        border: 1px solid #d9dee7;
+        border-radius: 8px;
+        padding: 14px;
+        background: #fbfcfe;
+      }
+
+      .library-agent-card h3 {
+        margin: 0;
+        font-size: 1rem;
+        overflow-wrap: anywhere;
+      }
+
+      .library-description {
+        margin: 0;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+      }
+
+      .library-files {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .library-error {
+        margin: 0;
+        color: #8a1f11;
+        font-weight: 800;
+      }
+
+      .tour-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+        margin-top: 16px;
+      }
+
+      .tour-item {
+        overflow: hidden;
+        border: 1px solid #d9dee7;
+        border-radius: 8px;
+        background: #fbfcfe;
+      }
+
+      .tour-image,
+      .tour-image-empty {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        display: grid;
+        place-items: center;
+        background: #e9eef5;
+        color: #697586;
+        font-weight: 700;
+      }
+
+      .tour-image {
+        object-fit: cover;
+      }
+
+      .tour-body {
+        display: grid;
+        gap: 8px;
+        padding: 14px;
+      }
+
+      .tour-title {
+        margin: 0;
+        font-size: 1rem;
+        line-height: 1.35;
+      }
+
+      .tour-meta {
+        display: grid;
+        gap: 4px;
+        margin: 0;
+        color: #4b5563;
+        font-size: 0.92rem;
+        line-height: 1.45;
+      }
+
+      .tour-meta div {
+        display: grid;
+        gap: 2px;
+      }
+
+      .tour-meta dt {
+        font-weight: 800;
+        color: #20242a;
+      }
+
+      .tour-meta dd {
+        margin: 0;
+      }
+
+      .tour-section {
+        margin-top: 18px;
+      }
+
+      .tour-section h3 {
+        margin: 0 0 8px;
+        font-size: 1rem;
+      }
+
+      .weather-summary-grid,
+      .weather-core-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .weather-info-item {
+        display: grid;
+        gap: 4px;
+        border: 1px solid #d9dee7;
+        border-radius: 8px;
+        padding: 12px;
+        background: #fbfcfe;
+      }
+
+      .weather-label {
+        color: #5c6672;
+        font-size: 0.82rem;
+        font-weight: 800;
+      }
+
+      .weather-value {
+        color: #20242a;
+        font-size: 1rem;
+        font-weight: 800;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+      }
+
+      .weather-source {
+        display: inline-flex;
+        width: fit-content;
+        border-radius: 999px;
+        padding: 4px 9px;
+        color: #203047;
+        background: #e9eef5;
+        font-size: 0.85rem;
+        font-weight: 900;
+      }
+
+      .weather-source.kma_api {
+        color: #075e36;
+        background: #dff7e9;
+      }
+
+      .weather-source.mock_fallback {
+        color: #7a4b00;
+        background: #fff0c2;
+      }
+
+      .weather-debug {
+        margin-top: 16px;
+        border: 1px solid #d9dee7;
+        border-radius: 8px;
+        background: #ffffff;
+      }
+
+      .weather-debug summary {
+        padding: 12px 14px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .weather-debug dl {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+        border-top: 1px solid #d9dee7;
+        padding: 14px;
+      }
+
+      .weather-debug div {
+        display: grid;
+        grid-template-columns: minmax(120px, 0.35fr) 1fr;
+        gap: 10px;
+      }
+
+      .weather-debug dt {
+        color: #5c6672;
+        font-weight: 800;
+      }
+
+      .weather-debug dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .transport-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+        margin-top: 16px;
+        padding: 14px;
+        border: 1px solid #d9dee7;
+        border-radius: 8px;
+        background: #f8fafc;
+      }
+
+      .transport-overview div,
+      .route-card {
+        display: grid;
+        gap: 4px;
+      }
+
+      .transport-label {
+        color: #5c6672;
+        font-size: 0.82rem;
+        font-weight: 800;
+      }
+
+      .transport-value {
+        color: #20242a;
+        font-weight: 700;
+        line-height: 1.35;
+      }
+
+      .route-grid {
+        display: grid;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .route-card {
+        border: 1px solid #d9dee7;
+        border-radius: 8px;
+        padding: 14px;
+        background: #fbfcfe;
+      }
+
+      .route-card h4 {
+        margin: 0;
+        font-size: 0.98rem;
+        line-height: 1.35;
+      }
+
+      .route-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 8px 12px;
+        margin: 4px 0 0;
+        color: #4b5563;
+        font-size: 0.92rem;
+        line-height: 1.45;
+      }
+
+      .route-meta div {
+        display: grid;
+        gap: 2px;
+      }
+
+      .route-meta dt {
+        font-weight: 800;
+        color: #20242a;
+      }
+
+      .route-meta dd {
+        margin: 0;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 20px;
+        color: #3f4854;
+        line-height: 1.6;
+      }
+
+      details.raw-response {
+        padding: 0;
+      }
+
+      details.raw-response summary {
+        padding: 14px 18px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      pre {
+        min-height: 260px;
+        margin: 0;
+        overflow: auto;
+        border: 1px solid #d9dee7;
+        border-radius: 8px;
+        padding: 18px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-break: break-word;
+        background: #ffffff;
+      }
+
+      details.raw-response pre {
+        min-height: 180px;
+        border: 0;
+        border-top: 1px solid #d9dee7;
+        border-radius: 0 0 8px 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>dynamic-agent-lab</h1>
+        <p>여행 계획 요청을 분석해 필요한 mock 서브에이전트를 실행합니다.</p>
+      </header>
+
+      <section class="workflow" aria-label="workflow runner">
+        <section class="condition-card" aria-label="여행 조건">
+          <h2>여행 조건 선택</h2>
+          <div class="condition-grid">
+            <label for="destination-select">
+              목적지
+              <select id="destination-select">
+                <option value="서울">서울</option>
+                <option value="부산" selected>부산</option>
+                <option value="제주">제주</option>
+                <option value="강릉">강릉</option>
+                <option value="전주">전주</option>
+                <option value="대구">대구</option>
+                <option value="대전">대전</option>
+                <option value="광주">광주</option>
+                <option value="인천">인천</option>
+                <option value="여수">여수</option>
+                <option value="경주">경주</option>
+                <option value="속초">속초</option>
+                <option value="춘천">춘천</option>
+              </select>
+            </label>
+
+            <label for="origin-select">
+              출발지
+              <select id="origin-select">
+                <option value="서울" selected>서울</option>
+                <option value="부산">부산</option>
+                <option value="대구">대구</option>
+                <option value="대전">대전</option>
+                <option value="광주">광주</option>
+                <option value="인천">인천</option>
+              </select>
+            </label>
+
+            <label for="duration-select">
+              기간
+              <select id="duration-select">
+                <option value="2">1박 2일</option>
+                <option value="3" selected>2박 3일</option>
+                <option value="4">3박 4일</option>
+              </select>
+            </label>
+
+            <label for="budget-select">
+              예산
+              <select id="budget-select">
+                <option value="low" selected>저렴</option>
+                <option value="medium">보통</option>
+                <option value="high">여유</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="checkbox-group">
+            <strong>필요한 정보</strong>
+            <div class="checkbox-grid">
+              <label><input type="checkbox" name="feature" value="destination" checked />여행지 추천</label>
+              <label><input type="checkbox" name="feature" value="budget" checked />예산</label>
+              <label><input type="checkbox" name="feature" value="schedule" checked />일정</label>
+              <label><input type="checkbox" name="feature" value="weather" checked />날씨</label>
+              <label><input type="checkbox" name="feature" value="tour" checked />관광지</label>
+              <label><input type="checkbox" name="feature" value="transport" checked />교통</label>
+            </div>
+          </div>
+        </section>
+
+        <label for="user-request">
+          추가 요청
+          <textarea id="user-request" placeholder="예: 아이와 함께 가기 좋은 곳 위주로, 비 오는 날 실내 위주로 등"></textarea>
+        </label>
+        <button id="run-button" type="button">실행</button>
+      </section>
+
+      <section class="output" aria-live="polite">
+        <div id="status" class="status"></div>
+        <div id="result" class="result-view">
+          <details class="raw-response" open>
+            <summary>raw_response</summary>
+            <pre>{}</pre>
+          </details>
+        </div>
+      </section>
+
+      <details class="agent-library" id="agent-library">
+        <summary>에이전트 라이브러리 갤러리</summary>
+        <div id="agent-library-content" class="library-body">
+          <p>에이전트 라이브러리를 불러오는 중...</p>
+        </div>
+      </details>
+    </main>
+
+    <script>
+      const textarea = document.querySelector("#user-request");
+      const destinationSelect = document.querySelector("#destination-select");
+      const originSelect = document.querySelector("#origin-select");
+      const durationSelect = document.querySelector("#duration-select");
+      const budgetSelect = document.querySelector("#budget-select");
+      const button = document.querySelector("#run-button");
+      const status = document.querySelector("#status");
+      const result = document.querySelector("#result");
+      const agentLibraryContent = document.querySelector("#agent-library-content");
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function renderList(title, items) {
+        if (!Array.isArray(items) || items.length === 0) {
+          return "";
+        }
+
+        return `
+          <section class="tour-section">
+            <h3>${escapeHtml(title)}</h3>
+            <ul>
+              ${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+            </ul>
+          </section>
+        `;
+      }
+
+      function renderTourItem(item) {
+        const image = item.image
+          ? `<img class="tour-image" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title || "관광지 이미지")}" loading="lazy" />`
+          : `<div class="tour-image-empty">이미지 없음</div>`;
+
+        return `
+          <article class="tour-item">
+            ${image}
+            <div class="tour-body">
+              <h3 class="tour-title">${escapeHtml(item.title || "제목 없음")}</h3>
+              <dl class="tour-meta">
+                <div><dt>주소</dt><dd>${escapeHtml(item.addr || "정보 없음")}</dd></div>
+                <div><dt>분류</dt><dd>${escapeHtml(item.category || "정보 없음")}</dd></div>
+                <div><dt>좌표</dt><dd>${escapeHtml(item.mapx || "정보 없음")}, ${escapeHtml(item.mapy || "정보 없음")}</dd></div>
+              </dl>
+            </div>
+          </article>
+        `;
+      }
+
+      function renderTourAgentCard(agentResult) {
+        const tourItems = Array.isArray(agentResult.tour_items)
+          ? agentResult.tour_items
+          : [];
+
+        return `
+          <article class="tour-card">
+            <h2>추천 관광지 / 투어 정보</h2>
+            <p>${escapeHtml(agentResult.summary || "관광지 추천 결과입니다.")}</p>
+            <div class="tour-grid">
+              ${
+                tourItems.length > 0
+                  ? tourItems.map(renderTourItem).join("")
+                  : `<article class="tour-item"><div class="tour-image-empty">관광지 정보 없음</div></article>`
+              }
+            </div>
+            ${renderList("관광지 판단 내용", agentResult.tour_findings)}
+            ${renderList("추천 활용 방법", agentResult.recommendations)}
+            ${renderList("주의할 점", agentResult.risks)}
+            ${renderList("다음에 연결 가능한 에이전트", agentResult.next_agents)}
+          </article>
+        `;
+      }
+
+      function renderWeatherDebug(debugInfo) {
+        if (!debugInfo || typeof debugInfo !== "object") {
+          return "";
+        }
+
+        const fields = [
+          ["location", debugInfo.location],
+          ["nx", debugInfo.nx],
+          ["ny", debugInfo.ny],
+          ["days", debugInfo.days],
+          ["data_source", debugInfo.data_source],
+          ["debug_message", debugInfo.debug_message],
+        ];
+
+        return `
+          <details class="weather-debug">
+            <summary>debug_info</summary>
+            <dl>
+              ${fields.map(([label, value]) => `
+                <div>
+                  <dt>${escapeHtml(label)}</dt>
+                  <dd>${escapeHtml(value ?? "정보 없음")}</dd>
+                </div>
+              `).join("")}
+            </dl>
+          </details>
+        `;
+      }
+
+      function renderWeatherAgentCard(agentResult) {
+        const weatherData =
+          agentResult.weather_summary ||
+          agentResult.forecast ||
+          agentResult.weather ||
+          null;
+
+        if (!weatherData || typeof weatherData !== "object") {
+          return `
+            <article class="weather-card">
+              <h2>날씨 정보</h2>
+              <p>${escapeHtml(agentResult.summary || "날씨 결과입니다.")}</p>
+              <p>날씨 상세 정보가 응답에 포함되지 않았습니다. raw_response를 확인하세요.</p>
+              ${renderWeatherDebug(agentResult.debug_info)}
+            </article>
+          `;
+        }
+
+        const location =
+          agentResult.location ||
+          weatherData.location ||
+          agentResult.debug_info?.location ||
+          "정보 없음";
+        const period = weatherData.period || agentResult.period || "정보 없음";
+        const dataSource = agentResult.data_source || weatherData.data_source || "정보 없음";
+
+        return `
+          <article class="weather-card">
+            <h2>날씨 정보</h2>
+            <p>${escapeHtml(agentResult.summary || "날씨 결과입니다.")}</p>
+            <section class="weather-summary-grid" aria-label="날씨 요약">
+              <div class="weather-info-item">
+                <span class="weather-label">지역</span>
+                <span class="weather-value">${escapeHtml(location)}</span>
+              </div>
+              <div class="weather-info-item">
+                <span class="weather-label">기간</span>
+                <span class="weather-value">${escapeHtml(period)}</span>
+              </div>
+              <div class="weather-info-item">
+                <span class="weather-label">데이터 소스</span>
+                <span class="weather-source ${escapeHtml(dataSource)}">${escapeHtml(dataSource)}</span>
+              </div>
+            </section>
+            <section class="weather-core-grid" aria-label="날씨 핵심 정보">
+              <div class="weather-info-item">
+                <span class="weather-label">기온</span>
+                <span class="weather-value">${escapeHtml(weatherData.temperature ?? "정보 없음")}</span>
+              </div>
+              <div class="weather-info-item">
+                <span class="weather-label">상태</span>
+                <span class="weather-value">${escapeHtml(weatherData.condition ?? "정보 없음")}</span>
+              </div>
+              <div class="weather-info-item">
+                <span class="weather-label">강수확률</span>
+                <span class="weather-value">${escapeHtml(weatherData.rain_probability ?? "정보 없음")}</span>
+              </div>
+            </section>
+            ${renderList("날씨 판단 내용", agentResult.weather_findings)}
+            ${renderList("추천 사항", agentResult.recommendations)}
+            ${renderWeatherDebug(agentResult.debug_info)}
+          </article>
+        `;
+      }
+
+      function renderTransportOverview(overview) {
+        if (!overview || typeof overview !== "object") {
+          return "";
+        }
+
+        const fields = [
+          ["출발지", overview.origin],
+          ["도착지", overview.destination],
+          ["도시 간 이동", overview.main_transport],
+          ["현지 교통", overview.local_transport],
+          ["예상 이동 시간", overview.estimated_travel_time],
+        ];
+
+        return `
+          <section class="transport-overview" aria-label="교통 개요">
+            ${fields.map(([label, value]) => `
+              <div>
+                <span class="transport-label">${escapeHtml(label)}</span>
+                <span class="transport-value">${escapeHtml(value || "정보 없음")}</span>
+              </div>
+            `).join("")}
+          </section>
+        `;
+      }
+
+      function renderRouteCard(route, index) {
+        return `
+          <article class="route-card">
+            <h4>${index + 1}. ${escapeHtml(route.method || "이동 경로")}</h4>
+            <dl class="route-meta">
+              <div><dt>유형</dt><dd>${escapeHtml(route.type || "정보 없음")}</dd></div>
+              <div><dt>출발</dt><dd>${escapeHtml(route.from || "정보 없음")}</dd></div>
+              <div><dt>도착</dt><dd>${escapeHtml(route.to || "정보 없음")}</dd></div>
+              <div><dt>수단</dt><dd>${escapeHtml(route.method || "정보 없음")}</dd></div>
+              <div><dt>예상 시간</dt><dd>${escapeHtml(route.estimated_time || "정보 없음")}</dd></div>
+              <div><dt>메모</dt><dd>${escapeHtml(route.notes || "정보 없음")}</dd></div>
+            </dl>
+          </article>
+        `;
+      }
+
+      function renderTransportRoutes(routes) {
+        if (!Array.isArray(routes) || routes.length === 0) {
+          return "";
+        }
+
+        return `
+          <section class="tour-section">
+            <h3>추천 이동 경로</h3>
+            <div class="route-grid">
+              ${routes.map(renderRouteCard).join("")}
+            </div>
+          </section>
+        `;
+      }
+
+      function renderTransportAgentCard(agentResult) {
+        return `
+          <article class="transport-card">
+            <h2>교통 / 이동 계획</h2>
+            <p>${escapeHtml(agentResult.summary || "교통 이동 계획 결과입니다.")}</p>
+            ${renderTransportOverview(agentResult.transport_overview)}
+            ${renderTransportRoutes(agentResult.routes)}
+            ${renderList("교통 팁", agentResult.transport_tips)}
+            ${renderList("주의할 점", agentResult.risks)}
+            ${renderList("다음에 연결 가능한 에이전트", agentResult.next_agents)}
+          </article>
+        `;
+      }
+
+      function renderGenericAgentCard(agentResult) {
+        return `
+          <article class="agent-card">
+            <h2>${escapeHtml(agentResult.agent || "agent")}</h2>
+            <p>${escapeHtml(agentResult.summary || "에이전트 결과입니다.")}</p>
+          </article>
+        `;
+      }
+
+      function renderExecutionFlow(data) {
+        const selectedAgents = Array.isArray(data.selected_agents)
+          ? data.selected_agents
+          : [];
+        const loadedAgentNames = new Set(
+          Array.isArray(data.loaded_agents)
+            ? data.loaded_agents.map((agent) => agent.name)
+            : []
+        );
+
+        if (selectedAgents.length === 0) {
+          return `
+            <article class="flow-card">
+              <h2>에이전트 실행 흐름</h2>
+              <p>실행된 에이전트가 없습니다.</p>
+            </article>
+          `;
+        }
+
+        return `
+          <article class="flow-card">
+            <h2>에이전트 실행 흐름</h2>
+            <ol class="flow-list">
+              ${selectedAgents.map((agentName, index) => {
+                const isLoaded = loadedAgentNames.has(agentName);
+                const badgeClass = isLoaded ? "complete" : "failed";
+                const label = isLoaded ? "완료" : "실패 또는 미로드";
+                return `
+                  <li>
+                    <span class="agent-name">${index + 1}. ${escapeHtml(agentName)}</span>
+                    <span class="status-badge ${badgeClass}">${label}</span>
+                  </li>
+                `;
+              }).join("")}
+            </ol>
+          </article>
+        `;
+      }
+
+      function validationStatusLabel(status) {
+        if (status === "corrected") {
+          return "자동 보정됨";
+        }
+        if (status === "warning") {
+          return "주의 필요";
+        }
+        if (status === "ok") {
+          return "문제 없음";
+        }
+        return "검증 결과 없음";
+      }
+
+      function renderValidationReport(report) {
+        if (!report || typeof report !== "object") {
+          return `
+            <article class="validation-card">
+              <h2>자체검증 결과</h2>
+              <p>검증 결과 없음</p>
+            </article>
+          `;
+        }
+
+        const status = report.status || "none";
+        return `
+          <article class="validation-card ${status === "corrected" ? "corrected" : ""}">
+            <h2>자체검증 결과</h2>
+            <p>상태: <span class="validation-status ${escapeHtml(status)}">${escapeHtml(validationStatusLabel(status))}</span></p>
+            ${renderList("발견된 문제", report.issues)}
+            ${renderList("자동 보정", report.corrections)}
+          </article>
+        `;
+      }
+
+      function renderFeatureBadges(features) {
+        if (!Array.isArray(features) || features.length === 0) {
+          return `<span class="debug-value">정보 없음</span>`;
+        }
+
+        return `
+          <div class="debug-badges">
+            ${features.map((feature) => `<span class="debug-badge">${escapeHtml(feature)}</span>`).join("")}
+          </div>
+        `;
+      }
+
+      function renderInputSummary(summary) {
+        if (!summary || typeof summary !== "object") {
+          return `<p>입력값 요약 없음</p>`;
+        }
+
+        const fields = [
+          ["destination", summary.destination],
+          ["location", summary.location],
+          ["origin", summary.origin],
+          ["days", summary.days],
+          ["budget_level", summary.budget_level],
+        ];
+
+        return `
+          <div class="debug-grid">
+            ${fields.map(([label, value]) => `
+              <div class="debug-item">
+                <span class="debug-label">${escapeHtml(label)}</span>
+                <span class="debug-value">${escapeHtml(value ?? "정보 없음")}</span>
+              </div>
+            `).join("")}
+            <div class="debug-item">
+              <span class="debug-label">requested_features</span>
+              ${renderFeatureBadges(summary.requested_features)}
+            </div>
+          </div>
+        `;
+      }
+
+      function debugBadgeClass(value) {
+        if (value === "kma_api") {
+          return "kma";
+        }
+        if (value === "tour_api") {
+          return "tour";
+        }
+        if (value === "mock_fallback") {
+          return "mock";
+        }
+        if (value === true || value === "validator_corrected") {
+          return "corrected";
+        }
+        return "";
+      }
+
+      function renderDebugBadge(value) {
+        return `<span class="debug-badge ${debugBadgeClass(value)}">${escapeHtml(value)}</span>`;
+      }
+
+      function renderDebugValue(value) {
+        if (Array.isArray(value)) {
+          return value.length
+            ? value.map((item) => escapeHtml(item)).join(", ")
+            : "[]";
+        }
+        if (value && typeof value === "object") {
+          return escapeHtml(JSON.stringify(value));
+        }
+        return escapeHtml(value ?? "정보 없음");
+      }
+
+      function renderAgentDebug(agentResult) {
+        const agentName = agentResult.agent || "agent";
+        const debugInfo = agentResult.debug_info && typeof agentResult.debug_info === "object"
+          ? agentResult.debug_info
+          : {};
+        const rows = [];
+
+        if (agentResult.data_source) {
+          rows.push(["data_source", agentResult.data_source, true]);
+        }
+        if (agentResult.debug_message) {
+          rows.push(["debug_message", agentResult.debug_message, false]);
+        }
+        Object.entries(debugInfo).forEach(([key, value]) => {
+          rows.push([key, value, key === "validator_corrected" && value === true]);
+        });
+
+        if (rows.length === 0) {
+          return `
+            <article class="debug-agent">
+              <h3>${escapeHtml(agentName)}</h3>
+              <p>디버그 정보 없음</p>
+            </article>
+          `;
+        }
+
+        return `
+          <article class="debug-agent">
+            <h3>${escapeHtml(agentName)}</h3>
+            <dl>
+              ${rows.map(([key, value, badge]) => `
+                <div>
+                  <dt>${escapeHtml(key)}</dt>
+                  <dd>${badge ? renderDebugBadge(value) : renderDebugValue(value)}</dd>
+                </div>
+              `).join("")}
+            </dl>
+          </article>
+        `;
+      }
+
+      function renderDebugPanel(data) {
+        const agentResults = Array.isArray(data.agent_results)
+          ? data.agent_results
+          : [];
+
+        return `
+          <article class="debug-panel">
+            <h2>입력값 / 디버그 정보</h2>
+            ${renderInputSummary(data.input_data_summary)}
+            <section class="tour-section">
+              <h3>에이전트 디버그 정보</h3>
+              <div class="debug-agent-list">
+                ${
+                  agentResults.length > 0
+                    ? agentResults.map(renderAgentDebug).join("")
+                    : `<p>디버그 정보 없음</p>`
+                }
+              </div>
+            </section>
+          </article>
+        `;
+      }
+
+      function libraryStatusLabel(status) {
+        if (status === "available") {
+          return "사용 가능";
+        }
+        if (status === "missing_files") {
+          return "파일 누락";
+        }
+        if (status === "invalid_agent_json") {
+          return "JSON 오류";
+        }
+        return status || "상태 알 수 없음";
+      }
+
+      function libraryStatusClass(status) {
+        if (status === "available") {
+          return "complete";
+        }
+        if (status === "missing_files" || status === "invalid_agent_json") {
+          return "failed";
+        }
+        return "";
+      }
+
+      function renderBooleanBadge(label, value) {
+        return `<span class="debug-badge ${value ? "kma" : "mock"}">${escapeHtml(label)}: ${value ? "있음" : "없음"}</span>`;
+      }
+
+      function renderDataSources(dataSources) {
+        if (!Array.isArray(dataSources) || dataSources.length === 0) {
+          return `<span class="debug-value">데이터 소스 정보 없음</span>`;
+        }
+
+        return `
+          <div class="debug-badges">
+            ${dataSources.map((source) => `<span class="debug-badge">${escapeHtml(source)}</span>`).join("")}
+          </div>
+        `;
+      }
+
+      function renderAgentLibrary(data) {
+        const agents = Array.isArray(data.agents) ? data.agents : [];
+        agentLibraryContent.innerHTML = `
+          <div class="library-summary">
+            <div class="debug-item">
+              <span class="debug-label">에이전트 라이브러리</span>
+              <span class="debug-value">${escapeHtml(data.library_path || "정보 없음")}</span>
+            </div>
+            <div class="debug-item">
+              <span class="debug-label">총 에이전트</span>
+              <span class="debug-value">${escapeHtml(data.total_agents ?? 0)}개</span>
+            </div>
+            <div class="debug-item">
+              <span class="debug-label">사용 가능</span>
+              <span class="debug-value">${escapeHtml(data.available_count ?? 0)}개</span>
+            </div>
+          </div>
+          <div class="library-grid">
+            ${agents.map((agent) => `
+              <article class="library-agent-card">
+                <h3>${escapeHtml(agent.name || "agent")}</h3>
+                <div><span class="status-badge ${libraryStatusClass(agent.status)}">${escapeHtml(libraryStatusLabel(agent.status))}</span></div>
+                <p class="library-description">${escapeHtml(agent.description || "설명 없음")}</p>
+                <div class="library-files">
+                  ${renderBooleanBadge("agent.json", agent.has_agent_json)}
+                  ${renderBooleanBadge("main.py", agent.has_main_py)}
+                  ${renderBooleanBadge("README.md", agent.has_readme)}
+                </div>
+                <div>
+                  <span class="debug-label">data_sources</span>
+                  ${renderDataSources(agent.data_sources)}
+                </div>
+                ${agent.error ? `<p class="library-error">${escapeHtml(agent.error)}</p>` : ""}
+              </article>
+            `).join("")}
+          </div>
+        `;
+      }
+
+      async function loadAgentLibrary() {
+        try {
+          const response = await fetch("/agent-library");
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(JSON.stringify(data));
+          }
+          renderAgentLibrary(data);
+        } catch (_error) {
+          agentLibraryContent.innerHTML = `<p>에이전트 라이브러리를 불러오지 못했습니다.</p>`;
+        }
+      }
+
+      function attachImageFallbacks() {
+        result.querySelectorAll(".tour-image").forEach((image) => {
+          image.addEventListener("error", () => {
+            const fallback = document.createElement("div");
+            fallback.className = "tour-image-empty";
+            fallback.textContent = "이미지 없음";
+            image.replaceWith(fallback);
+          }, { once: true });
+        });
+      }
+
+      function buildRequestPayload() {
+        const destination = destinationSelect.value;
+        const origin = originSelect.value;
+        const days = Number(durationSelect.value);
+        const budgetLevel = budgetSelect.value;
+        const requestedFeatures = Array.from(
+          document.querySelectorAll('input[name="feature"]:checked')
+        ).map((checkbox) => checkbox.value);
+
+        return {
+          user_request: textarea.value.trim(),
+          destination,
+          location: destination,
+          origin,
+          days,
+          budget_level: budgetLevel,
+          requested_features: requestedFeatures,
+        };
+      }
+
+      function renderResult(data) {
+        const agentCards = Array.isArray(data.agent_results)
+          ? data.agent_results.map((agentResult) => {
+              if (agentResult.agent === "travel_weather_agent") {
+                return renderWeatherAgentCard(agentResult);
+              }
+              if (agentResult.agent === "travel_tour_agent") {
+                return renderTourAgentCard(agentResult);
+              }
+              if (agentResult.agent === "travel_transport_agent") {
+                return renderTransportAgentCard(agentResult);
+              }
+              return renderGenericAgentCard(agentResult);
+            }).join("")
+          : "";
+
+        result.innerHTML = `
+          <section class="summary-card">${escapeHtml(data.final_summary || "")}</section>
+          ${renderExecutionFlow(data)}
+          ${renderValidationReport(data.validation_report)}
+          ${renderDebugPanel(data)}
+          ${agentCards}
+          <details class="raw-response">
+            <summary>raw_response</summary>
+            <pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>
+          </details>
+        `;
+        attachImageFallbacks();
+      }
+
+      button.addEventListener("click", async () => {
+        const payload = buildRequestPayload();
+
+        if (payload.requested_features.length === 0) {
+          status.textContent = "필요한 정보를 하나 이상 선택해주세요.";
+          renderResult({ final_summary: "", agent_results: [] });
+          return;
+        }
+
+        button.disabled = true;
+        status.textContent = "워크플로 실행 중...";
+        console.log("request payload", payload);
+
+        try {
+          const response = await fetch("/run-workflow", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(JSON.stringify(data, null, 2));
+          }
+
+          renderResult(data);
+          status.textContent = `${data.selected_agents.length}개 에이전트 실행 완료`;
+        } catch (error) {
+          status.textContent = "요청 처리 중 오류가 발생했습니다.";
+          result.innerHTML = `
+            <details class="raw-response" open>
+              <summary>raw_response</summary>
+              <pre>${escapeHtml(String(error.message || error))}</pre>
+            </details>
+          `;
+        } finally {
+          button.disabled = false;
+        }
+      });
+
+      loadAgentLibrary();
+    </script>
+  </body>
+</html>
