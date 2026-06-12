@@ -46,6 +46,12 @@ dynamic-agent-lab/
 
 ## 실행 방법
 
+### 설치
+
+```bash
+pip install -r requirements.txt
+```
+
 ### WSL/Linux
 
 ```bash
@@ -83,6 +89,25 @@ python scripts\smoke_test.py
 ```bash
 python3 scripts/smoke_test.py
 ```
+
+## 환경변수 설정
+
+1. `.env.example`을 복사해서 `.env`를 만듭니다.
+
+   PowerShell:
+
+   ```powershell
+   copy .env.example .env
+   ```
+
+   WSL/Linux:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. 실제 API 키는 `.env`에만 입력합니다.
+3. `.env`는 `.gitignore`에 포함되어 있으므로 GitHub에 올라가지 않습니다.
 
 ## 현재 smoke test 통과 항목
 
