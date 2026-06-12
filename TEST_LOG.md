@@ -16,6 +16,17 @@
 - jeju transport: PASS
 - busan full workflow: PASS
 
+## GitHub clone 재현성 테스트
+
+- 테스트 폴더: `D:\CodexWork\deploy-test\dynamic-agent-lab`
+- 테스트 명령: `python scripts\smoke_test.py`
+- 결과:
+  - agent library: PASS
+  - jeju weather: PASS
+  - jeju transport: PASS
+  - busan full workflow: PASS
+- 결론: GitHub에서 새로 clone한 폴더에서도 내부 `agents/` 기준으로 기본 기능이 정상 작동한다.
+
 ## 현재 정상 확인된 기능
 
 - `/agent-library` API가 6개 에이전트를 정상 반환한다.
