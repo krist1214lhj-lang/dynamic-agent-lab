@@ -66,6 +66,23 @@ cd D:\CodexWork\test-01\dynamic-agent-lab
 uvicorn main:app --host 0.0.0.0 --port 8012 --reload
 ```
 
+## Vercel 배포
+
+1. GitHub repository를 Vercel에 Import합니다.
+2. Framework Preset은 `Other`를 선택하거나 자동 감지를 사용합니다.
+3. Environment Variables는 Vercel Dashboard에서 설정합니다.
+   - `KMA_SERVICE_KEY`
+   - `TOUR_API_SERVICE_KEY`
+4. 배포 후 `GET /health`로 서버 상태를 확인합니다.
+5. 배포 주소에 대해 smoke test를 실행합니다.
+
+PowerShell:
+
+```powershell
+$env:BASE_URL="https://your-vercel-app.vercel.app"
+python scripts\smoke_test.py
+```
+
 ## 접속 주소
 
 http://localhost:8012
