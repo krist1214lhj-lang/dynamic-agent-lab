@@ -13,11 +13,24 @@ except ImportError:  # pragma: no cover - environment fallback
     load_dotenv = None
 
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if load_dotenv is not None:
+    load_dotenv(PROJECT_ROOT / ".env", override=True)
+
 TOUR_API_BASE_URL = "https://apis.data.go.kr/B551011/KorService2"
 TOUR_API_MOBILE_OS = "ETC"
 TOUR_API_MOBILE_APP = "dynamic-agent-lab"
 TOUR_FOOD_CONTENT_TYPE_ID = "39"
 MAX_FOOD_ITEMS = 6
+
+PLACEHOLDER_SERVICE_KEYS = {
+    "",
+    "your_tour_api_service_key_here",
+    "your_kma_service_key_here",
+    "YOUR_TOUR_API_SERVICE_KEY",
+    "TOUR_API_SERVICE_KEY",
+    "실제_관광공사_서비스키",
+}
 
 AREA_CODE_BY_NAME = {
     "서울": "1",
@@ -310,9 +323,9 @@ def _safe_int(value, default=3):
 
 
 def _load_env():
-    env_path = Path(__file__).with_name(".env")
+    env_path = PROJECT_ROOT / ".env"
     if load_dotenv is not None:
-        load_dotenv(dotenv_path=env_path)
+        load_dotenv(dotenv_path=env_path, override=True)
 
     env_values = {}
     if env_path.exists():
@@ -330,14 +343,24 @@ def _load_env():
 
 def load_service_key():
     env_values = _load_env()
-    return (
-        os.getenv("TOUR_API_SERVICE_KEY")
-        or env_values.get("TOUR_API_SERVICE_KEY")
-        or os.getenv("TOURAPI_SERVICE_KEY")
-        or env_values.get("TOURAPI_SERVICE_KEY")
-        or os.getenv("KTO_SERVICE_KEY")
-        or env_values.get("KTO_SERVICE_KEY")
-    )
+    service_key = os.getenv("TOUR_API_SERVICE_KEY", "").strip()
+    if not service_key:
+        service_key = str(env_values.get("TOUR_API_SERVICE_KEY") or "").strip()
+    return str(service_key or "").strip()
+
+
+def _is_valid_service_key(service_key):
+    return str(service_key or "").strip() not in PLACEHOLDER_SERVICE_KEYS
+
+
+def _safe_error(exc, api_method):
+    if hasattr(exc, "response") and getattr(exc.response, "status_code", None):
+        status_code = getattr(exc.response, "status_code", None)
+        reason = getattr(exc.response, "reason", "") or "HTTP error"
+        return f"HTTPError: {status_code} {reason} during {api_method}"
+    if isinstance(exc, RuntimeError):
+        return f"RuntimeError during {api_method}: {str(exc).splitlines()[0]}"
+    return f"{type(exc).__name__} during {api_method}"
 
 
 def _base_params(service_key):
@@ -557,10 +580,20 @@ def _mock_food_result(destination, days, budget_level, reason="mock_fallback"):
         ],
         "recommendations": _mock_recommendations(destination, budget_level),
         "debug_info": {
+            "env_key_present": False,
+            "env_key_valid": False,
+            "env_key_length": 0,
+            "api_base_url": "KorService2",
             "destination": destination,
             "area_code": AREA_CODE_BY_NAME.get(destination, AREA_CODE_BY_NAME["서울"]),
             "content_type_id": 39,
             "api_method_used": "mock_fallback",
+            "area_based_status_code": None,
+            "area_based_raw_count": 0,
+            "supplemental_search_used": False,
+            "supplemental_success_count": 0,
+            "fallback_reason": reason,
+            "last_error": reason,
             "data_source": "mock_fallback",
         },
     }
@@ -577,7 +610,11 @@ def _fetch_area_based_raw_items(service_key, area_code):
         timeout=6,
     )
     response.raise_for_status()
-    return _extract_raw_items(response.json())
+    try:
+        payload = response.json()
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"area_based_json_parse_error: {response.status_code}: {exc}") from exc
+    return response.status_code, _extract_raw_items(payload)
 
 
 def _fetch_keyword_raw_items(service_key, keyword, area_code):
@@ -592,7 +629,11 @@ def _fetch_keyword_raw_items(service_key, keyword, area_code):
         timeout=6,
     )
     response.raise_for_status()
-    return _extract_raw_items(response.json())
+    try:
+        payload = response.json()
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"area_based_json_parse_error: {response.status_code}: {exc}") from exc
+    return response.status_code, _extract_raw_items(payload)
 
 
 def _candidate_keywords(destination):
@@ -652,28 +693,117 @@ def _build_tour_api_result(destination, days, budget_level, area_code, api_metho
             f"예산이 {budget_level}이면 로컬 대표 음식과 간단한 카페를 섞어보세요.",
         ],
         "debug_info": {
+            "env_key_present": False,
+            "env_key_valid": False,
+            "env_key_length": 0,
+            "api_base_url": "KorService2",
             "destination": destination,
             "area_code": area_code,
             "content_type_id": 39,
             "api_method_used": api_method_used,
+            "area_based_status_code": 200,
+            "area_based_raw_count": len(raw_items),
+            "supplemental_search_used": api_method_used == "searchKeyword2",
+            "supplemental_success_count": len(raw_items) if api_method_used == "searchKeyword2" else 0,
+            "fallback_reason": None,
+            "last_error": None,
             "data_source": "tour_api",
         },
     }
+
+
+def _build_debug_info(
+    *,
+    service_key,
+    destination,
+    area_code,
+    api_method_used,
+    area_based_status_code=None,
+    area_based_raw_count=0,
+    supplemental_search_used=False,
+    supplemental_success_count=0,
+    fallback_reason=None,
+    last_error=None,
+    data_source="mock_fallback",
+):
+    env_key_valid = _is_valid_service_key(service_key)
+    return {
+        "env_key_present": env_key_valid,
+        "env_key_valid": env_key_valid,
+        "env_key_length": len(service_key or ""),
+        "api_base_url": "KorService2",
+        "destination": destination,
+        "area_code": area_code,
+        "content_type_id": 39,
+        "api_method_used": api_method_used,
+        "area_based_status_code": area_based_status_code,
+        "area_based_raw_count": area_based_raw_count,
+        "supplemental_search_used": supplemental_search_used,
+        "supplemental_success_count": supplemental_success_count,
+        "fallback_reason": fallback_reason,
+        "last_error": last_error,
+        "data_source": data_source,
+    }
+
+
+def _mock_food_result_with_debug(destination, days, budget_level, service_key, area_code, reason, last_error=None):
+    result = _mock_food_result(destination, days, budget_level, reason)
+    result["debug_info"] = _build_debug_info(
+        service_key=service_key,
+        destination=destination,
+        area_code=area_code,
+        api_method_used="mock_fallback",
+        area_based_status_code=None,
+        area_based_raw_count=0,
+        supplemental_search_used=False,
+        supplemental_success_count=0,
+        fallback_reason=reason,
+        last_error=last_error or reason,
+        data_source="mock_fallback",
+    )
+    return result
 
 
 def run(input_data):
     safe_input, destination, days, budget_level, user_request = _get_context(input_data)
     area_name, area_code = _detect_area_code(safe_input)
     service_key = load_service_key()
+    service_key_valid = _is_valid_service_key(service_key)
 
-    if requests is None or not service_key:
-        return _mock_food_result(destination, days, budget_level, "missing_dependency_or_service_key")
+    if requests is None:
+        return _mock_food_result_with_debug(
+            destination,
+            days,
+            budget_level,
+            service_key,
+            area_code,
+            "missing_requests_dependency",
+            "requests dependency is not available",
+        )
+
+    if not service_key_valid:
+        return _mock_food_result_with_debug(
+            destination,
+            days,
+            budget_level,
+            service_key,
+            area_code,
+            "missing_or_placeholder_service_key",
+            "TOUR_API_SERVICE_KEY is missing or still placeholder",
+        )
 
     api_method_used = "areaBasedList2"
+    area_based_status_code = None
+    area_based_raw_count = 0
+    supplemental_search_used = False
+    supplemental_success_count = 0
+    fallback_reason = None
+    last_error = None
     try:
-        area_items = _fetch_area_based_raw_items(service_key, area_code)
+        area_based_status_code, area_items = _fetch_area_based_raw_items(service_key, area_code)
+        area_based_raw_count = len(area_items)
         if area_items:
-            return _build_tour_api_result(
+            result = _build_tour_api_result(
                 destination,
                 days,
                 budget_level,
@@ -681,20 +811,56 @@ def run(input_data):
                 api_method_used,
                 area_items,
             )
-    except Exception:
+            result["debug_info"] = _build_debug_info(
+                service_key=service_key,
+                destination=destination,
+                area_code=area_code,
+                api_method_used="areaBasedList2",
+                area_based_status_code=area_based_status_code,
+                area_based_raw_count=area_based_raw_count,
+                supplemental_search_used=False,
+                supplemental_success_count=0,
+                fallback_reason=None,
+                last_error=None,
+                data_source="tour_api",
+            )
+            return result
+        fallback_reason = "area_based_empty"
+        last_error = "areaBasedList2 returned no items"
+    except Exception as exc:
         area_items = []
+        area_based_raw_count = 0
+        if "area_based_json_parse_error" in str(exc):
+            fallback_reason = "area_based_json_parse_error"
+            try:
+                status_bits = str(exc).split(":", 2)
+                area_based_status_code = int(status_bits[1].strip())
+            except Exception:
+                pass
+        elif hasattr(exc, "response") and getattr(exc.response, "status_code", None):
+            fallback_reason = "area_based_http_error"
+            area_based_status_code = getattr(exc.response, "status_code", None)
+        elif isinstance(exc, RuntimeError):
+            fallback_reason = "area_based_http_error"
+        else:
+            fallback_reason = "area_based_http_error"
+        last_error = _safe_error(exc, "areaBasedList2")
 
+    supplemental_search_used = True
     try:
         api_method_used = "searchKeyword2"
         keyword_items = []
         for keyword in _candidate_keywords(destination):
             try:
-                keyword_items.extend(_fetch_keyword_raw_items(service_key, keyword, area_code))
-            except Exception:
+                _status_code, items = _fetch_keyword_raw_items(service_key, keyword, area_code)
+                keyword_items.extend(items)
+            except Exception as exc:
+                last_error = _safe_error(exc, "searchKeyword2")
                 continue
         keyword_items = _unique_items(keyword_items)
+        supplemental_success_count = len(keyword_items)
         if keyword_items:
-            return _build_tour_api_result(
+            result = _build_tour_api_result(
                 destination,
                 days,
                 budget_level,
@@ -702,10 +868,39 @@ def run(input_data):
                 api_method_used,
                 keyword_items,
             )
-    except Exception:
-        pass
+            result["debug_info"] = _build_debug_info(
+                service_key=service_key,
+                destination=destination,
+                area_code=area_code,
+                api_method_used="searchKeyword2",
+                area_based_status_code=area_based_status_code,
+                area_based_raw_count=area_based_raw_count,
+                supplemental_search_used=True,
+                supplemental_success_count=supplemental_success_count,
+                fallback_reason=None,
+                last_error=None,
+                data_source="tour_api",
+            )
+            return result
+        fallback_reason = "supplemental_empty"
+        if last_error:
+            last_error = f"{last_error}; supplemental_empty"
+        else:
+            last_error = "supplemental_empty"
+    except Exception as exc:
+        supplemental_success_count = 0
+        fallback_reason = "supplemental_empty"
+        last_error = _safe_error(exc, "searchKeyword2")
 
-    return _mock_food_result(destination, days, budget_level, "tour_api_empty_or_failed")
+    return _mock_food_result_with_debug(
+        destination,
+        days,
+        budget_level,
+        service_key,
+        area_code,
+        fallback_reason or "supplemental_empty",
+        last_error,
+    )
 
 
 if __name__ == "__main__":

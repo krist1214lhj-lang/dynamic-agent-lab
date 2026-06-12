@@ -1,10 +1,16 @@
 import importlib.util
 import json
+import os
 import re
 import sys
 import uuid
 from pathlib import Path
 from typing import Any
+
+from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env", override=True)
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
@@ -64,7 +70,6 @@ def external_agent_dir(path: str) -> Path:
     return Path("D:/") / path.removeprefix("/mnt/d/")
 
 
-BASE_DIR = Path(__file__).resolve().parent
 INTERNAL_AGENT_LIBRARY = BASE_DIR / "agents"
 EXTERNAL_AGENT_LIBRARY = external_agent_dir("/mnt/d/AI_AGENT_LIBRARY")
 
@@ -419,6 +424,10 @@ def health_endpoint() -> dict[str, Any]:
         "agent_source": "internal" if INTERNAL_AGENT_LIBRARY.exists() else "external_fallback",
         "agent_library_path": agent_library["library_path"],
         "available_agents": agent_library["available_count"],
+        "env_loaded": {
+            "KMA_SERVICE_KEY": bool(os.getenv("KMA_SERVICE_KEY")),
+            "TOUR_API_SERVICE_KEY": bool(os.getenv("TOUR_API_SERVICE_KEY")),
+        },
     }
 
 
