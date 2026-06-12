@@ -1,0 +1,137 @@
+{
+  "name": "travel_food_agent",
+  "description": "여행지 기준 맛집과 지역 음식을 추천하는 에이전트",
+  "role": "맛집 / 지역 음식 추천",
+  "inputs": [
+    "destination",
+    "location",
+    "days",
+    "budget_level",
+    "user_request"
+  ],
+  "outputs": [
+    "summary",
+    "food_items",
+    "food_findings",
+    "recommendations",
+    "debug_info"
+  ],
+  "data_sources": [
+    "tour_api",
+    "mock_fallback"
+  ],
+  "version": "0.1.0",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "destination": {
+        "type": "string",
+        "description": "Preferred travel destination."
+      },
+      "location": {
+        "type": "string",
+        "description": "Fallback travel location."
+      },
+      "days": {
+        "type": "integer",
+        "description": "Trip duration in days."
+      },
+      "budget_level": {
+        "type": "string",
+        "description": "Budget level such as low, medium, or high."
+      },
+      "user_request": {
+        "type": "string",
+        "description": "Original user travel request."
+      }
+    },
+    "additionalProperties": true
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "agent": {
+        "type": "string"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "destination": {
+        "type": "string"
+      },
+      "data_source": {
+        "type": "string",
+        "enum": ["tour_api", "mock_fallback"]
+      },
+      "food_items": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "address": {
+              "type": "string"
+            },
+            "category": {
+              "type": "string"
+            },
+            "menu_hint": {
+              "type": "string"
+            },
+            "meal_time": {
+              "type": "string"
+            },
+            "image": {
+              "type": "string"
+            },
+            "mapx": {
+              "type": "string"
+            },
+            "mapy": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "address",
+            "category",
+            "menu_hint",
+            "meal_time",
+            "image",
+            "mapx",
+            "mapy"
+          ]
+        }
+      },
+      "food_findings": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "recommendations": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "debug_info": {
+        "type": "object"
+      }
+    },
+    "required": [
+      "agent",
+      "summary",
+      "destination",
+      "data_source",
+      "food_items",
+      "food_findings",
+      "recommendations",
+      "debug_info"
+    ]
+  },
+  "entrypoint": "main.py",
+  "function": "run"
+}

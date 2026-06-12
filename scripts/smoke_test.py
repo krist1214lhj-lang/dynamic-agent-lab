@@ -16,6 +16,7 @@ EXPECTED_AGENTS = {
     "travel_schedule_agent",
     "travel_weather_agent",
     "travel_tour_agent",
+    "travel_food_agent",
     "travel_transport_agent",
 }
 
@@ -195,6 +196,43 @@ def test_jeju_transport():
     )
 
 
+def test_jeju_food():
+    payload = {
+        "user_request": "",
+        "destination": "제주",
+        "location": "제주",
+        "origin": "서울",
+        "days": 3,
+        "budget_level": "low",
+        "requested_features": ["food"],
+    }
+    data = request_json("POST", "/run-workflow", payload)
+    food_result = find_agent_result(data, "travel_food_agent")
+    routing_debug = data.get("routing_debug") or {}
+
+    assert_true(
+        "travel_food_agent" in data.get("selected_agents", []),
+        "selected_agents에 travel_food_agent가 없습니다.",
+    )
+    assert_true(
+        any(agent.get("name") == "travel_food_agent" for agent in data.get("loaded_agents", [])),
+        "loaded_agents에 travel_food_agent가 없습니다.",
+    )
+    assert_true(food_result is not None, "travel_food_agent 결과가 없습니다.")
+    assert_true(
+        data.get("input_data_summary", {}).get("destination") == "제주",
+        "input_data_summary.destination이 제주가 아닙니다.",
+    )
+
+    food_items = food_result.get("food_items") or []
+    assert_true(food_items, "food_items가 없습니다.")
+    assert_true(len(food_items) >= 3, "food_items가 3개보다 작습니다.")
+    assert_true(
+        "travel_food_agent" in (routing_debug.get("selected_agents_from_features") or []),
+        "routing_debug.selected_agents_from_features에 travel_food_agent가 없습니다.",
+    )
+
+
 def test_busan_full_workflow():
     payload = {
         "user_request": "",
@@ -259,6 +297,7 @@ def main():
         ("agent library", test_agent_library),
         ("jeju weather", test_jeju_weather),
         ("jeju transport", test_jeju_transport),
+        ("jeju food", test_jeju_food),
         ("busan full workflow", test_busan_full_workflow),
     ]
 

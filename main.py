@@ -9,7 +9,7 @@ from typing import Any
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from validators.travel_validator import validate_and_correct
 
@@ -25,13 +25,14 @@ class WorkflowRequest(BaseModel):
     origin: str | None = None
     days: int | None = None
     budget_level: str | None = None
-    requested_features: list[str] = []
+    requested_features: list[str] = Field(default_factory=list)
 
 
 class WorkflowResponse(BaseModel):
     user_request: str
     input_data: dict[str, Any]
     input_data_summary: dict[str, Any]
+    routing_debug: dict[str, Any]
     selected_agents: list[str]
     loaded_agents: list[dict[str, Any]]
     agent_results: list[dict[str, Any]]
@@ -83,6 +84,7 @@ ROUTING_RULES: dict[str, list[str]] = {
     "travel_schedule_agent": ["일정", "코스", "몇박", "2박", "3일", "계획"],
     "travel_weather_agent": ["날씨", "기온", "비", "우산", "강수", "흐림", "맑음"],
     "travel_tour_agent": ["관광지", "명소", "볼거리", "행사", "축제", "숙박", "호텔", "사진", "투어"],
+    "travel_food_agent": ["맛집", "음식", "식당", "먹거리", "로컬푸드", "향토음식", "점심", "저녁"],
     "travel_transport_agent": ["교통", "이동", "지하철", "버스", "택시", "기차", "KTX", "공항", "노선", "동선"],
 }
 
@@ -92,6 +94,7 @@ FEATURE_AGENT_MAP: dict[str, str] = {
     "schedule": "travel_schedule_agent",
     "weather": "travel_weather_agent",
     "tour": "travel_tour_agent",
+    "food": "travel_food_agent",
     "transport": "travel_transport_agent",
 }
 
@@ -112,10 +115,19 @@ def select_agents(user_request: str) -> list[str]:
 def select_agents_from_features(requested_features: list[str]) -> list[str]:
     selected_agents = []
     for feature in requested_features:
-        agent_name = FEATURE_AGENT_MAP.get(feature)
+        normalized_feature = str(feature).strip().lower()
+        agent_name = FEATURE_AGENT_MAP.get(normalized_feature)
         if agent_name and agent_name not in selected_agents:
             selected_agents.append(agent_name)
     return selected_agents
+
+
+def normalize_requested_features(requested_features: list[str]) -> list[str]:
+    return [
+        str(feature).strip().lower()
+        for feature in requested_features
+        if str(feature).strip()
+    ]
 
 
 def extract_destination(user_request: str) -> str:
@@ -317,12 +329,12 @@ def run_workflow(payload: WorkflowRequest | str) -> dict[str, Any]:
         workflow_request = payload
 
     user_request = workflow_request.user_request
-    selected_agents = (
-        select_agents_from_features(workflow_request.requested_features)
-        if workflow_request.requested_features
-        else select_agents(user_request)
-    )
-    if not selected_agents:
+    requested_features = normalize_requested_features(workflow_request.requested_features)
+    routing_mode = "requested_features" if requested_features else "keyword_router"
+    selected_agents_from_features = select_agents_from_features(requested_features) if requested_features else []
+    if requested_features:
+        selected_agents = selected_agents_from_features if selected_agents_from_features else ["travel_destination_agent"]
+    else:
         selected_agents = select_agents(user_request)
 
     input_data = build_input_data(workflow_request)
@@ -333,6 +345,12 @@ def run_workflow(payload: WorkflowRequest | str) -> dict[str, Any]:
         "days": input_data["days"],
         "budget_level": input_data["budget_level"],
         "requested_features": input_data["requested_features"],
+    }
+    routing_debug = {
+        "routing_mode": routing_mode,
+        "requested_features": input_data["requested_features"],
+        "selected_agents_from_features": selected_agents_from_features,
+        "selected_agents_final": selected_agents,
     }
     loaded_agents: list[dict[str, Any]] = []
     agent_results: list[dict[str, Any]] = []
@@ -373,6 +391,7 @@ def run_workflow(payload: WorkflowRequest | str) -> dict[str, Any]:
         "user_request": user_request,
         "input_data": input_data,
         "input_data_summary": input_data_summary,
+        "routing_debug": routing_debug,
         "selected_agents": selected_agents,
         "loaded_agents": loaded_agents,
         "agent_results": agent_results,
