@@ -1,0 +1,118 @@
+{
+  "name": "travel_schedule_agent",
+  "description": "사용자의 여행 목적지와 기간을 바탕으로 일자별 여행 일정표를 mock JSON으로 반환하는 실험용 에이전트입니다.",
+  "role": "여행 일정표 생성",
+  "inputs": [
+    "destination",
+    "location",
+    "days",
+    "user_request"
+  ],
+  "outputs": [
+    "summary",
+    "schedule",
+    "daily_plan",
+    "debug_info"
+  ],
+  "data_sources": [
+    "mock_fallback"
+  ],
+  "version": "0.1.0",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "destination": {
+        "type": "string",
+        "description": "여행 목적지입니다."
+      },
+      "days": {
+        "type": "integer",
+        "description": "여행 일수입니다."
+      },
+      "travel_style": {
+        "type": "string",
+        "description": "여행 스타일입니다. 예: relaxed, active, family, culture"
+      },
+      "budget_level": {
+        "type": "string",
+        "description": "예산 수준입니다. 예: low, medium, high"
+      },
+      "user_request": {
+        "type": "string",
+        "description": "사용자의 원문 여행 요청입니다."
+      }
+    },
+    "required": [
+      "user_request"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "agent": {
+        "type": "string"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "itinerary": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "day": {
+              "type": "integer"
+            },
+            "title": {
+              "type": "string"
+            },
+            "morning": {
+              "type": "string"
+            },
+            "afternoon": {
+              "type": "string"
+            },
+            "evening": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "day",
+            "title",
+            "morning",
+            "afternoon",
+            "evening"
+          ]
+        }
+      },
+      "schedule_tips": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "risks": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "next_agents": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": [
+      "agent",
+      "summary",
+      "itinerary",
+      "schedule_tips",
+      "risks",
+      "next_agents"
+    ]
+  },
+  "entrypoint": "main.py",
+  "function": "run"
+}

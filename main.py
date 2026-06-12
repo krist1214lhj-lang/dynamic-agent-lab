@@ -63,18 +63,19 @@ def external_agent_dir(path: str) -> Path:
     return Path("D:/") / path.removeprefix("/mnt/d/")
 
 
-AGENT_LIBRARY_PATH = "/mnt/d/AI_AGENT_LIBRARY"
-AGENT_LIBRARY_DIR = external_agent_dir(AGENT_LIBRARY_PATH)
+BASE_DIR = Path(__file__).resolve().parent
+INTERNAL_AGENT_LIBRARY = BASE_DIR / "agents"
+EXTERNAL_AGENT_LIBRARY = external_agent_dir("/mnt/d/AI_AGENT_LIBRARY")
 
 
-AGENT_DIRS: dict[str, Path] = {
-    "travel_destination_agent": AGENT_LIBRARY_DIR / "travel_destination_agent",
-    "travel_budget_agent": AGENT_LIBRARY_DIR / "travel_budget_agent",
-    "travel_schedule_agent": AGENT_LIBRARY_DIR / "travel_schedule_agent",
-    "travel_weather_agent": AGENT_LIBRARY_DIR / "travel_weather_agent",
-    "travel_tour_agent": AGENT_LIBRARY_DIR / "travel_tour_agent",
-    "travel_transport_agent": AGENT_LIBRARY_DIR / "travel_transport_agent",
-}
+AGENT_NAMES = [
+    "travel_destination_agent",
+    "travel_budget_agent",
+    "travel_schedule_agent",
+    "travel_weather_agent",
+    "travel_tour_agent",
+    "travel_transport_agent",
+]
 
 ROUTING_RULES: dict[str, list[str]] = {
     "travel_destination_agent": ["여행지", "추천", "도시", "어디"],
@@ -144,6 +145,39 @@ def extract_days(user_request: str) -> int:
     return 3
 
 
+def resolve_agent_dir(agent_name: str) -> Path:
+    internal_agent_dir = INTERNAL_AGENT_LIBRARY / agent_name
+    if internal_agent_dir.exists():
+        return internal_agent_dir
+    return EXTERNAL_AGENT_LIBRARY / agent_name
+
+
+def resolve_agent_source(agent_name: str) -> str:
+    internal_agent_dir = INTERNAL_AGENT_LIBRARY / agent_name
+    if internal_agent_dir.exists():
+        return "internal"
+    external_agent_dir_path = EXTERNAL_AGENT_LIBRARY / agent_name
+    if external_agent_dir_path.exists():
+        return "external"
+    return "internal" if INTERNAL_AGENT_LIBRARY.exists() else "external"
+
+
+def iter_agent_dirs():
+    seen: set[str] = set()
+    for source_name, root in [("internal", INTERNAL_AGENT_LIBRARY), ("external", EXTERNAL_AGENT_LIBRARY)]:
+        if not root.exists():
+            continue
+        for path in sorted(root.iterdir(), key=lambda item: item.name):
+            if (
+                path.is_dir()
+                and path.name.startswith("travel_")
+                and path.name.endswith("_agent")
+                and path.name not in seen
+            ):
+                seen.add(path.name)
+                yield path, source_name
+
+
 def build_input_data(payload: WorkflowRequest) -> dict[str, Any]:
     user_request = payload.user_request
     destination = payload.destination or extract_destination(user_request)
@@ -200,10 +234,10 @@ def _as_list(value: Any) -> list[Any]:
 
 
 def _display_agent_path(agent_dir: Path) -> str:
-    return f"{AGENT_LIBRARY_PATH}/{agent_dir.name}"
+    return str(agent_dir)
 
 
-def _agent_library_item(agent_dir: Path) -> dict[str, Any]:
+def _agent_library_item(agent_dir: Path, source: str) -> dict[str, Any]:
     agent_json_path = agent_dir / "agent.json"
     main_py_path = agent_dir / "main.py"
     readme_path = agent_dir / "README.md"
@@ -215,6 +249,7 @@ def _agent_library_item(agent_dir: Path) -> dict[str, Any]:
         "name": agent_dir.name,
         "status": "missing_files",
         "path": _display_agent_path(agent_dir),
+        "source": source,
         "has_agent_json": has_agent_json,
         "has_main_py": has_main_py,
         "has_readme": has_readme,
@@ -250,6 +285,7 @@ def _agent_library_item(agent_dir: Path) -> dict[str, Any]:
     item.update({
         "name": str(metadata.get("name") or agent_dir.name),
         "status": "available",
+        "source": source,
         "description": str(metadata.get("description") or ""),
         "role": str(metadata.get("role") or ""),
         "inputs": _as_list(metadata.get("inputs")),
@@ -260,19 +296,14 @@ def _agent_library_item(agent_dir: Path) -> dict[str, Any]:
 
 
 def get_agent_library() -> dict[str, Any]:
-    agent_dirs = sorted(
-        [
-            path for path in AGENT_LIBRARY_DIR.iterdir()
-            if path.is_dir()
-            and path.name.startswith("travel_")
-            and path.name.endswith("_agent")
-        ],
-        key=lambda path: path.name,
-    ) if AGENT_LIBRARY_DIR.exists() else []
-    agents = [_agent_library_item(agent_dir) for agent_dir in agent_dirs]
+    agents = [_agent_library_item(agent_dir, source) for agent_dir, source in iter_agent_dirs()]
+    source = "internal" if INTERNAL_AGENT_LIBRARY.exists() else "external"
+    library_path = str(INTERNAL_AGENT_LIBRARY if INTERNAL_AGENT_LIBRARY.exists() else EXTERNAL_AGENT_LIBRARY)
 
     return {
-        "library_path": AGENT_LIBRARY_PATH,
+        "library_path": library_path,
+        "source": source,
+        "library_mode": source,
         "total_agents": len(agents),
         "available_count": sum(1 for agent in agents if agent["status"] == "available"),
         "agents": agents,
@@ -307,14 +338,15 @@ def run_workflow(payload: WorkflowRequest | str) -> dict[str, Any]:
     agent_results: list[dict[str, Any]] = []
 
     for agent_name in selected_agents:
-        agent_dir = AGENT_DIRS[agent_name]
+        agent_dir = resolve_agent_dir(agent_name)
         try:
             metadata, run = load_agent(agent_dir / "agent.json")
             loaded_agents.append({
                 "name": metadata["name"],
                 "version": metadata["version"],
                 "entrypoint": metadata["entrypoint"],
-                "function": metadata["function"]
+                "function": metadata["function"],
+                "source": resolve_agent_source(agent_name),
             })
             agent_results.append(run(input_data))
         except Exception as exc:

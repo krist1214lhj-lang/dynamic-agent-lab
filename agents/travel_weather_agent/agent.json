@@ -1,0 +1,123 @@
+{
+  "name": "travel_weather_agent",
+  "description": "사용자의 여행 목적지와 기간을 바탕으로 기상청 API 또는 mock fallback 기반 날씨 정보를 반환하는 실험용 에이전트입니다.",
+  "role": "여행지 날씨 확인",
+  "inputs": [
+    "destination",
+    "location",
+    "days",
+    "user_request"
+  ],
+  "outputs": [
+    "summary",
+    "weather_summary",
+    "forecast",
+    "debug_info"
+  ],
+  "data_sources": [
+    "kma_api",
+    "mock_fallback"
+  ],
+  "version": "0.1.0",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "location": {
+        "type": "string",
+        "description": "날씨를 확인할 여행지입니다."
+      },
+      "period": {
+        "type": "string",
+        "description": "여행 기간입니다. 예: 2박 3일, 2026-07-01 to 2026-07-03"
+      },
+      "days": {
+        "type": "integer",
+        "description": "여행 일수입니다."
+      },
+      "season": {
+        "type": "string",
+        "description": "여행 계절입니다. 예: spring, summer, autumn, winter"
+      },
+      "user_request": {
+        "type": "string",
+        "description": "사용자의 원문 여행 요청입니다."
+      }
+    },
+    "required": [
+      "user_request"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "agent": {
+        "type": "string"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "weather": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string"
+          },
+          "period": {
+            "type": "string"
+          },
+          "temperature": {
+            "type": "string"
+          },
+          "condition": {
+            "type": "string"
+          },
+          "rain_probability": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "location",
+          "period",
+          "temperature",
+          "condition",
+          "rain_probability"
+        ]
+      },
+      "weather_findings": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "recommendations": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "risks": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "next_agents": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": [
+      "agent",
+      "summary",
+      "weather",
+      "weather_findings",
+      "recommendations",
+      "risks",
+      "next_agents"
+    ]
+  },
+  "entrypoint": "main.py",
+  "function": "run"
+}

@@ -16,6 +16,14 @@ The long-term goal is to evolve this project into a stable, deployable travel ag
 
 ## External Agent Library
 
+Primary agent library:
+
+```bash
+/mnt/d/CodexWork/test-01/dynamic-agent-lab/agents
+```
+
+Development fallback:
+
 ```bash
 /mnt/d/AI_AGENT_LIBRARY
 ```
@@ -46,6 +54,7 @@ The long-term goal is to evolve this project into a stable, deployable travel ag
 - If an external API fails, the app must not crash and the agent should return `mock_fallback`.
 - Full API keys must never be printed or written to logs.
 - Agents must prioritize `input_data.destination`, `input_data.location`, `input_data.origin`, `input_data.days`, and `input_data.budget_level`.
+- API keys and `.env` files must not be stored in the repository.
 
 ## `main.py` Responsibilities
 

@@ -1,0 +1,130 @@
+{
+  "name": "travel_transport_agent",
+  "description": "사용자의 출발지, 목적지, 여행 기간을 바탕으로 도시 간 이동과 현지 교통 계획을 mock JSON과 규칙 기반 검증에 맞춰 반환하는 실험용 에이전트입니다.",
+  "role": "도시 간 이동 / 현지 교통 계획",
+  "inputs": [
+    "origin",
+    "destination",
+    "location",
+    "days",
+    "user_request"
+  ],
+  "outputs": [
+    "summary",
+    "transport_overview",
+    "routes",
+    "transport_tips",
+    "debug_info"
+  ],
+  "data_sources": [
+    "mock_fallback",
+    "rule_based_validator"
+  ],
+  "version": "0.1.0",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "origin": {
+        "type": "string",
+        "description": "출발 도시 또는 지역"
+      },
+      "destination": {
+        "type": "string",
+        "description": "도착 도시 또는 여행 목적지"
+      },
+      "days": {
+        "type": "integer",
+        "description": "여행 일수"
+      },
+      "travel_style": {
+        "type": "string",
+        "description": "선호 이동 방식 또는 여행 스타일"
+      },
+      "user_request": {
+        "type": "string",
+        "description": "사용자의 원문 여행 요청"
+      }
+    },
+    "required": []
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "agent": {
+        "type": "string"
+      },
+      "data_source": {
+        "type": "string"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "transport_overview": {
+        "type": "object",
+        "properties": {
+          "origin": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "main_transport": {
+            "type": "string"
+          },
+          "local_transport": {
+            "type": "string"
+          },
+          "estimated_travel_time": {
+            "type": "string"
+          }
+        }
+      },
+      "routes": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string"
+            },
+            "from": {
+              "type": "string"
+            },
+            "to": {
+              "type": "string"
+            },
+            "method": {
+              "type": "string"
+            },
+            "estimated_time": {
+              "type": "string"
+            },
+            "notes": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "transport_tips": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "risks": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "next_agents": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "entrypoint": "main.py",
+  "function": "run"
+}

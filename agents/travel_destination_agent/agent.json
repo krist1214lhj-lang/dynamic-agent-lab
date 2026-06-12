@@ -1,0 +1,86 @@
+{
+  "name": "travel_destination_agent",
+  "description": "사용자의 여행 요청과 목적지 정보를 바탕으로 여행지 추천과 목적지 요약을 mock JSON으로 반환하는 실험용 에이전트입니다.",
+  "role": "여행지 추천 / 목적지 요약",
+  "inputs": [
+    "destination",
+    "location",
+    "days",
+    "user_request"
+  ],
+  "outputs": [
+    "summary",
+    "recommendations",
+    "debug_info"
+  ],
+  "data_sources": [
+    "mock_fallback"
+  ],
+  "version": "0.1.0",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "destination_type": {
+        "type": "string",
+        "description": "선호하는 여행 유형입니다. 예: beach, city, nature, culture"
+      },
+      "budget": {
+        "type": "string",
+        "description": "여행 예산 수준입니다. 예: low, medium, high"
+      },
+      "duration_days": {
+        "type": "integer",
+        "description": "여행 기간입니다."
+      },
+      "season": {
+        "type": "string",
+        "description": "여행 예정 계절입니다. 예: spring, summer, autumn, winter"
+      },
+      "traveler_count": {
+        "type": "integer",
+        "description": "여행 인원입니다."
+      }
+    },
+    "required": [
+      "destination_type"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "agent": {
+        "type": "string"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "recommendations": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        }
+      },
+      "reasons": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "next_agents": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": [
+      "agent",
+      "summary",
+      "recommendations",
+      "reasons",
+      "next_agents"
+    ]
+  },
+  "entrypoint": "main.py",
+  "function": "run"
+}

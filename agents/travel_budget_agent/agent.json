@@ -1,0 +1,117 @@
+{
+  "name": "travel_budget_agent",
+  "description": "사용자의 여행 목적지, 기간, 예산 수준을 바탕으로 예상 비용과 절약 팁을 mock JSON으로 반환하는 실험용 에이전트입니다.",
+  "role": "여행 예산 / 비용 계산",
+  "inputs": [
+    "destination",
+    "days",
+    "budget_level",
+    "user_request"
+  ],
+  "outputs": [
+    "summary",
+    "budget_items",
+    "saving_tips",
+    "debug_info"
+  ],
+  "data_sources": [
+    "mock_fallback"
+  ],
+  "version": "0.1.0",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "destination": {
+        "type": "string",
+        "description": "여행 목적지입니다."
+      },
+      "duration_days": {
+        "type": "integer",
+        "description": "여행 기간입니다."
+      },
+      "traveler_count": {
+        "type": "integer",
+        "description": "여행 인원입니다."
+      },
+      "budget_level": {
+        "type": "string",
+        "description": "예산 수준입니다. 예: low, medium, high"
+      },
+      "travel_style": {
+        "type": "string",
+        "description": "여행 스타일입니다. 예: backpacking, standard, luxury"
+      }
+    },
+    "required": [
+      "destination",
+      "duration_days",
+      "traveler_count"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "agent": {
+        "type": "string"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "estimated_budget": {
+        "type": "object",
+        "properties": {
+          "transportation": {
+            "type": "string"
+          },
+          "accommodation": {
+            "type": "string"
+          },
+          "food": {
+            "type": "string"
+          },
+          "activities": {
+            "type": "string"
+          },
+          "total": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "transportation",
+          "accommodation",
+          "food",
+          "activities",
+          "total"
+        ]
+      },
+      "saving_tips": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "risks": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "next_agents": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": [
+      "agent",
+      "summary",
+      "estimated_budget",
+      "saving_tips",
+      "risks",
+      "next_agents"
+    ]
+  },
+  "entrypoint": "main.py",
+  "function": "run"
+}

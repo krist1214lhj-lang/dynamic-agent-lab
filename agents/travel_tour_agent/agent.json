@@ -1,0 +1,130 @@
+{
+  "name": "travel_tour_agent",
+  "description": "사용자의 여행 목적지와 기간을 바탕으로 한국관광공사 TourAPI 또는 mock fallback 기반 관광지, 명소, 볼거리 후보를 반환하는 에이전트입니다.",
+  "role": "관광지 / 명소 / 볼거리 조회",
+  "inputs": [
+    "destination",
+    "location",
+    "days",
+    "user_request"
+  ],
+  "outputs": [
+    "summary",
+    "tour_items",
+    "recommendations",
+    "debug_info"
+  ],
+  "data_sources": [
+    "tour_api",
+    "mock_fallback"
+  ],
+  "version": "0.1.0",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "user_request": {
+        "type": "string",
+        "description": "Original user travel request."
+      },
+      "location": {
+        "type": "string",
+        "description": "Target travel location or destination."
+      },
+      "destination": {
+        "type": "string",
+        "description": "Alternative target travel location field."
+      },
+      "period": {
+        "type": "string",
+        "description": "Travel period text."
+      },
+      "days": {
+        "type": "integer",
+        "description": "Trip duration in days."
+      },
+      "category": {
+        "type": "string",
+        "description": "Preferred tour category such as attraction, event, lodging, food, or image."
+      }
+    },
+    "additionalProperties": true
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "agent": {
+        "type": "string"
+      },
+      "data_source": {
+        "type": "string",
+        "enum": ["mock_fallback", "tour_api"]
+      },
+      "summary": {
+        "type": "string"
+      },
+      "tour_items": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "addr": {
+              "type": "string"
+            },
+            "category": {
+              "type": "string"
+            },
+            "image": {
+              "type": "string"
+            },
+            "mapx": {
+              "type": "string"
+            },
+            "mapy": {
+              "type": "string"
+            }
+          },
+          "required": ["title", "addr", "category", "image", "mapx", "mapy"]
+        }
+      },
+      "tour_findings": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "recommendations": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "risks": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "next_agents": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": [
+      "agent",
+      "data_source",
+      "summary",
+      "tour_items",
+      "tour_findings",
+      "recommendations",
+      "risks",
+      "next_agents"
+    ]
+  },
+  "entrypoint": "main.py",
+  "function": "run"
+}
