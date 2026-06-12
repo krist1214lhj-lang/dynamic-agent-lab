@@ -27,6 +27,18 @@
   - busan full workflow: PASS
 - 결론: GitHub에서 새로 clone한 폴더에서도 내부 `agents/` 기준으로 기본 기능이 정상 작동한다.
 
+## Vercel Production 배포 성공
+
+- 배포 주소: `https://dynamic-agent-lab.vercel.app`
+- 확인 항목:
+  - `/health` PASS
+  - `/agent-library` PASS
+  - jeju weather PASS
+  - jeju transport PASS
+  - busan full workflow PASS
+- 결론: Vercel Production 환경에서도 내부 `agents/` 기준으로 앱이 정상 작동한다.
+- 참고: 실제 공공 API 키는 Vercel Environment Variables에서 관리한다. 키가 없거나 API 호출이 실패하면 `mock_fallback`으로 동작할 수 있다.
+
 ## 현재 정상 확인된 기능
 
 - `/agent-library` API가 6개 에이전트를 정상 반환한다.
