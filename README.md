@@ -73,6 +73,7 @@ http://localhost:8012
 ## API
 
 - `GET /`
+- `GET /health`
 - `POST /run-workflow`
 - `GET /agent-library`
 
@@ -89,6 +90,8 @@ python scripts\smoke_test.py
 ```bash
 python3 scripts/smoke_test.py
 ```
+
+`/health`는 배포 환경에서 서버 상태를 확인하는 용도이며, smoke test에서 자동으로 확인합니다.
 
 ## 환경변수 설정
 

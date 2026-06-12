@@ -2,12 +2,13 @@
 # python scripts/smoke_test.py
 
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
 
 
-BASE_URL = "http://localhost:8012"
+BASE_URL = os.environ.get("BASE_URL", "http://localhost:8012")
 
 EXPECTED_AGENTS = {
     "travel_destination_agent",
@@ -97,6 +98,16 @@ def test_agent_library():
     )
     missing = sorted(EXPECTED_AGENTS - agent_names)
     assert_true(not missing, f"누락된 에이전트: {', '.join(missing)}")
+
+
+def test_health():
+    data = request_json("GET", "/health")
+
+    assert_true(data.get("status") == "ok", "health status가 ok가 아닙니다.")
+    assert_true(
+        data.get("available_agents", 0) >= 6,
+        "available_agents가 6보다 작습니다.",
+    )
 
 
 def test_jeju_weather():
@@ -244,6 +255,7 @@ def run_test(name, test_func):
 
 def main():
     tests = [
+        ("health", test_health),
         ("agent library", test_agent_library),
         ("jeju weather", test_jeju_weather),
         ("jeju transport", test_jeju_transport),

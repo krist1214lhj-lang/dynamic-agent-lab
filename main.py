@@ -391,6 +391,18 @@ def agent_library_endpoint() -> dict[str, Any]:
     return get_agent_library()
 
 
+@app.get("/health")
+def health_endpoint() -> dict[str, Any]:
+    agent_library = get_agent_library()
+    return {
+        "status": "ok",
+        "app": "dynamic-agent-lab",
+        "agent_source": "internal" if INTERNAL_AGENT_LIBRARY.exists() else "external_fallback",
+        "agent_library_path": agent_library["library_path"],
+        "available_agents": agent_library["available_count"],
+    }
+
+
 @app.post("/run-workflow", response_model=WorkflowResponse)
 def run_workflow_endpoint(payload: WorkflowRequest) -> dict[str, Any]:
     return run_workflow(payload)
