@@ -127,6 +127,24 @@ uvicorn main:app --host 0.0.0.0 --port 8012 --reload --reload-dir /mnt/d/CodexWo
 - Requested information: 여행지 추천, 예산, 일정, 날씨, 관광지, 교통
 - Additional request may be blank and the workflow must still run.
 
+## Completion Verification
+
+- Any change is complete only after `scripts/verify_local_and_vercel.py` passes.
+- The script must compare the local app and the Vercel deployment before the task is considered done.
+- Use the default deployment URL or override it with `VERCEL_URL` / `--vercel-url` when needed.
+
+PowerShell:
+
+```powershell
+python scripts\verify_local_and_vercel.py
+```
+
+WSL/Linux:
+
+```bash
+python3 scripts/verify_local_and_vercel.py
+```
+
 ## Success Criteria
 
 - `selected_agents` includes `travel_destination_agent`, `travel_budget_agent`, `travel_schedule_agent`, `travel_weather_agent`, `travel_tour_agent`, and `travel_transport_agent`.
