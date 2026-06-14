@@ -531,7 +531,8 @@
         margin-top: 16px;
       }
 
-      .food-grid {
+      .food-grid,
+      .event-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 14px;
@@ -545,7 +546,8 @@
         background: #fbfcfe;
       }
 
-      .food-item {
+      .food-item,
+      .event-item {
         overflow: hidden;
         border: 1px solid #d9dee7;
         border-radius: 8px;
@@ -568,7 +570,9 @@
       }
 
       .food-image,
-      .food-image-empty {
+      .food-image-empty,
+      .event-image,
+      .event-image-empty {
         width: 100%;
         aspect-ratio: 16 / 9;
         display: grid;
@@ -578,7 +582,8 @@
         font-weight: 700;
       }
 
-      .food-image {
+      .food-image,
+      .event-image {
         object-fit: cover;
       }
 
@@ -588,7 +593,8 @@
         padding: 14px;
       }
 
-      .food-body {
+      .food-body,
+      .event-body {
         display: grid;
         gap: 8px;
         padding: 14px;
@@ -600,7 +606,8 @@
         line-height: 1.35;
       }
 
-      .food-title {
+      .food-title,
+      .event-title {
         margin: 0;
         font-size: 1rem;
         line-height: 1.35;
@@ -629,7 +636,8 @@
         margin: 0;
       }
 
-      .food-meta {
+      .food-meta,
+      .event-meta {
         display: grid;
         gap: 4px;
         margin: 0;
@@ -638,17 +646,20 @@
         line-height: 1.45;
       }
 
-      .food-meta div {
+      .food-meta div,
+      .event-meta div {
         display: grid;
         gap: 2px;
       }
 
-      .food-meta dt {
+      .food-meta dt,
+      .event-meta dt {
         font-weight: 800;
         color: #20242a;
       }
 
-      .food-meta dd {
+      .food-meta dd,
+      .event-meta dd {
         margin: 0;
       }
 
@@ -661,11 +672,13 @@
         font-size: 1rem;
       }
 
-      .food-section {
+      .food-section,
+      .event-section {
         margin-top: 18px;
       }
 
-      .food-section h3 {
+      .food-section h3,
+      .event-section h3 {
         margin: 0 0 8px;
         font-size: 1rem;
       }
@@ -1435,7 +1448,8 @@
         background: rgba(255, 255, 255, 0.05);
       }
 
-      .food-item {
+      .food-item,
+      .event-item {
         border-radius: 16px;
         background: rgba(255, 255, 255, 0.05);
       }
@@ -1447,7 +1461,9 @@
       }
 
       .food-image,
-      .food-image-empty {
+      .food-image-empty,
+      .event-image,
+      .event-image-empty {
         background: linear-gradient(135deg, rgba(120, 245, 209, 0.16), rgba(103, 183, 255, 0.16));
         color: #dfeafc;
       }
@@ -1456,7 +1472,8 @@
         padding: 14px;
       }
 
-      .food-body {
+      .food-body,
+      .event-body {
         padding: 14px;
       }
 
@@ -1549,7 +1566,8 @@
         .checkbox-grid,
         .library-grid,
         .tour-grid,
-        .food-grid {
+        .food-grid,
+        .event-grid {
           grid-template-columns: 1fr;
         }
 
@@ -1695,6 +1713,7 @@
                   <label><input type="checkbox" name="feature" value="destination" checked />여행지 추천</label>
                   <label><input type="checkbox" name="feature" value="budget" checked />예산</label>
                   <label><input type="checkbox" name="feature" value="food" checked />맛집</label>
+                  <label><input type="checkbox" name="feature" value="event" checked />행사/축제</label>
                   <label><input type="checkbox" name="feature" value="schedule" checked />일정</label>
                   <label><input type="checkbox" name="feature" value="weather" checked />날씨</label>
                   <label><input type="checkbox" name="feature" value="tour" checked />관광지</label>
@@ -1898,6 +1917,100 @@
             ${renderList("맛집 판단 내용", agentResult.food_findings)}
             ${renderList("추천 사항", agentResult.recommendations)}
             ${renderFoodDebug(agentResult.debug_info)}
+          </article>
+        `;
+      }
+
+      function renderEventItem(item) {
+        const image = item.image
+          ? `<img class="event-image" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name || "행사 이미지")}" loading="lazy" />`
+          : `<div class="event-image-empty">이미지 없음</div>`;
+
+        return `
+          <article class="event-item">
+            ${image}
+            <div class="event-body">
+              <h3 class="event-title">${escapeHtml(item.name || "제목 없음")}</h3>
+              <dl class="event-meta">
+                <div><dt>주소</dt><dd>${escapeHtml(item.address || "정보 없음")}</dd></div>
+                <div><dt>분류</dt><dd>${escapeHtml(item.category || "정보 없음")}</dd></div>
+                <div><dt>기간</dt><dd>${escapeHtml(item.event_period || "정보 없음")}</dd></div>
+                <div><dt>전화</dt><dd>${escapeHtml(item.tel || "정보 없음")}</dd></div>
+                <div><dt>좌표</dt><dd>${escapeHtml(item.mapx || "정보 없음")}, ${escapeHtml(item.mapy || "정보 없음")}</dd></div>
+                <div><dt>개요</dt><dd>${escapeHtml(item.overview_hint || "정보 없음")}</dd></div>
+              </dl>
+            </div>
+          </article>
+        `;
+      }
+
+      function renderEventDebug(debugInfo) {
+        if (!debugInfo || typeof debugInfo !== "object") {
+          return "";
+        }
+
+        const fields = [
+          ["destination", debugInfo.destination],
+          ["area_code", debugInfo.area_code],
+          ["content_type_id", debugInfo.content_type_id],
+          ["api_method_used", debugInfo.api_method_used],
+          ["data_source", debugInfo.data_source],
+          ["env_key_present", debugInfo.env_key_present],
+          ["env_key_valid", debugInfo.env_key_valid],
+          ["fallback_reason", debugInfo.fallback_reason],
+          ["last_error", debugInfo.last_error],
+        ];
+
+        return `
+          <details class="weather-debug">
+            <summary>debug_info</summary>
+            <dl>
+              ${fields.map(([label, value]) => `
+                <div>
+                  <dt>${escapeHtml(label)}</dt>
+                  <dd>${escapeHtml(value ?? "정보 없음")}</dd>
+                </div>
+              `).join("")}
+            </dl>
+          </details>
+        `;
+      }
+
+      function renderEventAgentCard(agentResult) {
+        const eventItems = Array.isArray(agentResult.event_items)
+          ? agentResult.event_items
+          : [];
+
+        return `
+          <article class="tour-card">
+            <h2>지역 문화축제 / 행사 추천</h2>
+            <p>${escapeHtml(agentResult.summary || "지역 문화축제와 행사 추천 결과입니다.")}</p>
+            <section class="tour-section">
+              <h3>기본 정보</h3>
+              <div class="debug-grid">
+                <div class="debug-item">
+                  <span class="debug-label">destination</span>
+                  <span class="debug-value">${escapeHtml(agentResult.destination || "정보 없음")}</span>
+                </div>
+                <div class="debug-item">
+                  <span class="debug-label">data_source</span>
+                  <span class="debug-value">${escapeHtml(agentResult.data_source || "정보 없음")}</span>
+                </div>
+              </div>
+            </section>
+            <section class="event-section">
+              <h3>행사/축제 후보</h3>
+              <div class="event-grid">
+                ${
+                  eventItems.length > 0
+                    ? eventItems.map(renderEventItem).join("")
+                    : `<article class="event-item"><div class="event-image-empty">행사 정보 없음</div></article>`
+                }
+              </div>
+            </section>
+            ${renderList("행사 판단 내용", agentResult.event_findings)}
+            ${renderList("추천 사항", agentResult.recommendations)}
+            ${renderEventDebug(agentResult.debug_info)}
           </article>
         `;
       }
@@ -2200,6 +2313,12 @@
         const selectedAgentsFromFeatures = Array.isArray(routingDebug.selected_agents_from_features)
           ? routingDebug.selected_agents_from_features
           : [];
+        const selectedAgentsFinal = Array.isArray(routingDebug.selected_agents_final)
+          ? routingDebug.selected_agents_final
+          : [];
+        const unknownFeatures = Array.isArray(routingDebug.unknown_features)
+          ? routingDebug.unknown_features
+          : [];
 
         return `
           <article class="routing-panel">
@@ -2225,6 +2344,26 @@
                   ${
                     selectedAgentsFromFeatures.length > 0
                       ? selectedAgentsFromFeatures.map((agent) => `<span class="routing-pill">${escapeHtml(agent)}</span>`).join("")
+                      : `<span class="routing-empty">없음</span>`
+                  }
+                </div>
+              </div>
+              <div class="routing-item">
+                <span class="routing-label">selected_agents_final</span>
+                <div class="routing-pills">
+                  ${
+                    selectedAgentsFinal.length > 0
+                      ? selectedAgentsFinal.map((agent) => `<span class="routing-pill">${escapeHtml(agent)}</span>`).join("")
+                      : `<span class="routing-empty">없음</span>`
+                  }
+                </div>
+              </div>
+              <div class="routing-item">
+                <span class="routing-label">unknown_features</span>
+                <div class="routing-pills">
+                  ${
+                    unknownFeatures.length > 0
+                      ? unknownFeatures.map((feature) => `<span class="routing-pill">${escapeHtml(feature)}</span>`).join("")
                       : `<span class="routing-empty">없음</span>`
                   }
                 </div>
@@ -2423,10 +2562,16 @@
       }
 
       function attachImageFallbacks() {
-        result.querySelectorAll(".tour-image").forEach((image) => {
+        result.querySelectorAll(".tour-image, .food-image, .event-image").forEach((image) => {
           image.addEventListener("error", () => {
             const fallback = document.createElement("div");
-            fallback.className = "tour-image-empty";
+            if (image.classList.contains("food-image")) {
+              fallback.className = "food-image-empty";
+            } else if (image.classList.contains("event-image")) {
+              fallback.className = "event-image-empty";
+            } else {
+              fallback.className = "tour-image-empty";
+            }
             fallback.textContent = "이미지 없음";
             image.replaceWith(fallback);
           }, { once: true });
@@ -2458,6 +2603,9 @@
           ? data.agent_results.map((agentResult) => {
               if (agentResult.agent === "travel_food_agent") {
                 return renderFoodAgentCard(agentResult);
+              }
+              if (agentResult.agent === "travel_event_agent") {
+                return renderEventAgentCard(agentResult);
               }
               if (agentResult.agent === "travel_weather_agent") {
                 return renderWeatherAgentCard(agentResult);

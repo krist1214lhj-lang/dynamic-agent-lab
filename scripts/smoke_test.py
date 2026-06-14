@@ -17,7 +17,19 @@ EXPECTED_AGENTS = {
     "travel_weather_agent",
     "travel_tour_agent",
     "travel_food_agent",
+    "travel_event_agent",
     "travel_transport_agent",
+}
+
+EXPECTED_FEATURE_MAP = {
+    "destination": "travel_destination_agent",
+    "budget": "travel_budget_agent",
+    "schedule": "travel_schedule_agent",
+    "weather": "travel_weather_agent",
+    "tour": "travel_tour_agent",
+    "transport": "travel_transport_agent",
+    "food": "travel_food_agent",
+    "event": "travel_event_agent",
 }
 
 
@@ -92,10 +104,13 @@ def test_agent_library():
     data = request_json("GET", "/agent-library")
     agent_names = {agent.get("name") for agent in data.get("agents", [])}
 
-    assert_true(data.get("total_agents", 0) >= 6, "total_agents가 6보다 작습니다.")
     assert_true(
-        data.get("available_count", 0) >= 6,
-        "available_count가 6보다 작습니다.",
+        data.get("total_agents", 0) >= len(EXPECTED_AGENTS),
+        f"total_agents가 {len(EXPECTED_AGENTS)}보다 작습니다.",
+    )
+    assert_true(
+        data.get("available_count", 0) >= len(EXPECTED_AGENTS),
+        f"available_count가 {len(EXPECTED_AGENTS)}보다 작습니다.",
     )
     missing = sorted(EXPECTED_AGENTS - agent_names)
     assert_true(not missing, f"누락된 에이전트: {', '.join(missing)}")
@@ -106,8 +121,24 @@ def test_health():
 
     assert_true(data.get("status") == "ok", "health status가 ok가 아닙니다.")
     assert_true(
-        data.get("available_agents", 0) >= 6,
-        "available_agents가 6보다 작습니다.",
+        data.get("available_agents", 0) >= len(EXPECTED_AGENTS),
+        f"available_agents가 {len(EXPECTED_AGENTS)}보다 작습니다.",
+    )
+
+
+def test_feature_map():
+    data = request_json("GET", "/feature-map")
+    features = data.get("features") or {}
+
+    for feature, expected_agent in EXPECTED_FEATURE_MAP.items():
+        assert_true(
+            features.get(feature) == expected_agent,
+            f"{feature} feature가 {expected_agent}로 매핑되지 않았습니다.",
+        )
+
+    assert_true(
+        data.get("feature_count", 0) >= len(EXPECTED_FEATURE_MAP),
+        f"feature_count가 {len(EXPECTED_FEATURE_MAP)}보다 작습니다.",
     )
 
 
@@ -233,6 +264,43 @@ def test_jeju_food():
     )
 
 
+def test_jeju_event():
+    payload = {
+        "user_request": "",
+        "destination": "제주",
+        "location": "제주",
+        "origin": "서울",
+        "days": 3,
+        "budget_level": "low",
+        "requested_features": ["event"],
+    }
+    data = request_json("POST", "/run-workflow", payload)
+    event_result = find_agent_result(data, "travel_event_agent")
+    routing_debug = data.get("routing_debug") or {}
+
+    assert_true(
+        "travel_event_agent" in data.get("selected_agents", []),
+        "selected_agents에 travel_event_agent가 없습니다.",
+    )
+    assert_true(
+        any(agent.get("name") == "travel_event_agent" for agent in data.get("loaded_agents", [])),
+        "loaded_agents에 travel_event_agent가 없습니다.",
+    )
+    assert_true(event_result is not None, "travel_event_agent 결과가 없습니다.")
+    assert_true(
+        data.get("input_data_summary", {}).get("destination") == "제주",
+        "input_data_summary.destination이 제주가 아닙니다.",
+    )
+
+    event_items = event_result.get("event_items") or []
+    assert_true(event_items, "event_items가 없습니다.")
+    assert_true(len(event_items) >= 3, "event_items가 3개보다 작습니다.")
+    assert_true(
+        "travel_event_agent" in (routing_debug.get("selected_agents_from_features") or []),
+        "routing_debug.selected_agents_from_features에 travel_event_agent가 없습니다.",
+    )
+
+
 def test_busan_full_workflow():
     payload = {
         "user_request": "",
@@ -295,9 +363,11 @@ def main():
     tests = [
         ("health", test_health),
         ("agent library", test_agent_library),
+        ("feature map", test_feature_map),
         ("jeju weather", test_jeju_weather),
         ("jeju transport", test_jeju_transport),
         ("jeju food", test_jeju_food),
+        ("jeju event", test_jeju_event),
         ("busan full workflow", test_busan_full_workflow),
     ]
 

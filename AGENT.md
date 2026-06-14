@@ -36,6 +36,8 @@ Development fallback:
 - `travel_weather_agent`
 - `travel_tour_agent`
 - `travel_transport_agent`
+- `travel_food_agent`
+- `travel_event_agent`
 
 ## Agent Roles
 
@@ -45,6 +47,8 @@ Development fallback:
 - `travel_weather_agent`: weather from KMA API or `mock_fallback`
 - `travel_tour_agent`: tour attractions from Korea Tourism Organization TourAPI or `mock_fallback`
 - `travel_transport_agent`: transport and route planning
+- `travel_food_agent`: restaurants and local food recommendations from TourAPI or `mock_fallback`
+- `travel_event_agent`: regional festivals and cultural events from TourAPI or `mock_fallback`
 
 ## External Agent Rules
 
@@ -92,6 +96,20 @@ Development fallback:
 - Preserve existing behavior unless the task explicitly changes it.
 - Public API failures must not crash the app.
 - After testing, summarize changed files and test results.
+
+## New Feature Checklist
+
+When adding a new requested feature, always check these five places together:
+
+1. Create or update `agents/<new_agent>`.
+2. Add the feature key to `main.py` `FEATURE_AGENT_MAP`.
+3. Add the matching checkbox `value` to `static/index.html`.
+4. Add or update the result card renderer in `static/index.html`.
+5. Add a standalone feature test to `scripts/smoke_test.py`.
+
+Do not add only a UI checkbox while omitting `main.py` `FEATURE_AGENT_MAP`.
+Do not treat a request as successful if `requested_features` is present but `selected_agents` is empty and falls back to `travel_destination_agent`.
+Every new feature must pass a standalone smoke test before the feature is considered complete.
 
 ## Server Command
 

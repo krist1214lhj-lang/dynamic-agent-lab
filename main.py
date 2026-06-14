@@ -80,6 +80,8 @@ AGENT_NAMES = [
     "travel_schedule_agent",
     "travel_weather_agent",
     "travel_tour_agent",
+    "travel_food_agent",
+    "travel_event_agent",
     "travel_transport_agent",
 ]
 
@@ -90,6 +92,7 @@ ROUTING_RULES: dict[str, list[str]] = {
     "travel_weather_agent": ["날씨", "기온", "비", "우산", "강수", "흐림", "맑음"],
     "travel_tour_agent": ["관광지", "명소", "볼거리", "행사", "축제", "숙박", "호텔", "사진", "투어"],
     "travel_food_agent": ["맛집", "음식", "식당", "먹거리", "로컬푸드", "향토음식", "점심", "저녁"],
+    "travel_event_agent": ["축제", "행사", "이벤트", "공연", "문화행사", "페스티벌", "전시", "체험", "버스킹"],
     "travel_transport_agent": ["교통", "이동", "지하철", "버스", "택시", "기차", "KTX", "공항", "노선", "동선"],
 }
 
@@ -99,8 +102,9 @@ FEATURE_AGENT_MAP: dict[str, str] = {
     "schedule": "travel_schedule_agent",
     "weather": "travel_weather_agent",
     "tour": "travel_tour_agent",
-    "food": "travel_food_agent",
     "transport": "travel_transport_agent",
+    "food": "travel_food_agent",
+    "event": "travel_event_agent",
 }
 
 
@@ -120,11 +124,18 @@ def select_agents(user_request: str) -> list[str]:
 def select_agents_from_features(requested_features: list[str]) -> list[str]:
     selected_agents = []
     for feature in requested_features:
-        normalized_feature = str(feature).strip().lower()
-        agent_name = FEATURE_AGENT_MAP.get(normalized_feature)
+        agent_name = FEATURE_AGENT_MAP.get(feature)
         if agent_name and agent_name not in selected_agents:
             selected_agents.append(agent_name)
     return selected_agents
+
+
+def find_unknown_features(requested_features: list[str]) -> list[str]:
+    return [
+        feature
+        for feature in requested_features
+        if feature not in FEATURE_AGENT_MAP
+    ]
 
 
 def normalize_requested_features(requested_features: list[str]) -> list[str]:
@@ -337,12 +348,14 @@ def run_workflow(payload: WorkflowRequest | str) -> dict[str, Any]:
     requested_features = normalize_requested_features(workflow_request.requested_features)
     routing_mode = "requested_features" if requested_features else "keyword_router"
     selected_agents_from_features = select_agents_from_features(requested_features) if requested_features else []
+    unknown_features = find_unknown_features(requested_features) if requested_features else []
     if requested_features:
         selected_agents = selected_agents_from_features if selected_agents_from_features else ["travel_destination_agent"]
     else:
         selected_agents = select_agents(user_request)
 
     input_data = build_input_data(workflow_request)
+    input_data["requested_features"] = requested_features
     input_data_summary = {
         "destination": input_data["destination"],
         "location": input_data["location"],
@@ -356,6 +369,7 @@ def run_workflow(payload: WorkflowRequest | str) -> dict[str, Any]:
         "requested_features": input_data["requested_features"],
         "selected_agents_from_features": selected_agents_from_features,
         "selected_agents_final": selected_agents,
+        "unknown_features": unknown_features,
     }
     loaded_agents: list[dict[str, Any]] = []
     agent_results: list[dict[str, Any]] = []
@@ -413,6 +427,14 @@ def read_index() -> FileResponse:
 @app.get("/agent-library")
 def agent_library_endpoint() -> dict[str, Any]:
     return get_agent_library()
+
+
+@app.get("/feature-map")
+def feature_map_endpoint() -> dict[str, Any]:
+    return {
+        "features": FEATURE_AGENT_MAP,
+        "feature_count": len(FEATURE_AGENT_MAP),
+    }
 
 
 @app.get("/health")
