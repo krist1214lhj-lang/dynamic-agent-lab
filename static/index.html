@@ -1382,6 +1382,23 @@
         gap: 14px;
       }
 
+      .detail-plan-section,
+      .detail-plan-list {
+        display: grid;
+        gap: 14px;
+      }
+
+      .result-section-heading {
+        margin: 2px 0 0;
+      }
+
+      .result-section-heading h2 {
+        margin: 0;
+        color: #f6fbff;
+        font-size: 1.22rem;
+        line-height: 1.3;
+      }
+
       .summary-card {
         border-radius: 20px;
         padding: 20px 22px;
@@ -1872,6 +1889,15 @@
         </section>
 
         <section class="result-panel glass-panel" aria-label="results">
+          <section class="output" aria-live="polite">
+            <div id="status" class="status"></div>
+            <div id="result" class="result-view">
+              <details class="raw-response">
+                <summary>raw_response</summary>
+                <pre>{}</pre>
+              </details>
+            </div>
+          </section>
           <section class="saved-plans-panel" aria-label="saved travel plans">
             <div class="saved-plans-header">
               <div>
@@ -1886,15 +1912,6 @@
             </div>
             <div id="saved-plan-message" class="saved-plan-message" aria-live="polite"></div>
             <div id="saved-plan-list" class="saved-plan-list"></div>
-          </section>
-          <section class="output" aria-live="polite">
-            <div id="status" class="status"></div>
-            <div id="result" class="result-view">
-              <details class="raw-response">
-                <summary>raw_response</summary>
-                <pre>{}</pre>
-              </details>
-            </div>
           </section>
         </section>
       </section>
@@ -2438,6 +2455,28 @@
             <p>${escapeHtml(agentResult.summary || "에이전트 결과입니다.")}</p>
           </article>
         `;
+      }
+
+      function renderDetailAgentCard(agentResult) {
+        if (agentResult.agent === "travel_schedule_agent") {
+          return renderScheduleAgentCard(agentResult);
+        }
+        if (agentResult.agent === "travel_food_agent") {
+          return renderFoodAgentCard(agentResult);
+        }
+        if (agentResult.agent === "travel_event_agent") {
+          return renderEventAgentCard(agentResult);
+        }
+        if (agentResult.agent === "travel_weather_agent") {
+          return renderWeatherAgentCard(agentResult);
+        }
+        if (agentResult.agent === "travel_tour_agent") {
+          return renderTourAgentCard(agentResult);
+        }
+        if (agentResult.agent === "travel_transport_agent") {
+          return renderTransportAgentCard(agentResult);
+        }
+        return renderGenericAgentCard(agentResult);
       }
 
       function renderExecutionFlow(data) {
@@ -3060,39 +3099,46 @@
           currentWorkflowResult = data;
         }
 
-        const agentCards = Array.isArray(data.agent_results)
-          ? data.agent_results.map((agentResult) => {
-              if (agentResult.agent === "travel_planning_agent") {
-                return renderPlanningAgentCard(agentResult);
-              }
-              if (agentResult.agent === "travel_schedule_agent") {
-                return renderScheduleAgentCard(agentResult);
-              }
-              if (agentResult.agent === "travel_food_agent") {
-                return renderFoodAgentCard(agentResult);
-              }
-              if (agentResult.agent === "travel_event_agent") {
-                return renderEventAgentCard(agentResult);
-              }
-              if (agentResult.agent === "travel_weather_agent") {
-                return renderWeatherAgentCard(agentResult);
-              }
-              if (agentResult.agent === "travel_tour_agent") {
-                return renderTourAgentCard(agentResult);
-              }
-              if (agentResult.agent === "travel_transport_agent") {
-                return renderTransportAgentCard(agentResult);
-              }
-              return renderGenericAgentCard(agentResult);
-            }).join("")
+        const agentResults = Array.isArray(data.agent_results)
+          ? data.agent_results
+          : [];
+        const planningResult = agentResults.find(
+          (agentResult) => agentResult.agent === "travel_planning_agent"
+        );
+        const detailAgentOrder = [
+          "travel_schedule_agent",
+          "travel_transport_agent",
+          "travel_weather_agent",
+          "travel_food_agent",
+          "travel_event_agent",
+          "travel_tour_agent",
+          "travel_budget_agent",
+          "travel_destination_agent",
+        ];
+        const detailCards = detailAgentOrder
+          .map((agentName) => agentResults.find((agentResult) => agentResult.agent === agentName))
+          .filter(Boolean)
+          .map(renderDetailAgentCard)
+          .join("");
+        const planningCard = planningResult
+          ? renderPlanningAgentCard(planningResult)
           : "";
 
         result.innerHTML = `
           <section class="summary-card">${escapeHtml(data.final_summary || "")}</section>
+          ${planningCard}
+          <section class="detail-plan-section">
+            <div class="section-heading result-section-heading">
+              <p class="section-kicker">Agent Details</p>
+              <h2>세부 여행계획</h2>
+            </div>
+            <div class="detail-plan-list">
+              ${detailCards || `<article class="agent-card"><h2>세부 여행계획</h2><p>세부 에이전트 결과가 없습니다.</p></article>`}
+            </div>
+          </section>
           ${renderExecutionFlow(data)}
           ${renderValidationReport(data.validation_report)}
           ${renderDebugPanel(data)}
-          ${agentCards}
           <details class="raw-response">
             <summary>raw_response</summary>
             <pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>
