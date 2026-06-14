@@ -115,7 +115,7 @@ Every new feature must pass a standalone smoke test before the feature is consid
 
 ```bash
 cd /mnt/d/CodexWork/test-01/dynamic-agent-lab
-uvicorn main:app --host 0.0.0.0 --port 8012 --reload --reload-dir /mnt/d/CodexWork/test-01/dynamic-agent-lab --reload-dir /mnt/d/AI_AGENT_LIBRARY
+uvicorn main:app --host 0.0.0.0 --port 8013 --reload --reload-dir /mnt/d/CodexWork/test-01/dynamic-agent-lab --reload-dir /mnt/d/AI_AGENT_LIBRARY
 ```
 
 ## Test Conditions
@@ -131,7 +131,9 @@ uvicorn main:app --host 0.0.0.0 --port 8012 --reload --reload-dir /mnt/d/CodexWo
 
 - Any change is complete only after `scripts/verify_local_and_vercel.py` passes.
 - The script must compare the local app and the Vercel deployment before the task is considered done.
+- The default local URL is `http://127.0.0.1:8013`.
 - Use the default deployment URL or override it with `VERCEL_URL` / `--vercel-url` when needed.
+- Override the local URL with `LOCAL_URL` / `--local-url` when a different port is required.
 
 PowerShell:
 

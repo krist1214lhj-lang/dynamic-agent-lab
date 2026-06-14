@@ -22,7 +22,7 @@ from typing import Any
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_LOCAL_URL = "http://127.0.0.1:8012"
+DEFAULT_LOCAL_URL = "http://127.0.0.1:8013"
 DEFAULT_VERCEL_URL = "https://dynamic-agent-lab.vercel.app"
 REQUEST_TIMEOUT_SECONDS = 45
 
