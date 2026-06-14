@@ -75,6 +75,7 @@ EXTERNAL_AGENT_LIBRARY = external_agent_dir("/mnt/d/AI_AGENT_LIBRARY")
 
 
 AGENT_NAMES = [
+    "travel_planning_agent",
     "travel_destination_agent",
     "travel_budget_agent",
     "travel_schedule_agent",
@@ -86,6 +87,7 @@ AGENT_NAMES = [
 ]
 
 ROUTING_RULES: dict[str, list[str]] = {
+    "travel_planning_agent": ["전체 계획", "여행계획", "전략", "총괄", "당일치기"],
     "travel_destination_agent": ["여행지", "추천", "도시", "어디"],
     "travel_budget_agent": ["예산", "비용", "돈", "저렴"],
     "travel_schedule_agent": ["일정", "코스", "몇박", "2박", "3일", "계획"],
@@ -105,7 +107,11 @@ FEATURE_AGENT_MAP: dict[str, str] = {
     "transport": "travel_transport_agent",
     "food": "travel_food_agent",
     "event": "travel_event_agent",
+    "planning": "travel_planning_agent",
 }
+
+DEFAULT_AGENT = "travel_destination_agent"
+PLANNING_AGENT = "travel_planning_agent"
 
 
 def select_agents(user_request: str) -> list[str]:
@@ -116,9 +122,26 @@ def select_agents(user_request: str) -> list[str]:
     ]
 
     if not selected_agents:
-        selected_agents.append("travel_destination_agent")
+        selected_agents.append(DEFAULT_AGENT)
 
     return selected_agents
+
+
+def include_planning_agent(selected_agents: list[str]) -> tuple[list[str], list[str]]:
+    without_duplicates = []
+    for agent_name in selected_agents:
+        if agent_name not in without_duplicates:
+            without_duplicates.append(agent_name)
+
+    if PLANNING_AGENT in without_duplicates:
+        final_agents = [PLANNING_AGENT] + [
+            agent_name
+            for agent_name in without_duplicates
+            if agent_name != PLANNING_AGENT
+        ]
+        return final_agents, []
+
+    return [PLANNING_AGENT, *without_duplicates], [PLANNING_AGENT]
 
 
 def select_agents_from_features(requested_features: list[str]) -> list[str]:
@@ -350,9 +373,10 @@ def run_workflow(payload: WorkflowRequest | str) -> dict[str, Any]:
     selected_agents_from_features = select_agents_from_features(requested_features) if requested_features else []
     unknown_features = find_unknown_features(requested_features) if requested_features else []
     if requested_features:
-        selected_agents = selected_agents_from_features if selected_agents_from_features else ["travel_destination_agent"]
+        base_selected_agents = selected_agents_from_features if selected_agents_from_features else [DEFAULT_AGENT]
     else:
-        selected_agents = select_agents(user_request)
+        base_selected_agents = select_agents(user_request)
+    selected_agents, auto_included_agents = include_planning_agent(base_selected_agents)
 
     input_data = build_input_data(workflow_request)
     input_data["requested_features"] = requested_features
@@ -368,6 +392,7 @@ def run_workflow(payload: WorkflowRequest | str) -> dict[str, Any]:
         "routing_mode": routing_mode,
         "requested_features": input_data["requested_features"],
         "selected_agents_from_features": selected_agents_from_features,
+        "auto_included_agents": auto_included_agents,
         "selected_agents_final": selected_agents,
         "unknown_features": unknown_features,
     }

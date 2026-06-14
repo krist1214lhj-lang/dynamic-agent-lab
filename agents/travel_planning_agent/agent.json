@@ -1,0 +1,42 @@
+{
+  "name": "travel_planning_agent",
+  "title": "전체 여행계획 총괄 에이전트",
+  "description": "여행기간, 출발지, 목적지, 예산, 요청 기능을 기준으로 전체 여행계획 전략과 에이전트 조합 방향을 제안합니다.",
+  "version": "1.0.0",
+  "category": "travel",
+  "role": "전체 여행계획 총괄",
+  "entrypoint": "main.py",
+  "function": "run",
+  "inputs": [
+    "destination",
+    "origin",
+    "days",
+    "budget_level",
+    "requested_features"
+  ],
+  "outputs": [
+    "planning_summary",
+    "duration_strategy",
+    "recommended_agent_mix",
+    "planning_rules",
+    "warnings"
+  ],
+  "data_sources": [
+    "local_duration_rules"
+  ],
+  "input_schema": {
+    "destination": "string",
+    "origin": "string",
+    "days": "number",
+    "budget_level": "string",
+    "requested_features": "array"
+  },
+  "output_schema": {
+    "agent": "string",
+    "planning_summary": "string",
+    "duration_strategy": "object",
+    "recommended_agent_mix": "array",
+    "planning_rules": "array",
+    "warnings": "array"
+  }
+}

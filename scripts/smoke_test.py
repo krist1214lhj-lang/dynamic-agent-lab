@@ -8,9 +8,10 @@ import urllib.error
 import urllib.request
 
 
-BASE_URL = os.environ.get("BASE_URL", "http://localhost:8012")
+BASE_URL = os.environ.get("BASE_URL", "http://localhost:8013")
 
 EXPECTED_AGENTS = {
+    "travel_planning_agent",
     "travel_destination_agent",
     "travel_budget_agent",
     "travel_schedule_agent",
@@ -30,6 +31,7 @@ EXPECTED_FEATURE_MAP = {
     "transport": "travel_transport_agent",
     "food": "travel_food_agent",
     "event": "travel_event_agent",
+    "planning": "travel_planning_agent",
 }
 
 
@@ -100,6 +102,20 @@ def assert_true(condition, reason):
         raise SmokeTestError(reason)
 
 
+def assert_planning_auto_included(data):
+    selected_agents = data.get("selected_agents", [])
+    loaded_agents = data.get("loaded_agents", [])
+
+    assert_true(
+        selected_agents and selected_agents[0] == "travel_planning_agent",
+        "selected_agents 첫 번째가 travel_planning_agent가 아닙니다.",
+    )
+    assert_true(
+        any(agent.get("name") == "travel_planning_agent" for agent in loaded_agents),
+        "loaded_agents에 travel_planning_agent가 없습니다.",
+    )
+
+
 def test_agent_library():
     data = request_json("GET", "/agent-library")
     agent_names = {agent.get("name") for agent in data.get("agents", [])}
@@ -154,6 +170,7 @@ def test_jeju_weather():
     }
     data = request_json("POST", "/run-workflow", payload)
     weather_result = find_agent_result(data, "travel_weather_agent")
+    assert_planning_auto_included(data)
 
     assert_true(
         "travel_weather_agent" in data.get("selected_agents", []),
@@ -195,6 +212,7 @@ def test_jeju_transport():
     }
     data = request_json("POST", "/run-workflow", payload)
     transport_result = find_agent_result(data, "travel_transport_agent")
+    assert_planning_auto_included(data)
 
     assert_true(
         "travel_transport_agent" in data.get("selected_agents", []),
@@ -240,6 +258,7 @@ def test_jeju_food():
     data = request_json("POST", "/run-workflow", payload)
     food_result = find_agent_result(data, "travel_food_agent")
     routing_debug = data.get("routing_debug") or {}
+    assert_planning_auto_included(data)
 
     assert_true(
         "travel_food_agent" in data.get("selected_agents", []),
@@ -262,6 +281,10 @@ def test_jeju_food():
         "travel_food_agent" in (routing_debug.get("selected_agents_from_features") or []),
         "routing_debug.selected_agents_from_features에 travel_food_agent가 없습니다.",
     )
+    assert_true(
+        "travel_planning_agent" in (routing_debug.get("auto_included_agents") or []),
+        "routing_debug.auto_included_agents에 travel_planning_agent가 없습니다.",
+    )
 
 
 def test_jeju_event():
@@ -277,6 +300,7 @@ def test_jeju_event():
     data = request_json("POST", "/run-workflow", payload)
     event_result = find_agent_result(data, "travel_event_agent")
     routing_debug = data.get("routing_debug") or {}
+    assert_planning_auto_included(data)
 
     assert_true(
         "travel_event_agent" in data.get("selected_agents", []),
@@ -299,6 +323,46 @@ def test_jeju_event():
         "travel_event_agent" in (routing_debug.get("selected_agents_from_features") or []),
         "routing_debug.selected_agents_from_features에 travel_event_agent가 없습니다.",
     )
+    assert_true(
+        "travel_planning_agent" in (routing_debug.get("auto_included_agents") or []),
+        "routing_debug.auto_included_agents에 travel_planning_agent가 없습니다.",
+    )
+
+
+def test_jeju_day_trip_planning():
+    payload = {
+        "user_request": "",
+        "destination": "제주",
+        "location": "제주",
+        "origin": "서울",
+        "days": 1,
+        "budget_level": "low",
+        "requested_features": ["schedule", "weather", "transport"],
+    }
+    data = request_json("POST", "/run-workflow", payload)
+    selected_agents = data.get("selected_agents", [])
+    planning_result = find_agent_result(data, "travel_planning_agent")
+    schedule_result = find_agent_result(data, "travel_schedule_agent")
+
+    assert_planning_auto_included(data)
+    assert_true("travel_schedule_agent" in selected_agents, "travel_schedule_agent가 선택되지 않았습니다.")
+    assert_true("travel_weather_agent" in selected_agents, "travel_weather_agent가 선택되지 않았습니다.")
+    assert_true("travel_transport_agent" in selected_agents, "travel_transport_agent가 선택되지 않았습니다.")
+    assert_true(
+        data.get("input_data_summary", {}).get("days") == 1,
+        "input_data_summary.days가 1이 아닙니다.",
+    )
+    assert_true(planning_result is not None, "travel_planning_agent 결과가 없습니다.")
+
+    planning_strategy = planning_result.get("duration_strategy") or {}
+    assert_true(planning_strategy.get("days") == 1, "planning duration_strategy.days가 1이 아닙니다.")
+    assert_true(planning_strategy.get("label") == "당일치기", "planning duration_strategy.label이 당일치기가 아닙니다.")
+    assert_true(planning_strategy.get("lodging_required") is False, "planning lodging_required가 false가 아닙니다.")
+
+    assert_true(schedule_result is not None, "travel_schedule_agent 결과가 없습니다.")
+    schedule_strategy = schedule_result.get("duration_strategy") or {}
+    assert_true(schedule_strategy, "travel_schedule_agent duration_strategy가 없습니다.")
+    assert_true(schedule_strategy.get("label") == "당일치기", "schedule duration_strategy.label이 당일치기가 아닙니다.")
 
 
 def test_busan_full_workflow():
@@ -323,8 +387,9 @@ def test_busan_full_workflow():
     agent_result_names = {
         result.get("agent") for result in data.get("agent_results", [])
     }
+    assert_planning_auto_included(data)
 
-    assert_true(len(selected_agents) >= 6, "selected_agents가 6개보다 작습니다.")
+    assert_true(len(selected_agents) >= 7, "selected_agents가 7개보다 작습니다.")
     assert_true(
         data.get("input_data_summary", {}).get("destination") == "부산",
         "input_data_summary.destination이 부산이 아닙니다.",
@@ -340,6 +405,10 @@ def test_busan_full_workflow():
     assert_true(
         "travel_transport_agent" in agent_result_names,
         "travel_transport_agent가 실행되지 않았습니다.",
+    )
+    assert_true(
+        "travel_planning_agent" in agent_result_names,
+        "travel_planning_agent가 실행되지 않았습니다.",
     )
 
 
@@ -368,6 +437,7 @@ def main():
         ("jeju transport", test_jeju_transport),
         ("jeju food", test_jeju_food),
         ("jeju event", test_jeju_event),
+        ("jeju day trip planning", test_jeju_day_trip_planning),
         ("busan full workflow", test_busan_full_workflow),
     ]
 

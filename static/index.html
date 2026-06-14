@@ -1116,6 +1116,9 @@
       textarea,
       select,
       .checkbox-grid label,
+      .saved-plans-panel,
+      .saved-plan-item,
+      .saved-plan-empty,
       .debug-item,
       .debug-agent,
       .library-agent-card,
@@ -1245,6 +1248,127 @@
       .output {
         margin-top: 0;
         gap: 16px;
+      }
+
+      .saved-plans-panel {
+        display: grid;
+        gap: 14px;
+        margin-bottom: 18px;
+        padding: 18px;
+        border-radius: 18px;
+      }
+
+      .saved-plans-header {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .saved-plans-header h2 {
+        margin: 0;
+        color: #f6fbff;
+        font-size: 1.14rem;
+        line-height: 1.3;
+      }
+
+      .saved-plan-count {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        margin-top: 8px;
+        border: 1px solid var(--line-strong);
+        border-radius: 999px;
+        padding: 0 10px;
+        color: #d7fff0;
+        background: rgba(120, 245, 209, 0.12);
+        font-size: 0.82rem;
+        font-weight: 900;
+      }
+
+      .saved-plan-controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .save-plan-button {
+        min-height: 50px;
+      }
+
+      .toggle-saved-plans-button {
+        min-height: 50px;
+        color: #eef8ff;
+        background: linear-gradient(135deg, rgba(103, 183, 255, 0.26), rgba(154, 123, 255, 0.34));
+      }
+
+      .saved-plan-message {
+        min-height: 22px;
+        color: #a9d5ff;
+        font-size: 0.92rem;
+        font-weight: 800;
+      }
+
+      .saved-plan-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .saved-plan-empty,
+      .saved-plan-item {
+        border-radius: 16px;
+        padding: 14px;
+      }
+
+      .saved-plan-empty {
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .saved-plan-item {
+        display: grid;
+        gap: 12px;
+      }
+
+      .saved-plan-main {
+        display: grid;
+        gap: 8px;
+      }
+
+      .saved-plan-title {
+        margin: 0;
+        color: #f6fbff;
+        font-size: 1rem;
+        line-height: 1.35;
+      }
+
+      .saved-plan-created {
+        color: var(--muted);
+        font-size: 0.84rem;
+        font-weight: 700;
+      }
+
+      .saved-plan-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .saved-plan-actions button {
+        width: auto;
+        min-height: 40px;
+        border-radius: 14px;
+        padding: 0 14px;
+        font-size: 0.9rem;
+      }
+
+      .saved-plan-load {
+        background: linear-gradient(135deg, var(--mint), var(--sky));
+      }
+
+      .saved-plan-delete {
+        color: #ffe8ef;
+        background: linear-gradient(135deg, #8c2448, #d84f78);
       }
 
       .status {
@@ -1577,6 +1701,17 @@
           padding: 16px;
         }
 
+        .saved-plans-header,
+        .saved-plan-controls,
+        .saved-plan-actions {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+
+        .saved-plan-actions button {
+          width: 100%;
+        }
+
         .summary-card,
         .flow-card,
         .validation-card,
@@ -1691,9 +1826,11 @@
                 <label for="duration-select">
                   기간
                   <select id="duration-select">
+                    <option value="1">당일치기</option>
                     <option value="2">1박 2일</option>
                     <option value="3" selected>2박 3일</option>
                     <option value="4">3박 4일</option>
+                    <option value="5">4박 5일</option>
                   </select>
                 </label>
 
@@ -1706,6 +1843,10 @@
                   </select>
                 </label>
               </div>
+
+              <p id="duration-guidance" class="saved-plan-message">
+                2박 3일 이상은 지역을 나누어 관광지, 맛집, 행사 일정을 균형 있게 배치합니다.
+              </p>
 
               <div class="checkbox-group">
                 <strong>필요한 정보</strong>
@@ -1731,6 +1872,21 @@
         </section>
 
         <section class="result-panel glass-panel" aria-label="results">
+          <section class="saved-plans-panel" aria-label="saved travel plans">
+            <div class="saved-plans-header">
+              <div>
+                <p class="section-kicker">Saved Plans</p>
+                <h2 id="saved-plan-heading">저장된 여행 플랜 · 0개 저장됨</h2>
+                <span id="saved-plan-count" class="saved-plan-count">0개 저장됨</span>
+              </div>
+            </div>
+            <div class="saved-plan-controls">
+              <button id="save-plan-button" class="save-plan-button" type="button">현재 플랜 저장</button>
+              <button id="toggle-saved-plans-button" class="toggle-saved-plans-button" type="button" aria-expanded="false" aria-controls="saved-plan-list">저장 목록 보기</button>
+            </div>
+            <div id="saved-plan-message" class="saved-plan-message" aria-live="polite"></div>
+            <div id="saved-plan-list" class="saved-plan-list"></div>
+          </section>
           <section class="output" aria-live="polite">
             <div id="status" class="status"></div>
             <div id="result" class="result-view">
@@ -1758,11 +1914,21 @@
       const destinationSelect = document.querySelector("#destination-select");
       const originSelect = document.querySelector("#origin-select");
       const durationSelect = document.querySelector("#duration-select");
+      const durationGuidance = document.querySelector("#duration-guidance");
       const budgetSelect = document.querySelector("#budget-select");
       const button = document.querySelector("#run-button");
       const status = document.querySelector("#status");
       const result = document.querySelector("#result");
+      const savePlanButton = document.querySelector("#save-plan-button");
+      const toggleSavedPlansButton = document.querySelector("#toggle-saved-plans-button");
+      const savedPlanHeading = document.querySelector("#saved-plan-heading");
+      const savedPlanCount = document.querySelector("#saved-plan-count");
+      const savedPlanMessage = document.querySelector("#saved-plan-message");
+      const savedPlanList = document.querySelector("#saved-plan-list");
       const agentLibraryContent = document.querySelector("#agent-library-content");
+      const savedPlansStorageKey = "saved_travel_plans";
+      let currentWorkflowResult = null;
+      let savedPlansExpanded = false;
 
       function escapeHtml(value) {
         return String(value ?? "")
@@ -2175,6 +2341,92 @@
             ${renderList("교통 팁", agentResult.transport_tips)}
             ${renderList("주의할 점", agentResult.risks)}
             ${renderList("다음에 연결 가능한 에이전트", agentResult.next_agents)}
+          </article>
+        `;
+      }
+
+      function yesNo(value) {
+        return value ? "있음" : "없음";
+      }
+
+      function renderDurationStrategy(strategy) {
+        if (!strategy || typeof strategy !== "object") {
+          return "";
+        }
+
+        const fields = [
+          ["기간", strategy.label],
+          ["속도", strategy.pace],
+          ["추천 관광지 수", strategy.recommended_tour_count],
+          ["추천 맛집 수", strategy.recommended_food_count],
+          ["추천 행사 수", strategy.recommended_event_count],
+          ["야간 일정", yesNo(strategy.night_schedule)],
+          ["숙박 필요", yesNo(strategy.lodging_required)],
+        ];
+
+        return `
+          <section class="tour-section">
+            <h3>여행기간 전략</h3>
+            <div class="debug-grid">
+              ${fields.map(([label, value]) => `
+                <div class="debug-item">
+                  <span class="debug-label">${escapeHtml(label)}</span>
+                  <span class="debug-value">${escapeHtml(value ?? "정보 없음")}</span>
+                </div>
+              `).join("")}
+            </div>
+          </section>
+        `;
+      }
+
+      function renderPlanningAgentCard(agentResult) {
+        return `
+          <article class="agent-card">
+            <h2>전체 여행계획 전략</h2>
+            <p>${escapeHtml(agentResult.planning_summary || agentResult.summary || "전체 여행계획 전략입니다.")}</p>
+            ${renderDurationStrategy(agentResult.duration_strategy)}
+            ${renderList("추천 에이전트 조합", agentResult.recommended_agent_mix)}
+            ${renderList("계획 규칙", agentResult.planning_rules)}
+            ${renderList("주의할 점", agentResult.warnings)}
+          </article>
+        `;
+      }
+
+      function renderScheduleDay(day) {
+        return `
+          <article class="route-card">
+            <h4>${escapeHtml(day.day || "")}일차 · ${escapeHtml(day.title || "일정")}</h4>
+            <dl class="route-meta">
+              <div><dt>오전</dt><dd>${escapeHtml(day.morning || "정보 없음")}</dd></div>
+              <div><dt>오후</dt><dd>${escapeHtml(day.afternoon || "정보 없음")}</dd></div>
+              <div><dt>저녁</dt><dd>${escapeHtml(day.evening || "정보 없음")}</dd></div>
+            </dl>
+          </article>
+        `;
+      }
+
+      function renderScheduleAgentCard(agentResult) {
+        const itinerary = Array.isArray(agentResult.itinerary)
+          ? agentResult.itinerary
+          : [];
+
+        return `
+          <article class="agent-card">
+            <h2>여행 일정</h2>
+            <p>${escapeHtml(agentResult.summary || "여행 일정 결과입니다.")}</p>
+            ${renderDurationStrategy(agentResult.duration_strategy)}
+            <section class="tour-section">
+              <h3>일정표</h3>
+              <div class="route-grid">
+                ${
+                  itinerary.length > 0
+                    ? itinerary.map(renderScheduleDay).join("")
+                    : `<p>일정 정보 없음</p>`
+                }
+              </div>
+            </section>
+            ${renderList("일정 팁", agentResult.schedule_tips)}
+            ${renderList("주의할 점", agentResult.risks)}
           </article>
         `;
       }
@@ -2598,9 +2850,224 @@
         };
       }
 
+      function readSavedPlans() {
+        try {
+          const rawPlans = localStorage.getItem(savedPlansStorageKey);
+          if (!rawPlans) {
+            return [];
+          }
+          const parsedPlans = JSON.parse(rawPlans);
+          return Array.isArray(parsedPlans) ? parsedPlans : [];
+        } catch (_error) {
+          return [];
+        }
+      }
+
+      function writeSavedPlans(plans) {
+        localStorage.setItem(savedPlansStorageKey, JSON.stringify(plans));
+      }
+
+      function showSavedPlanMessage(message) {
+        savedPlanMessage.textContent = message;
+      }
+
+      function durationLabel(days) {
+        const normalizedDays = Number(days);
+        if (normalizedDays === 1) {
+          return "당일치기";
+        }
+        if (normalizedDays === 2) {
+          return "1박 2일";
+        }
+        return `${normalizedDays - 1}박 ${normalizedDays}일`;
+      }
+
+      function durationGuidanceText(days) {
+        const normalizedDays = Number(days);
+        if (normalizedDays === 1) {
+          return "당일치기는 이동 부담을 줄이고 핵심 관광지와 식사 중심으로 계획합니다.";
+        }
+        if (normalizedDays === 2) {
+          return "1박 2일은 첫날 오후와 둘째 날 오전을 중심으로 여유 있게 구성합니다.";
+        }
+        return "2박 3일 이상은 지역을 나누어 관광지, 맛집, 행사 일정을 균형 있게 배치합니다.";
+      }
+
+      function updateDurationGuidance() {
+        durationGuidance.textContent = durationGuidanceText(durationSelect.value);
+      }
+
+      function getWorkflowSummary(data) {
+        const summary = data?.input_data_summary && typeof data.input_data_summary === "object"
+          ? data.input_data_summary
+          : {};
+        const inputData = data?.input_data && typeof data.input_data === "object"
+          ? data.input_data
+          : {};
+
+        return {
+          destination: summary.destination || inputData.destination || destinationSelect.value,
+          origin: summary.origin || inputData.origin || originSelect.value,
+          days: Number(summary.days || inputData.days || durationSelect.value),
+          budget_level: summary.budget_level || inputData.budget_level || budgetSelect.value,
+          requested_features: Array.isArray(summary.requested_features)
+            ? summary.requested_features
+            : Array.isArray(inputData.requested_features)
+              ? inputData.requested_features
+              : [],
+        };
+      }
+
+      function createSavedPlan(data) {
+        const summary = getWorkflowSummary(data);
+        const createdAt = new Date().toISOString();
+        const randomPart = Math.random().toString(36).slice(2, 10);
+
+        return {
+          id: `plan_${createdAt.replace(/[-:.TZ]/g, "")}_${randomPart}`,
+          title: `${summary.destination} ${durationLabel(summary.days)} ${summary.budget_level} 여행 플랜`,
+          destination: summary.destination,
+          origin: summary.origin,
+          days: summary.days,
+          budget_level: summary.budget_level,
+          requested_features: summary.requested_features,
+          created_at: createdAt,
+          result: data,
+        };
+      }
+
+      function formatCreatedAt(value) {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+          return value || "시간 정보 없음";
+        }
+        return date.toLocaleString("ko-KR", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      function setSelectValue(selectElement, value) {
+        const normalizedValue = String(value ?? "");
+        const hasOption = Array.from(selectElement.options).some((option) => option.value === normalizedValue);
+        if (hasOption) {
+          selectElement.value = normalizedValue;
+        }
+      }
+
+      function fillFormFromPlan(plan) {
+        const resultData = plan.result || {};
+        const summary = getWorkflowSummary(resultData);
+        const requestedFeatures = Array.isArray(plan.requested_features)
+          ? plan.requested_features
+          : summary.requested_features;
+
+        setSelectValue(destinationSelect, plan.destination || summary.destination);
+        setSelectValue(originSelect, plan.origin || summary.origin);
+        setSelectValue(durationSelect, plan.days || summary.days);
+        setSelectValue(budgetSelect, plan.budget_level || summary.budget_level);
+        textarea.value = resultData.user_request || resultData.input_data?.user_request || "";
+        updateDurationGuidance();
+
+        document.querySelectorAll('input[name="feature"]').forEach((checkbox) => {
+          checkbox.checked = requestedFeatures.includes(checkbox.value);
+        });
+      }
+
+      function savedPlanCountLabel(count) {
+        return `${count}개 저장됨`;
+      }
+
+      function renderSavedPlans() {
+        const plans = readSavedPlans();
+        const countLabel = savedPlanCountLabel(plans.length);
+
+        savedPlanHeading.textContent = `저장된 여행 플랜 · ${countLabel}`;
+        savedPlanCount.textContent = countLabel;
+        toggleSavedPlansButton.textContent = savedPlansExpanded ? "저장 목록 숨기기" : "저장 목록 보기";
+        toggleSavedPlansButton.setAttribute("aria-expanded", String(savedPlansExpanded));
+
+        if (!savedPlansExpanded) {
+          savedPlanList.innerHTML = "";
+          savedPlanList.hidden = true;
+          return;
+        }
+
+        savedPlanList.hidden = false;
+
+        if (plans.length === 0) {
+          savedPlanList.innerHTML = `<div class="saved-plan-empty">저장된 플랜이 없습니다.</div>`;
+          return;
+        }
+
+        savedPlanList.innerHTML = plans.map((plan) => `
+          <article class="saved-plan-item">
+            <div class="saved-plan-main">
+              <h3 class="saved-plan-title">${escapeHtml(plan.title || "여행 플랜")}</h3>
+              <span class="saved-plan-created">${escapeHtml(formatCreatedAt(plan.created_at))}</span>
+              ${renderFeatureBadges(plan.requested_features)}
+            </div>
+            <div class="saved-plan-actions">
+              <button class="saved-plan-load" type="button" data-plan-action="load" data-plan-id="${escapeHtml(plan.id)}">불러오기</button>
+              <button class="saved-plan-delete" type="button" data-plan-action="delete" data-plan-id="${escapeHtml(plan.id)}">삭제</button>
+            </div>
+          </article>
+        `).join("");
+      }
+
+      function saveCurrentPlan() {
+        if (!currentWorkflowResult) {
+          showSavedPlanMessage("먼저 여행 플랜을 실행해 주세요.");
+          return;
+        }
+
+        const plans = readSavedPlans();
+        const nextPlan = createSavedPlan(currentWorkflowResult);
+        plans.unshift(nextPlan);
+        writeSavedPlans(plans);
+        renderSavedPlans();
+        showSavedPlanMessage("현재 플랜을 저장했습니다.");
+      }
+
+      function loadSavedPlan(planId) {
+        const plan = readSavedPlans().find((item) => item.id === planId);
+        if (!plan || !plan.result) {
+          showSavedPlanMessage("저장된 플랜을 불러오지 못했습니다.");
+          renderSavedPlans();
+          return;
+        }
+
+        fillFormFromPlan(plan);
+        currentWorkflowResult = plan.result;
+        renderResult(plan.result);
+        status.textContent = "저장된 여행 플랜을 불러왔습니다.";
+        showSavedPlanMessage("저장된 플랜을 불러왔습니다.");
+      }
+
+      function deleteSavedPlan(planId) {
+        const plans = readSavedPlans();
+        const nextPlans = plans.filter((plan) => plan.id !== planId);
+        writeSavedPlans(nextPlans);
+        renderSavedPlans();
+        showSavedPlanMessage("저장된 플랜을 삭제했습니다.");
+      }
+
       function renderResult(data) {
+        if (data && Array.isArray(data.selected_agents) && data.input_data_summary) {
+          currentWorkflowResult = data;
+        }
+
         const agentCards = Array.isArray(data.agent_results)
           ? data.agent_results.map((agentResult) => {
+              if (agentResult.agent === "travel_planning_agent") {
+                return renderPlanningAgentCard(agentResult);
+              }
+              if (agentResult.agent === "travel_schedule_agent") {
+                return renderScheduleAgentCard(agentResult);
+              }
               if (agentResult.agent === "travel_food_agent") {
                 return renderFoodAgentCard(agentResult);
               }
@@ -2639,11 +3106,13 @@
 
         if (payload.requested_features.length === 0) {
           status.textContent = "필요한 정보를 하나 이상 선택해주세요.";
+          currentWorkflowResult = null;
           renderResult({ final_summary: "", agent_results: [] });
           return;
         }
 
         button.disabled = true;
+        currentWorkflowResult = null;
         status.textContent = "워크플로 실행 중...";
         console.log("request payload", payload);
 
@@ -2666,6 +3135,7 @@
           status.textContent = `${data.selected_agents.length}개 에이전트 실행 완료`;
         } catch (error) {
           status.textContent = "요청 처리 중 오류가 발생했습니다.";
+          currentWorkflowResult = null;
           result.innerHTML = `
             <details class="raw-response" open>
               <summary>raw_response</summary>
@@ -2677,6 +3147,36 @@
         }
       });
 
+      savePlanButton.addEventListener("click", saveCurrentPlan);
+
+      durationSelect.addEventListener("change", updateDurationGuidance);
+
+      toggleSavedPlansButton.addEventListener("click", () => {
+        savedPlansExpanded = !savedPlansExpanded;
+        renderSavedPlans();
+      });
+
+      savedPlanList.addEventListener("click", (event) => {
+        if (!(event.target instanceof Element)) {
+          return;
+        }
+
+        const actionButton = event.target.closest("button[data-plan-action]");
+        if (!actionButton) {
+          return;
+        }
+
+        const planId = actionButton.dataset.planId;
+        if (actionButton.dataset.planAction === "load") {
+          loadSavedPlan(planId);
+        }
+        if (actionButton.dataset.planAction === "delete") {
+          deleteSavedPlan(planId);
+        }
+      });
+
+      renderSavedPlans();
+      updateDurationGuidance();
       loadAgentLibrary();
     </script>
   </body>

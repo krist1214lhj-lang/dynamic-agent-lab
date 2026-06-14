@@ -32,6 +32,7 @@ Development fallback:
 
 - `travel_destination_agent`
 - `travel_budget_agent`
+- `travel_planning_agent`
 - `travel_schedule_agent`
 - `travel_weather_agent`
 - `travel_tour_agent`
@@ -43,6 +44,7 @@ Development fallback:
 
 - `travel_destination_agent`: travel destination recommendations and destination summaries
 - `travel_budget_agent`: budget, costs, and saving tips
+- `travel_planning_agent`: overall travel planning strategy based on duration, origin, destination, budget, and requested features
 - `travel_schedule_agent`: travel itinerary
 - `travel_weather_agent`: weather from KMA API or `mock_fallback`
 - `travel_tour_agent`: tour attractions from Korea Tourism Organization TourAPI or `mock_fallback`
@@ -149,7 +151,7 @@ python3 scripts/verify_local_and_vercel.py
 
 ## Success Criteria
 
-- `selected_agents` includes `travel_destination_agent`, `travel_budget_agent`, `travel_schedule_agent`, `travel_weather_agent`, `travel_tour_agent`, and `travel_transport_agent`.
+- `selected_agents` starts with `travel_planning_agent` and includes `travel_destination_agent`, `travel_budget_agent`, `travel_schedule_agent`, `travel_weather_agent`, `travel_tour_agent`, and `travel_transport_agent`.
 - `input_data_summary.destination` is `부산`.
 - `input_data_summary.days` is `3`.
 - `travel_weather_agent` returns weather based on `location`.

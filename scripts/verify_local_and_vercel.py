@@ -27,6 +27,7 @@ DEFAULT_VERCEL_URL = "https://dynamic-agent-lab.vercel.app"
 REQUEST_TIMEOUT_SECONDS = 45
 
 EXPECTED_AGENTS = {
+    "travel_planning_agent",
     "travel_destination_agent",
     "travel_budget_agent",
     "travel_schedule_agent",
@@ -46,6 +47,7 @@ EXPECTED_FEATURE_MAP = {
     "transport": "travel_transport_agent",
     "food": "travel_food_agent",
     "event": "travel_event_agent",
+    "planning": "travel_planning_agent",
 }
 
 
@@ -119,6 +121,20 @@ CASES = [
             "days": 3,
             "budget_level": "low",
             "requested_features": ["event"],
+        },
+    ),
+    Case(
+        "jeju day trip planning",
+        "POST",
+        "/run-workflow",
+        {
+            "user_request": "",
+            "destination": "제주",
+            "location": "제주",
+            "origin": "서울",
+            "days": 1,
+            "budget_level": "low",
+            "requested_features": ["schedule", "weather", "transport"],
         },
     ),
     Case(
@@ -342,6 +358,15 @@ def assert_workflow_contract(case: Case, label: str, data: dict[str, Any]) -> No
     selected_agents = data.get("selected_agents") or []
     loaded_agent_names = {agent.get("name") for agent in data.get("loaded_agents", [])}
 
+    assert_true(
+        selected_agents and selected_agents[0] == "travel_planning_agent",
+        f"{label} did not run travel_planning_agent first.",
+    )
+    assert_true(
+        "travel_planning_agent" in loaded_agent_names,
+        f"{label} did not load travel_planning_agent.",
+    )
+
     for expected_agent in expected_agents:
         assert_true(expected_agent in selected_agents, f"{label} did not select {expected_agent}.")
         assert_true(expected_agent in loaded_agent_names, f"{label} did not load {expected_agent}.")
@@ -394,10 +419,23 @@ def assert_workflow_contract(case: Case, label: str, data: dict[str, Any]) -> No
         event_items = event_result.get("event_items") or []
         assert_true(len(event_items) >= 3, f"{label} event_items has fewer than 3 items.")
 
+    if case.name == "jeju day trip planning":
+        planning_result = find_agent_result(data, "travel_planning_agent")
+        schedule_result = find_agent_result(data, "travel_schedule_agent")
+        assert_true(planning_result is not None, f"{label} has no planning result.")
+        planning_strategy = planning_result.get("duration_strategy") or {}
+        assert_true(planning_strategy.get("days") == 1, f"{label} planning days is not 1.")
+        assert_true(planning_strategy.get("label") == "당일치기", f"{label} planning label is not 당일치기.")
+        assert_true(planning_strategy.get("lodging_required") is False, f"{label} planning lodging_required is not false.")
+        assert_true(schedule_result is not None, f"{label} has no schedule result.")
+        schedule_strategy = schedule_result.get("duration_strategy") or {}
+        assert_true(schedule_strategy.get("label") == "당일치기", f"{label} schedule label is not 당일치기.")
+
     if case.name == "busan full workflow":
-        assert_true(len(selected_agents) >= 6, f"{label} selected fewer than 6 agents.")
+        assert_true(len(selected_agents) >= 7, f"{label} selected fewer than 7 agents.")
         result_names = {result.get("agent") for result in data.get("agent_results", [])}
         for agent_name in [
+            "travel_planning_agent",
             "travel_weather_agent",
             "travel_tour_agent",
             "travel_transport_agent",
