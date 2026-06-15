@@ -474,6 +474,7 @@ def health_endpoint() -> dict[str, Any]:
         "env_loaded": {
             "KMA_SERVICE_KEY": bool(os.getenv("KMA_SERVICE_KEY")),
             "TOUR_API_SERVICE_KEY": bool(os.getenv("TOUR_API_SERVICE_KEY")),
+            "ODSAY_API_KEY": bool(os.getenv("ODSAY_API_KEY")),
         },
     }
 

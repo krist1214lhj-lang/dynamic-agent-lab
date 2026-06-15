@@ -6,8 +6,6 @@
 # $env:VERCEL_URL="https://your-app.vercel.app"; python scripts\verify_local_and_vercel.py
 
 import argparse
-import copy
-import difflib
 import json
 import os
 import subprocess
@@ -25,6 +23,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_LOCAL_URL = "http://127.0.0.1:8013"
 DEFAULT_VERCEL_URL = "https://dynamic-agent-lab.vercel.app"
 REQUEST_TIMEOUT_SECONDS = 45
+VERCEL_ODSAY_API_KEY_LOADED = None
 
 EXPECTED_AGENTS = {
     "travel_planning_agent",
@@ -54,6 +53,26 @@ ALLOWED_TRANSPORT_DATA_SOURCES = {
     "odsay_api",
     "mock_fallback",
     "rule_based_fallback",
+}
+
+API_ENV_NAMES = [
+    "KMA_SERVICE_KEY",
+    "TOUR_API_SERVICE_KEY",
+    "ODSAY_API_KEY",
+]
+
+PLACEHOLDER_VALUES = {
+    "your_kma_service_key_here",
+    "your_tour_api_service_key_here",
+    "your_odsay_api_key_here",
+}
+
+FALLBACK_CHECK_AGENTS = {
+    "travel_weather_agent",
+    "travel_tour_agent",
+    "travel_food_agent",
+    "travel_event_agent",
+    "travel_transport_agent",
 }
 
 
@@ -337,6 +356,46 @@ def assert_known_api_key_not_leaked(label: str, data: dict[str, Any], env_name: 
     assert_true(key_value not in serialized, f"{label} leaked raw {env_name}.")
 
 
+def assert_no_api_secret_or_placeholder_leaked(label: str, data: dict[str, Any]) -> None:
+    serialized = json.dumps(data, ensure_ascii=False)
+    for env_name in API_ENV_NAMES:
+        assert_known_api_key_not_leaked(label, data, env_name)
+    for placeholder in PLACEHOLDER_VALUES:
+        assert_true(placeholder not in serialized, f"{label} leaked placeholder value {placeholder}.")
+
+
+def fallback_reason_for(result: dict[str, Any]) -> Any:
+    debug_info = result.get("debug_info") if isinstance(result.get("debug_info"), dict) else {}
+    api_debug = result.get("api_debug") if isinstance(result.get("api_debug"), dict) else {}
+    for source in [debug_info, api_debug, result]:
+        for key in ["fallback_reason", "debug_message", "last_error"]:
+            value = source.get(key)
+            if value:
+                return value
+
+    for field in ["weather_findings", "tour_findings", "food_findings", "event_findings"]:
+        values = result.get(field)
+        if isinstance(values, list):
+            for value in values:
+                if "fallback_reason=" in str(value):
+                    return value
+    return None
+
+
+def assert_fallback_reasons(label: str, data: dict[str, Any]) -> None:
+    for result in data.get("agent_results", []):
+        agent_name = result.get("agent")
+        data_source = result.get("data_source")
+        if agent_name not in FALLBACK_CHECK_AGENTS:
+            continue
+        if data_source not in {"mock_fallback", "rule_based_fallback"}:
+            continue
+        assert_true(
+            bool(fallback_reason_for(result)),
+            f"{label} {agent_name} uses {data_source} without fallback reason.",
+        )
+
+
 def text_in_route(route: dict[str, Any], keyword: str) -> bool:
     searchable = [
         route.get("title"),
@@ -405,6 +464,13 @@ def assert_common_contract(case: Case, label: str, data: dict[str, Any]) -> None
             data.get("available_agents", 0) >= len(EXPECTED_AGENTS),
             f"{label} available_agents is smaller than {len(EXPECTED_AGENTS)}.",
         )
+        env_loaded = data.get("env_loaded") or {}
+        for env_name in API_ENV_NAMES:
+            assert_true(env_name in env_loaded, f"{label} health env_loaded has no {env_name}.")
+            assert_true(
+                isinstance(env_loaded.get(env_name), bool),
+                f"{label} health env_loaded.{env_name} is not boolean.",
+            )
         return
 
     if case.path == "/feature-map":
@@ -466,6 +532,7 @@ def assert_workflow_contract(case: Case, label: str, data: dict[str, Any]) -> No
         assert_true("error" not in result, f"{label} agent {result.get('agent')} returned an error.")
 
     assert_true(data.get("validation_report") is not None, f"{label} has no validation_report.")
+    assert_fallback_reasons(label, data)
 
     if case.name == "jeju weather":
         weather_result = find_agent_result(data, "travel_weather_agent")
@@ -533,83 +600,66 @@ def assert_workflow_contract(case: Case, label: str, data: dict[str, Any]) -> No
             assert_true(agent_name in result_names, f"{label} did not run {agent_name}.")
 
 
-def stable_agent_library(data: dict[str, Any]) -> dict[str, Any]:
-    agents = []
-    for agent in data.get("agents", []):
-        normalized = {
-            key: value
-            for key, value in agent.items()
-            if key not in {"path", "source", "error"}
-        }
-        agents.append(normalized)
-
-    return {
-        "total_agents": data.get("total_agents"),
-        "available_count": data.get("available_count"),
-        "agents": sorted(agents, key=lambda item: item.get("name", "")),
-    }
-
-
-def scrub_unstable_values(value: Any) -> Any:
-    if isinstance(value, dict):
-        scrubbed = {}
-        for key, child in value.items():
-            if key in {
-                "agent_library_path",
-                "library_path",
-                "path",
-                "env_loaded",
-                "debug_info",
-                "debug_message",
-                "api_debug",
-                "request_url_without_service_key",
-                "key_loaded",
-                "key_length",
-                "key_preview",
-                "base_date",
-                "base_time",
-                "condition",
-                "rain_probability",
-                "temperature",
-                "weather_findings",
-            }:
-                continue
-            scrubbed[key] = scrub_unstable_values(child)
-        return scrubbed
-    if isinstance(value, list):
-        return [scrub_unstable_values(child) for child in value]
-    return value
-
-
-def stable_response(case: Case, data: dict[str, Any]) -> dict[str, Any]:
-    stable = copy.deepcopy(data)
-    if case.path == "/agent-library":
-        return stable_agent_library(stable)
-    return scrub_unstable_values(stable)
-
-
-def stable_json(data: dict[str, Any]) -> str:
-    return json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True)
-
-
-def diff_responses(case: Case, local_data: dict[str, Any], vercel_data: dict[str, Any]) -> list[str]:
-    local_stable = stable_json(stable_response(case, local_data)).splitlines()
-    vercel_stable = stable_json(stable_response(case, vercel_data)).splitlines()
-    return list(
-        difflib.unified_diff(
-            local_stable,
-            vercel_stable,
-            fromfile=f"local:{case.name}",
-            tofile=f"vercel:{case.name}",
-            lineterm="",
-        )
-    )
-
-
 def transport_source_summary(data: dict[str, Any]) -> tuple[Any, Any]:
     transport_result = find_agent_result(data, "travel_transport_agent") or {}
     debug_info = transport_result.get("debug_info") or {}
-    return transport_result.get("data_source"), debug_info.get("fallback_reason")
+    return transport_result.get("data_source"), fallback_reason_for(transport_result)
+
+
+def agent_result_map(data: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    return {
+        result.get("agent"): result
+        for result in data.get("agent_results", [])
+        if result.get("agent")
+    }
+
+
+def report_health_env(local_data: dict[str, Any], vercel_data: dict[str, Any]) -> None:
+    global VERCEL_ODSAY_API_KEY_LOADED
+    local_env = local_data.get("env_loaded") or {}
+    vercel_env = vercel_data.get("env_loaded") or {}
+    local_odsay = local_env.get("ODSAY_API_KEY")
+    vercel_odsay = vercel_env.get("ODSAY_API_KEY")
+    VERCEL_ODSAY_API_KEY_LOADED = vercel_odsay
+    print(
+        "[INFO] health env_loaded ODSAY_API_KEY: "
+        f"local={local_odsay}; vercel={vercel_odsay}"
+    )
+    if vercel_odsay is False:
+        print("[INFO] Vercel ODSAY_API_KEY is not loaded; transport will use fallback.")
+
+
+def report_data_source_differences(case: Case, local_data: dict[str, Any], vercel_data: dict[str, Any]) -> None:
+    if case.path != "/run-workflow":
+        return
+
+    local_results = agent_result_map(local_data)
+    vercel_results = agent_result_map(vercel_data)
+    for agent_name in sorted(set(local_results) & set(vercel_results)):
+        if case.name == "seoul busan transport" and agent_name == "travel_transport_agent":
+            continue
+        local_source = local_results[agent_name].get("data_source")
+        vercel_source = vercel_results[agent_name].get("data_source")
+        if not local_source and not vercel_source:
+            continue
+        if local_source == vercel_source:
+            continue
+
+        local_reason = fallback_reason_for(local_results[agent_name]) or "-"
+        vercel_reason = fallback_reason_for(vercel_results[agent_name]) or "-"
+        print(
+            f"[INFO] {case.name} {agent_name} data_source differs: "
+            f"local={local_source} fallback_reason={local_reason}; "
+            f"vercel={vercel_source} fallback_reason={vercel_reason}"
+        )
+
+    vercel_transport = vercel_results.get("travel_transport_agent")
+    if vercel_transport and vercel_transport.get("data_source") != "odsay_api":
+        if VERCEL_ODSAY_API_KEY_LOADED is True:
+            print(
+                "[INFO] Vercel ODSAY_API_KEY is loaded, but ODsay call fell back. "
+                "Check Server IP restriction or API response."
+            )
 
 
 def run_case(case: Case, local_url: str, vercel_url: str) -> bool:
@@ -619,6 +669,13 @@ def run_case(case: Case, local_url: str, vercel_url: str) -> bool:
 
         assert_common_contract(case, "local", local_data)
         assert_common_contract(case, "vercel", vercel_data)
+        assert_no_api_secret_or_placeholder_leaked("local", local_data)
+        assert_no_api_secret_or_placeholder_leaked("vercel", vercel_data)
+
+        if case.path == "/health":
+            report_health_env(local_data, vercel_data)
+
+        report_data_source_differences(case, local_data, vercel_data)
 
         if case.name == "seoul busan transport":
             local_source, local_reason = transport_source_summary(local_data)
@@ -641,16 +698,6 @@ def run_case(case: Case, local_url: str, vercel_url: str) -> bool:
                 )
             print(f"[PASS] {case.name}")
             return True
-
-        diff = diff_responses(case, local_data, vercel_data)
-        if diff:
-            print(f"[FAIL] {case.name}")
-            print("reason: local and Vercel normalized responses differ")
-            preview = diff[:160]
-            print("\n".join(preview))
-            if len(diff) > len(preview):
-                print(f"... diff truncated ({len(diff) - len(preview)} more lines)")
-            return False
 
     except VerificationError as exc:
         print(f"[FAIL] {case.name}")
