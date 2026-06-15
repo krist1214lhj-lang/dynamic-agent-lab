@@ -2621,7 +2621,39 @@
         `;
       }
 
+      function renderScheduleTimeBlock(block) {
+        const typeLabel = block.type ? ` · ${block.type}` : "";
+        return `
+          <div>
+            <dt>${escapeHtml(`${block.time || "시간대"}${typeLabel}`)}</dt>
+            <dd>
+              <strong>${escapeHtml(block.title || "일정")}</strong>
+              ${block.description ? `<span>${escapeHtml(block.description)}</span>` : ""}
+            </dd>
+          </div>
+        `;
+      }
+
+      function renderDailyScheduleDay(day) {
+        const timeBlocks = Array.isArray(day.time_blocks) ? day.time_blocks : [];
+        return `
+          <article class="route-card">
+            <h4>${escapeHtml(day.day || "")}일차 · ${escapeHtml(day.title || "일정")}</h4>
+            <dl class="route-meta">
+              ${
+                timeBlocks.length > 0
+                  ? timeBlocks.map(renderScheduleTimeBlock).join("")
+                  : `<div><dt>일정</dt><dd>시간대별 일정 정보 없음</dd></div>`
+              }
+            </dl>
+          </article>
+        `;
+      }
+
       function renderScheduleAgentCard(agentResult) {
+        const dailyItinerary = Array.isArray(agentResult.daily_itinerary)
+          ? agentResult.daily_itinerary
+          : [];
         const itinerary = Array.isArray(agentResult.itinerary)
           ? agentResult.itinerary
           : [];
@@ -2629,20 +2661,23 @@
         return `
           <article class="agent-card">
             <h2>여행 일정</h2>
-            <p>${escapeHtml(agentResult.summary || "여행 일정 결과입니다.")}</p>
+            <p>${escapeHtml(agentResult.schedule_summary || agentResult.summary || "여행 일정 결과입니다.")}</p>
             ${renderDurationStrategy(agentResult.duration_strategy)}
             <section class="tour-section">
               <h3>일정표</h3>
               <div class="route-grid">
                 ${
-                  itinerary.length > 0
+                  dailyItinerary.length > 0
+                    ? dailyItinerary.map(renderDailyScheduleDay).join("")
+                    : itinerary.length > 0
                     ? itinerary.map(renderScheduleDay).join("")
                     : `<p>일정 정보 없음</p>`
                 }
               </div>
             </section>
+            ${renderList("통합 메모", agentResult.integration_notes)}
             ${renderList("일정 팁", agentResult.schedule_tips)}
-            ${renderList("주의할 점", agentResult.risks)}
+            ${renderList("주의할 점", agentResult.warnings || agentResult.risks)}
           </article>
         `;
       }
@@ -2841,8 +2876,37 @@
           };
         }
 
+        const dailyItinerary = Array.isArray(agentResult.daily_itinerary) ? agentResult.daily_itinerary : [];
         const itinerary = Array.isArray(agentResult.itinerary) ? agentResult.itinerary : [];
-        const summary = agentResult.summary || "";
+        const summary = agentResult.schedule_summary || agentResult.summary || "";
+
+        if (dailyItinerary.length > 0) {
+          const lines = [];
+          const html = dailyItinerary.map((day) => {
+            const dayTitle = `${readableValue(day.day) || ""}일차: ${readableValue(day.title) || "일정"}`.trim();
+            const blocks = Array.isArray(day.time_blocks) ? day.time_blocks.slice(0, 3) : [];
+            const blockLines = blocks.map((block) => {
+              const time = readableValue(block.time) || "시간대";
+              const title = readableValue(block.title) || "일정";
+              return `${time}: ${title}`;
+            });
+
+            lines.push(dayTitle);
+            blockLines.forEach((line) => lines.push(`- ${line}`));
+
+            return `
+              <div>
+                <strong>${escapeHtml(dayTitle)}</strong>
+                ${renderFinalList(blockLines, "추천 일정 정보가 없습니다.")}
+              </div>
+            `;
+          }).join("");
+
+          return {
+            html,
+            textLines: lines.length > 0 ? lines : [summary || "추천 일정 정보가 없습니다."],
+          };
+        }
 
         if (Number(days) === 1 && itinerary.length > 0) {
           const day = itinerary[0] || {};

@@ -1,23 +1,31 @@
 {
   "name": "travel_schedule_agent",
-  "description": "사용자의 여행 목적지와 기간을 바탕으로 일자별 여행 일정표를 mock JSON으로 반환하는 실험용 에이전트입니다.",
-  "role": "여행 일정표 생성",
+  "description": "사용자의 여행 조건과 planning, transport, budget, food, event, tour, destination, weather 에이전트 결과를 참고해 시간대별 최종 여행 일정표를 구성하는 규칙형 일정 컴포저입니다.",
+  "role": "통합 여행 일정표 생성",
   "inputs": [
     "destination",
-    "location",
+    "origin",
     "days",
-    "user_request"
+    "budget_level",
+    "requested_features",
+    "agent_results"
   ],
   "outputs": [
     "summary",
-    "schedule",
-    "daily_plan",
+    "schedule_summary",
+    "duration_strategy",
+    "daily_itinerary",
+    "itinerary",
+    "integration_notes",
+    "warnings",
     "debug_info"
   ],
   "data_sources": [
-    "mock_fallback"
+    "integrated_rule_schedule",
+    "rule_based_schedule"
   ],
-  "version": "0.1.0",
+  "env_vars": [],
+  "version": "0.2.0",
   "input_schema": {
     "type": "object",
     "properties": {
@@ -25,25 +33,34 @@
         "type": "string",
         "description": "여행 목적지입니다."
       },
+      "origin": {
+        "type": "string",
+        "description": "출발지입니다."
+      },
       "days": {
         "type": "integer",
         "description": "여행 일수입니다."
-      },
-      "travel_style": {
-        "type": "string",
-        "description": "여행 스타일입니다. 예: relaxed, active, family, culture"
       },
       "budget_level": {
         "type": "string",
         "description": "예산 수준입니다. 예: low, medium, high"
       },
-      "user_request": {
-        "type": "string",
-        "description": "사용자의 원문 여행 요청입니다."
+      "requested_features": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "agent_results": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        }
       }
     },
     "required": [
-      "user_request"
+      "destination",
+      "days"
     ]
   },
   "output_schema": {
@@ -52,10 +69,29 @@
       "agent": {
         "type": "string"
       },
-      "summary": {
+      "data_source": {
+        "type": "string",
+        "enum": [
+          "integrated_rule_schedule",
+          "rule_based_schedule"
+        ]
+      },
+      "destination": {
         "type": "string"
       },
-      "itinerary": {
+      "origin": {
+        "type": "string"
+      },
+      "days": {
+        "type": "integer"
+      },
+      "duration_label": {
+        "type": "string"
+      },
+      "duration_strategy": {
+        "type": "object"
+      },
+      "daily_itinerary": {
         "type": "array",
         "items": {
           "type": "object",
@@ -66,51 +102,48 @@
             "title": {
               "type": "string"
             },
-            "morning": {
-              "type": "string"
-            },
-            "afternoon": {
-              "type": "string"
-            },
-            "evening": {
-              "type": "string"
+            "time_blocks": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
             }
           },
           "required": [
             "day",
             "title",
-            "morning",
-            "afternoon",
-            "evening"
+            "time_blocks"
           ]
         }
       },
-      "schedule_tips": {
+      "schedule_summary": {
+        "type": "string"
+      },
+      "integration_notes": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "risks": {
+      "warnings": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "next_agents": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        }
+      "debug_info": {
+        "type": "object"
       }
     },
     "required": [
       "agent",
-      "summary",
-      "itinerary",
-      "schedule_tips",
-      "risks",
-      "next_agents"
+      "data_source",
+      "daily_itinerary",
+      "schedule_summary",
+      "duration_strategy",
+      "integration_notes",
+      "warnings",
+      "debug_info"
     ]
   },
   "entrypoint": "main.py",

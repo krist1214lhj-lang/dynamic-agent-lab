@@ -65,6 +65,12 @@ ALLOWED_BUDGET_DATA_SOURCES = {
     "rule_based_budget",
 }
 
+ALLOWED_SCHEDULE_DATA_SOURCES = {
+    "integrated_rule_schedule",
+    "rule_based_schedule",
+    "mock_fallback",
+}
+
 API_ENV_NAMES = [
     "KMA_SERVICE_KEY",
     "TOUR_API_SERVICE_KEY",
@@ -171,6 +177,20 @@ CASES = [
             "days": 3,
             "budget_level": "medium",
             "requested_features": ["budget"],
+        },
+    ),
+    Case(
+        "busan integrated schedule",
+        "POST",
+        "/run-workflow",
+        {
+            "user_request": "",
+            "destination": "부산",
+            "location": "부산",
+            "origin": "서울",
+            "days": 3,
+            "budget_level": "medium",
+            "requested_features": ["schedule", "transport", "budget", "food", "event", "tour"],
         },
     ),
     Case(
@@ -583,6 +603,51 @@ def assert_busan_budget_contract(label: str, data: dict[str, Any]) -> None:
     )
 
 
+def assert_busan_integrated_schedule_contract(label: str, data: dict[str, Any]) -> None:
+    selected_agents = data.get("selected_agents") or []
+    loaded_agent_names = {agent.get("name") for agent in data.get("loaded_agents", [])}
+    schedule_result = find_agent_result(data, "travel_schedule_agent")
+
+    assert_true(
+        selected_agents and selected_agents[0] == "travel_planning_agent",
+        f"{label} did not run travel_planning_agent first.",
+    )
+    for agent_name in [
+        "travel_schedule_agent",
+        "travel_transport_agent",
+        "travel_budget_agent",
+        "travel_food_agent",
+        "travel_event_agent",
+        "travel_tour_agent",
+    ]:
+        assert_true(agent_name in selected_agents, f"{label} did not select {agent_name}.")
+        assert_true(agent_name in loaded_agent_names, f"{label} did not load {agent_name}.")
+
+    assert_true(schedule_result is not None, f"{label} has no schedule result.")
+    data_source = schedule_result.get("data_source")
+    assert_true(
+        data_source in ALLOWED_SCHEDULE_DATA_SOURCES,
+        f"{label} schedule data_source is not allowed: {data_source}",
+    )
+
+    daily_itinerary = schedule_result.get("daily_itinerary")
+    assert_true(isinstance(daily_itinerary, list), f"{label} daily_itinerary is not a list.")
+    assert_true(len(daily_itinerary) >= 1, f"{label} daily_itinerary is empty.")
+    assert_true(
+        len(daily_itinerary) == 3,
+        f"{label} daily_itinerary length is not 3: {len(daily_itinerary)}",
+    )
+    for day in daily_itinerary:
+        assert_true(isinstance(day.get("time_blocks"), list), f"{label} day has no time_blocks list.")
+
+    duration_strategy = schedule_result.get("duration_strategy") or {}
+    assert_true(
+        duration_strategy.get("label") == "2박 3일",
+        f"{label} duration_strategy.label is not 2박 3일.",
+    )
+    assert_true(bool(schedule_result.get("schedule_summary")), f"{label} has no schedule_summary.")
+
+
 def assert_common_contract(case: Case, label: str, data: dict[str, Any]) -> None:
     if case.path == "/health":
         assert_true(data.get("status") == "ok", f"{label} health status is not ok.")
@@ -695,6 +760,9 @@ def assert_workflow_contract(case: Case, label: str, data: dict[str, Any]) -> No
 
     if case.name == "busan budget":
         assert_busan_budget_contract(label, data)
+
+    if case.name == "busan integrated schedule":
+        assert_busan_integrated_schedule_contract(label, data)
 
     if case.name == "jeju food":
         food_result = find_agent_result(data, "travel_food_agent")
@@ -849,6 +917,19 @@ def run_case(case: Case, local_url: str, vercel_url: str) -> bool:
             print(
                 "[INFO] busan budget rule_based_budget total: "
                 f"local={local_budget[0]}; vercel={vercel_budget[0]}"
+            )
+            print(f"[PASS] {case.name}")
+            return True
+
+        if case.name == "busan integrated schedule":
+            local_schedule = find_agent_result(local_data, "travel_schedule_agent") or {}
+            vercel_schedule = find_agent_result(vercel_data, "travel_schedule_agent") or {}
+            local_days = len(local_schedule.get("daily_itinerary") or [])
+            vercel_days = len(vercel_schedule.get("daily_itinerary") or [])
+            print(
+                "[INFO] busan integrated schedule days: "
+                f"local={local_days} source={local_schedule.get('data_source')}; "
+                f"vercel={vercel_days} source={vercel_schedule.get('data_source')}"
             )
             print(f"[PASS] {case.name}")
             return True

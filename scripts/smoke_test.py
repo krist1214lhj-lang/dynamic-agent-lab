@@ -453,6 +453,52 @@ def test_busan_budget():
     assert_known_api_keys_not_leaked(data)
 
 
+def test_busan_integrated_schedule():
+    payload = {
+        "user_request": "",
+        "destination": "부산",
+        "location": "부산",
+        "origin": "서울",
+        "days": 3,
+        "budget_level": "medium",
+        "requested_features": ["schedule", "transport", "budget", "food", "event", "tour"],
+    }
+    data = request_json("POST", "/run-workflow", payload)
+    selected_agents = data.get("selected_agents", [])
+    schedule_result = find_agent_result(data, "travel_schedule_agent")
+    assert_planning_auto_included(data)
+
+    for agent_name in [
+        "travel_schedule_agent",
+        "travel_transport_agent",
+        "travel_budget_agent",
+        "travel_food_agent",
+        "travel_event_agent",
+        "travel_tour_agent",
+    ]:
+        assert_true(agent_name in selected_agents, f"selected_agents에 {agent_name}가 없습니다.")
+
+    assert_true(schedule_result is not None, "travel_schedule_agent 결과가 없습니다.")
+    assert_true(
+        schedule_result.get("data_source") in {"integrated_rule_schedule", "rule_based_schedule", "mock_fallback"},
+        "schedule data_source가 허용된 값이 아닙니다.",
+    )
+
+    daily_itinerary = schedule_result.get("daily_itinerary")
+    assert_true(isinstance(daily_itinerary, list), "daily_itinerary가 배열이 아닙니다.")
+    assert_true(len(daily_itinerary) == payload["days"], "daily_itinerary 길이가 여행 일수와 다릅니다.")
+    for day in daily_itinerary:
+        assert_true(isinstance(day.get("time_blocks"), list), "time_blocks가 배열이 아닙니다.")
+
+    assert_true(bool(schedule_result.get("schedule_summary")), "schedule_summary가 없습니다.")
+    duration_strategy = schedule_result.get("duration_strategy") or {}
+    assert_true(
+        duration_strategy.get("label") == "2박 3일",
+        "duration_strategy.label이 2박 3일이 아닙니다.",
+    )
+    assert_known_api_keys_not_leaked(data)
+
+
 def test_jeju_food():
     payload = {
         "user_request": "",
@@ -646,6 +692,7 @@ def main():
         ("seoul busan transport", test_seoul_busan_transport),
         ("busan destination", test_busan_destination),
         ("busan budget", test_busan_budget),
+        ("busan integrated schedule", test_busan_integrated_schedule),
         ("jeju food", test_jeju_food),
         ("jeju event", test_jeju_event),
         ("jeju day trip planning", test_jeju_day_trip_planning),

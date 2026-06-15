@@ -144,6 +144,19 @@ def include_planning_agent(selected_agents: list[str]) -> tuple[list[str], list[
     return [PLANNING_AGENT, *without_duplicates], [PLANNING_AGENT]
 
 
+def build_execution_order(selected_agents: list[str]) -> list[str]:
+    if "travel_schedule_agent" not in selected_agents:
+        return selected_agents
+
+    execution_order = [
+        agent_name
+        for agent_name in selected_agents
+        if agent_name != "travel_schedule_agent"
+    ]
+    execution_order.append("travel_schedule_agent")
+    return execution_order
+
+
 def select_agents_from_features(requested_features: list[str]) -> list[str]:
     selected_agents = []
     for feature in requested_features:
@@ -399,7 +412,7 @@ def run_workflow(payload: WorkflowRequest | str) -> dict[str, Any]:
     loaded_agents: list[dict[str, Any]] = []
     agent_results: list[dict[str, Any]] = []
 
-    for agent_name in selected_agents:
+    for agent_name in build_execution_order(selected_agents):
         agent_dir = resolve_agent_dir(agent_name)
         try:
             metadata, run = load_agent(agent_dir / "agent.json")
@@ -410,7 +423,14 @@ def run_workflow(payload: WorkflowRequest | str) -> dict[str, Any]:
                 "function": metadata["function"],
                 "source": resolve_agent_source(agent_name),
             })
-            agent_results.append(run(input_data))
+            agent_input_data = dict(input_data)
+            agent_input_data["agent_results"] = agent_results
+            agent_input_data["agent_results_by_agent"] = {
+                result.get("agent"): result
+                for result in agent_results
+                if isinstance(result, dict) and result.get("agent")
+            }
+            agent_results.append(run(agent_input_data))
         except Exception as exc:
             agent_results.append({
                 "agent": agent_name,
