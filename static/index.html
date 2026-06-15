@@ -1368,6 +1368,139 @@
         gap: 14px;
       }
 
+      .final-itinerary-card {
+        position: relative;
+        overflow: hidden;
+        display: grid;
+        gap: 18px;
+        border: 1px solid rgba(120, 245, 209, 0.28);
+        border-radius: 22px;
+        padding: 22px;
+        color: #f8fcff;
+        background:
+          linear-gradient(135deg, rgba(12, 31, 64, 0.96), rgba(9, 18, 38, 0.9)),
+          rgba(255, 255, 255, 0.05);
+        box-shadow:
+          0 22px 54px rgba(0, 0, 0, 0.3),
+          0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+      }
+
+      .final-itinerary-card::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        height: 3px;
+        background: linear-gradient(90deg, var(--mint), var(--sky), var(--violet));
+      }
+
+      .final-itinerary-header {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .final-itinerary-card h2,
+      .final-itinerary-card h3,
+      .final-itinerary-card p {
+        margin: 0;
+      }
+
+      .final-itinerary-card h2 {
+        color: #ffffff;
+        font-size: 1.42rem;
+        line-height: 1.25;
+      }
+
+      .final-itinerary-subtitle {
+        margin-top: 7px;
+        color: #b9d8ff;
+        font-weight: 800;
+        line-height: 1.45;
+      }
+
+      .final-itinerary-copy {
+        display: grid;
+        justify-items: end;
+        gap: 8px;
+        min-width: 138px;
+      }
+
+      .final-itinerary-copy-button {
+        width: auto;
+        min-height: 42px;
+        border-radius: 14px;
+        padding: 0 14px;
+        font-size: 0.9rem;
+      }
+
+      .final-itinerary-copy-status {
+        min-height: 18px;
+        color: #d7fff0;
+        font-size: 0.86rem;
+        font-weight: 800;
+      }
+
+      .final-itinerary-body {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        gap: 16px;
+      }
+
+      .final-itinerary-section {
+        display: grid;
+        gap: 9px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(165, 194, 255, 0.16);
+      }
+
+      .final-itinerary-section h3 {
+        color: #d9fff1;
+        font-size: 1rem;
+        line-height: 1.35;
+      }
+
+      .final-itinerary-section p,
+      .final-itinerary-section li,
+      .final-itinerary-section dd {
+        color: #edf5ff;
+        line-height: 1.65;
+      }
+
+      .final-itinerary-section ul {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+        padding-left: 20px;
+      }
+
+      .final-itinerary-fields {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 8px 14px;
+        margin: 0;
+      }
+
+      .final-itinerary-fields div {
+        display: grid;
+        gap: 3px;
+      }
+
+      .final-itinerary-fields dt {
+        color: #a9c7ee;
+        font-size: 0.8rem;
+        font-weight: 900;
+      }
+
+      .final-itinerary-fields dd {
+        margin: 0;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+      }
+
       .detail-plan-section,
       .detail-plan-list {
         display: grid;
@@ -1716,6 +1849,7 @@
         }
 
         .summary-card,
+        .final-itinerary-card,
         .flow-card,
         .validation-card,
         .debug-panel,
@@ -1724,6 +1858,16 @@
         .weather-card,
         .transport-card {
           padding: 16px;
+        }
+
+        .final-itinerary-header,
+        .final-itinerary-copy {
+          display: grid;
+          justify-items: stretch;
+        }
+
+        .final-itinerary-copy-button {
+          width: 100%;
         }
       }
 
@@ -2463,6 +2607,320 @@
         return renderGenericAgentCard(agentResult);
       }
 
+      function findAgentResult(agentResults, agentName) {
+        return agentResults.find((agentResult) => agentResult.agent === agentName) || null;
+      }
+
+      function readableValue(value) {
+        if (value === true) {
+          return "있음";
+        }
+        if (value === false) {
+          return "없음";
+        }
+        if (value === null || value === undefined || value === "") {
+          return "";
+        }
+        if (Array.isArray(value)) {
+          return value.map(readableValue).filter(Boolean).join(", ");
+        }
+        if (typeof value === "object") {
+          const preferred = value.name || value.title || value.method || value.summary || value.label;
+          if (preferred) {
+            return String(preferred);
+          }
+          return Object.entries(value)
+            .filter(([, itemValue]) => itemValue !== null && itemValue !== undefined && typeof itemValue !== "object")
+            .slice(0, 3)
+            .map(([key, itemValue]) => `${key}: ${itemValue}`)
+            .join(", ");
+        }
+        return String(value);
+      }
+
+      function uniqueTextItems(items, limit = 3) {
+        const seen = new Set();
+        return items
+          .map(readableValue)
+          .map((item) => item.trim())
+          .filter((item) => {
+            if (!item || seen.has(item)) {
+              return false;
+            }
+            seen.add(item);
+            return true;
+          })
+          .slice(0, limit);
+      }
+
+      function renderFinalList(items, emptyText) {
+        const normalizedItems = uniqueTextItems(items, 8);
+        if (normalizedItems.length === 0) {
+          return `<p>${escapeHtml(emptyText)}</p>`;
+        }
+
+        return `
+          <ul>
+            ${normalizedItems.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+          </ul>
+        `;
+      }
+
+      function renderFinalFields(fields) {
+        return `
+          <dl class="final-itinerary-fields">
+            ${fields.map(([label, value]) => `
+              <div>
+                <dt>${escapeHtml(label)}</dt>
+                <dd>${escapeHtml(readableValue(value) || "정보 없음")}</dd>
+              </div>
+            `).join("")}
+          </dl>
+        `;
+      }
+
+      function finalSectionText(title, lines) {
+        const normalizedLines = uniqueTextItems(lines, 12);
+        if (normalizedLines.length === 0) {
+          return "";
+        }
+        return [`[${title}]`, ...normalizedLines, ""].join("\n");
+      }
+
+      function agentItems(agentResult, keys, limit = 3) {
+        if (!agentResult || typeof agentResult !== "object") {
+          return [];
+        }
+
+        for (const key of keys) {
+          if (Array.isArray(agentResult[key]) && agentResult[key].length > 0) {
+            return uniqueTextItems(agentResult[key], limit);
+          }
+        }
+
+        return [];
+      }
+
+      function weatherDataFromAgent(agentResult) {
+        if (!agentResult || typeof agentResult !== "object") {
+          return null;
+        }
+        return agentResult.weather_summary || agentResult.forecast || agentResult.weather || null;
+      }
+
+      function buildScheduleSummary(agentResult, days) {
+        if (!agentResult || typeof agentResult !== "object") {
+          return {
+            html: `<p>추천 일정 정보는 선택되지 않았습니다.</p>`,
+            textLines: ["추천 일정 정보는 선택되지 않았습니다."],
+          };
+        }
+
+        const itinerary = Array.isArray(agentResult.itinerary) ? agentResult.itinerary : [];
+        const summary = agentResult.summary || "";
+
+        if (Number(days) === 1 && itinerary.length > 0) {
+          const day = itinerary[0] || {};
+          const fields = [
+            ["오전", day.morning],
+            ["점심", day.lunch || day.noon || day.midday || day.meal || "별도 점심 정보 없음"],
+            ["오후", day.afternoon],
+            ["귀가", day.return || day.return_trip || day.evening],
+          ];
+
+          return {
+            html: renderFinalFields(fields),
+            textLines: fields.map(([label, value]) => `${label}: ${readableValue(value) || "정보 없음"}`),
+          };
+        }
+
+        if (itinerary.length > 0) {
+          const lines = itinerary.map((day) => {
+            const dayTitle = `${readableValue(day.day) || ""}일차 ${readableValue(day.title) || "일정"}`.trim();
+            const dayParts = [day.morning, day.afternoon, day.evening].map(readableValue).filter(Boolean);
+            return `${dayTitle}: ${dayParts.join(" / ")}`;
+          });
+
+          return {
+            html: renderFinalList(lines, "추천 일정 정보가 없습니다."),
+            textLines: lines,
+          };
+        }
+
+        return {
+          html: `<p>${escapeHtml(summary || "추천 일정 정보가 없습니다.")}</p>`,
+          textLines: [summary || "추천 일정 정보가 없습니다."],
+        };
+      }
+
+      function buildTransportSummary(agentResult) {
+        if (!agentResult || typeof agentResult !== "object") {
+          return {
+            html: `<p>교통 정보는 선택되지 않았습니다.</p>`,
+            textLines: ["교통 정보는 선택되지 않았습니다."],
+          };
+        }
+
+        const overview = agentResult.transport_overview && typeof agentResult.transport_overview === "object"
+          ? agentResult.transport_overview
+          : {};
+        const routeLines = Array.isArray(agentResult.routes)
+          ? agentResult.routes.slice(0, 3).map((route) => {
+              const method = route.method || route.mode || route.title || "이동 경로";
+              const time = route.estimated_time ? ` (${route.estimated_time})` : "";
+              const memo = route.notes || route.memo ? ` - ${route.notes || route.memo}` : "";
+              return `${method}${time}${memo}`;
+            })
+          : [];
+        const fields = [
+          ["도시 간 이동", overview.main_transport],
+          ["현지 교통", overview.local_transport],
+          ["예상 이동 시간", overview.estimated_travel_time],
+        ];
+        const hasOverview = fields.some(([, value]) => readableValue(value));
+
+        return {
+          html: `
+            <p>${escapeHtml(agentResult.summary || "교통 이동 계획 결과입니다.")}</p>
+            ${hasOverview ? renderFinalFields(fields) : ""}
+            ${routeLines.length > 0 ? renderFinalList(routeLines, "") : ""}
+          `,
+          textLines: [
+            agentResult.summary || "교통 이동 계획 결과입니다.",
+            ...fields.map(([label, value]) => readableValue(value) ? `${label}: ${readableValue(value)}` : "").filter(Boolean),
+            ...routeLines,
+          ],
+        };
+      }
+
+      function buildWeatherSummary(agentResult) {
+        if (!agentResult || typeof agentResult !== "object") {
+          return {
+            html: `<p>날씨 정보는 선택되지 않았습니다.</p>`,
+            textLines: ["날씨 정보는 선택되지 않았습니다."],
+          };
+        }
+
+        const weatherData = weatherDataFromAgent(agentResult) || {};
+        const fields = [
+          ["지역", agentResult.location || weatherData.location],
+          ["기간", weatherData.period || agentResult.period],
+          ["기온", weatherData.temperature],
+          ["상태", weatherData.condition],
+          ["강수확률", weatherData.rain_probability],
+        ];
+
+        return {
+          html: `
+            <p>${escapeHtml(agentResult.summary || "날씨 결과입니다.")}</p>
+            ${renderFinalFields(fields)}
+          `,
+          textLines: [
+            agentResult.summary || "날씨 결과입니다.",
+            ...fields.map(([label, value]) => readableValue(value) ? `${label}: ${readableValue(value)}` : "").filter(Boolean),
+          ],
+        };
+      }
+
+      function renderFinalItineraryCard(data) {
+        const agentResults = Array.isArray(data.agent_results) ? data.agent_results : [];
+        if (agentResults.length === 0) {
+          return "";
+        }
+
+        const summary = getWorkflowSummary(data);
+        const planningResult = findAgentResult(agentResults, "travel_planning_agent");
+        const scheduleResult = findAgentResult(agentResults, "travel_schedule_agent");
+        const transportResult = findAgentResult(agentResults, "travel_transport_agent");
+        const weatherResult = findAgentResult(agentResults, "travel_weather_agent");
+        const foodResult = findAgentResult(agentResults, "travel_food_agent");
+        const eventResult = findAgentResult(agentResults, "travel_event_agent");
+
+        const subtitle = `${summary.destination} ${durationLabel(summary.days)} ${summary.budget_level} 여행 플랜`;
+        const direction = planningResult?.planning_summary || "선택한 조건에 맞춰 여행계획을 구성했습니다.";
+        const durationStrategy =
+          planningResult?.duration_strategy ||
+          scheduleResult?.duration_strategy ||
+          {};
+        const durationFields = [
+          ["기간", durationStrategy.label || durationLabel(summary.days)],
+          ["속도", durationStrategy.pace],
+          ["숙박 필요", durationStrategy.lodging_required],
+          ["야간 일정", durationStrategy.night_schedule],
+        ];
+        const scheduleSummary = buildScheduleSummary(scheduleResult, summary.days);
+        const transportSummary = buildTransportSummary(transportResult);
+        const weatherSummary = buildWeatherSummary(weatherResult);
+        const foodItems = agentItems(foodResult, ["food_items", "restaurants", "restaurant_items"], 3);
+        const eventItems = agentItems(eventResult, ["event_items", "events", "festival_items"], 3);
+        const warnings = Array.isArray(planningResult?.warnings) ? planningResult.warnings : [];
+        const copyText = [
+          "최종 여행계획서",
+          subtitle,
+          "",
+          finalSectionText("여행 방향", [direction]),
+          finalSectionText("여행기간 전략", durationFields.map(([label, value]) => `${label}: ${readableValue(value) || "정보 없음"}`)),
+          finalSectionText("추천 일정", scheduleSummary.textLines),
+          finalSectionText("교통", transportSummary.textLines),
+          finalSectionText("날씨", weatherSummary.textLines),
+          finalSectionText("맛집", foodItems.length > 0 ? foodItems : ["맛집 정보는 선택되지 않았습니다."]),
+          finalSectionText("행사/축제", eventItems.length > 0 ? eventItems : ["행사/축제 정보는 선택되지 않았습니다."]),
+          warnings.length > 0 ? finalSectionText("주의사항", warnings) : "",
+        ].join("\n").trim();
+
+        return `
+          <article class="final-itinerary-card">
+            <div class="final-itinerary-header">
+              <div>
+                <p class="section-kicker">Final Itinerary</p>
+                <h2>최종 여행계획서</h2>
+                <p class="final-itinerary-subtitle">${escapeHtml(subtitle)}</p>
+              </div>
+              <div class="final-itinerary-copy">
+                <button class="final-itinerary-copy-button" type="button" data-copy-itinerary>요약 복사</button>
+                <span class="final-itinerary-copy-status" aria-live="polite"></span>
+              </div>
+            </div>
+            <div class="final-itinerary-body">
+              <section class="final-itinerary-section">
+                <h3>여행 방향</h3>
+                <p>${escapeHtml(direction)}</p>
+              </section>
+              <section class="final-itinerary-section">
+                <h3>여행기간 전략</h3>
+                ${renderFinalFields(durationFields)}
+              </section>
+              <section class="final-itinerary-section">
+                <h3>추천 일정</h3>
+                ${scheduleSummary.html}
+              </section>
+              <section class="final-itinerary-section">
+                <h3>교통</h3>
+                ${transportSummary.html}
+              </section>
+              <section class="final-itinerary-section">
+                <h3>날씨</h3>
+                ${weatherSummary.html}
+              </section>
+              <section class="final-itinerary-section">
+                <h3>맛집</h3>
+                ${renderFinalList(foodItems, "맛집 정보는 선택되지 않았습니다.")}
+              </section>
+              <section class="final-itinerary-section">
+                <h3>행사/축제</h3>
+                ${renderFinalList(eventItems, "행사/축제 정보는 선택되지 않았습니다.")}
+              </section>
+              ${
+                warnings.length > 0
+                  ? `<section class="final-itinerary-section"><h3>주의사항</h3>${renderFinalList(warnings, "")}</section>`
+                  : ""
+              }
+            </div>
+            <pre class="final-itinerary-copy-source" hidden>${escapeHtml(copyText)}</pre>
+          </article>
+        `;
+      }
+
       function renderExecutionFlow(data) {
         const selectedAgents = Array.isArray(data.selected_agents)
           ? data.selected_agents
@@ -3077,6 +3535,55 @@
         showSavedPlanMessage("저장된 플랜을 삭제했습니다.");
       }
 
+      async function copyTextToClipboard(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+          try {
+            await navigator.clipboard.writeText(text);
+            return true;
+          } catch (_error) {
+            // Fall through to the textarea fallback below.
+          }
+        }
+
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.setAttribute("readonly", "");
+        textArea.style.position = "fixed";
+        textArea.style.top = "-1000px";
+        textArea.style.left = "-1000px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        let copied = false;
+        try {
+          copied = document.execCommand("copy");
+        } catch (_error) {
+          copied = false;
+        } finally {
+          textArea.remove();
+        }
+
+        return copied;
+      }
+
+      async function handleFinalItineraryCopy(buttonElement) {
+        const card = buttonElement.closest(".final-itinerary-card");
+        const source = card?.querySelector(".final-itinerary-copy-source");
+        const statusElement = card?.querySelector(".final-itinerary-copy-status");
+        const text = source?.textContent || "";
+
+        if (!text.trim() || !statusElement) {
+          return;
+        }
+
+        const copied = await copyTextToClipboard(text);
+        statusElement.textContent = copied ? "복사되었습니다." : "복사에 실패했습니다.";
+        window.setTimeout(() => {
+          statusElement.textContent = "";
+        }, 2200);
+      }
+
       function renderResult(data) {
         if (data && Array.isArray(data.selected_agents) && data.input_data_summary) {
           currentWorkflowResult = data;
@@ -3108,6 +3615,7 @@
           : "";
 
         result.innerHTML = `
+          ${renderFinalItineraryCard(data)}
           <section class="summary-card">${escapeHtml(data.final_summary || "")}</section>
           ${planningCard}
           <section class="detail-plan-section">
@@ -3179,6 +3687,19 @@
       savePlanButton.addEventListener("click", saveCurrentPlan);
 
       durationSelect.addEventListener("change", updateDurationGuidance);
+
+      result.addEventListener("click", (event) => {
+        if (!(event.target instanceof Element)) {
+          return;
+        }
+
+        const copyButton = event.target.closest("button[data-copy-itinerary]");
+        if (!copyButton) {
+          return;
+        }
+
+        handleFinalItineraryCopy(copyButton);
+      });
 
       toggleSavedPlansButton.addEventListener("click", () => {
         savedPlansExpanded = !savedPlansExpanded;
