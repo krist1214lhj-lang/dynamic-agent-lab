@@ -55,6 +55,12 @@ ALLOWED_TRANSPORT_DATA_SOURCES = {
     "rule_based_fallback",
 }
 
+ALLOWED_DESTINATION_DATA_SOURCES = {
+    "tour_api",
+    "mock_fallback",
+    "rule_based_fallback",
+}
+
 API_ENV_NAMES = [
     "KMA_SERVICE_KEY",
     "TOUR_API_SERVICE_KEY",
@@ -68,6 +74,7 @@ PLACEHOLDER_VALUES = {
 }
 
 FALLBACK_CHECK_AGENTS = {
+    "travel_destination_agent",
     "travel_weather_agent",
     "travel_tour_agent",
     "travel_food_agent",
@@ -132,6 +139,20 @@ CASES = [
             "days": 2,
             "budget_level": "medium",
             "requested_features": ["transport"],
+        },
+    ),
+    Case(
+        "busan destination",
+        "POST",
+        "/run-workflow",
+        {
+            "user_request": "",
+            "destination": "부산",
+            "location": "부산",
+            "origin": "서울",
+            "days": 3,
+            "budget_level": "medium",
+            "requested_features": ["destination"],
         },
     ),
     Case(
@@ -457,6 +478,50 @@ def assert_seoul_busan_transport_contract(label: str, data: dict[str, Any]) -> N
     assert_known_api_key_not_leaked(label, data, "ODSAY_API_KEY")
 
 
+def assert_busan_destination_contract(label: str, data: dict[str, Any]) -> None:
+    selected_agents = data.get("selected_agents") or []
+    loaded_agent_names = {agent.get("name") for agent in data.get("loaded_agents", [])}
+    destination_result = find_agent_result(data, "travel_destination_agent")
+
+    assert_true(
+        selected_agents and selected_agents[0] == "travel_planning_agent",
+        f"{label} did not run travel_planning_agent first.",
+    )
+    assert_true(
+        "travel_destination_agent" in selected_agents,
+        f"{label} did not select travel_destination_agent.",
+    )
+    assert_true(
+        "travel_destination_agent" in loaded_agent_names,
+        f"{label} did not load travel_destination_agent.",
+    )
+    assert_true(destination_result is not None, f"{label} has no destination result.")
+
+    data_source = destination_result.get("data_source")
+    assert_true(
+        data_source in ALLOWED_DESTINATION_DATA_SOURCES,
+        f"{label} destination data_source is not allowed: {data_source}",
+    )
+    recommendations = (
+        destination_result.get("recommendations")
+        or destination_result.get("destinations")
+        or []
+    )
+    assert_true(bool(recommendations), f"{label} has no destination recommendations.")
+
+    debug_info = destination_result.get("debug_info") or {}
+    if data_source != "tour_api":
+        assert_true(
+            bool(debug_info.get("fallback_reason")),
+            f"{label} fallback destination has no debug_info.fallback_reason.",
+        )
+    assert_true(
+        debug_info.get("service_key_leaked") is False,
+        f"{label} debug_info.service_key_leaked is not false.",
+    )
+    assert_known_api_key_not_leaked(label, data, "TOUR_API_SERVICE_KEY")
+
+
 def assert_common_contract(case: Case, label: str, data: dict[str, Any]) -> None:
     if case.path == "/health":
         assert_true(data.get("status") == "ok", f"{label} health status is not ok.")
@@ -563,6 +628,9 @@ def assert_workflow_contract(case: Case, label: str, data: dict[str, Any]) -> No
 
     if case.name == "seoul busan transport":
         assert_seoul_busan_transport_contract(label, data)
+
+    if case.name == "busan destination":
+        assert_busan_destination_contract(label, data)
 
     if case.name == "jeju food":
         food_result = find_agent_result(data, "travel_food_agent")

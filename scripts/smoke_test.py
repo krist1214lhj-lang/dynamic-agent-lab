@@ -340,6 +340,62 @@ def test_seoul_busan_transport():
         )
 
 
+def test_busan_destination():
+    payload = {
+        "user_request": "",
+        "destination": "부산",
+        "location": "부산",
+        "origin": "서울",
+        "days": 3,
+        "budget_level": "medium",
+        "requested_features": ["destination"],
+    }
+    data = request_json("POST", "/run-workflow", payload)
+    destination_result = find_agent_result(data, "travel_destination_agent")
+    assert_planning_auto_included(data)
+
+    assert_true(
+        "travel_destination_agent" in data.get("selected_agents", []),
+        "selected_agents에 travel_destination_agent가 없습니다.",
+    )
+    assert_true(
+        any(agent.get("name") == "travel_destination_agent" for agent in data.get("loaded_agents", [])),
+        "loaded_agents에 travel_destination_agent가 없습니다.",
+    )
+    assert_true(destination_result is not None, "travel_destination_agent 결과가 없습니다.")
+
+    data_source = destination_result.get("data_source")
+    assert_true(
+        data_source in {"tour_api", "mock_fallback", "rule_based_fallback"},
+        f"destination data_source가 허용되지 않은 값입니다: {data_source}",
+    )
+    recommendations = destination_result.get("recommendations") or destination_result.get("destinations") or []
+    assert_true(bool(recommendations), "destination 추천 목록이 없습니다.")
+
+    debug_info = destination_result.get("debug_info") or {}
+    if data_source in {"mock_fallback", "rule_based_fallback"}:
+        assert_true(
+            bool(debug_info.get("fallback_reason")),
+            "fallback data_source인데 debug_info.fallback_reason이 없습니다.",
+        )
+    assert_true(
+        debug_info.get("service_key_leaked") is False,
+        "debug_info.service_key_leaked가 false가 아닙니다.",
+    )
+    assert_true(
+        "api_provider" not in debug_info or debug_info.get("api_provider") == "tour_api",
+        "debug_info.api_provider가 tour_api가 아닙니다.",
+    )
+
+    tour_key = local_env_value("TOUR_API_SERVICE_KEY")
+    if tour_key:
+        serialized = json.dumps(data, ensure_ascii=False)
+        assert_true(
+            tour_key not in serialized,
+            "TourAPI 키 원문이 응답에 노출되었습니다.",
+        )
+
+
 def test_jeju_food():
     payload = {
         "user_request": "",
@@ -531,6 +587,7 @@ def main():
         ("jeju weather", test_jeju_weather),
         ("jeju transport", test_jeju_transport),
         ("seoul busan transport", test_seoul_busan_transport),
+        ("busan destination", test_busan_destination),
         ("jeju food", test_jeju_food),
         ("jeju event", test_jeju_event),
         ("jeju day trip planning", test_jeju_day_trip_planning),

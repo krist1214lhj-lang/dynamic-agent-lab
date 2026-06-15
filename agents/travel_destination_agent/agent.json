@@ -1,6 +1,6 @@
 {
   "name": "travel_destination_agent",
-  "description": "사용자의 여행 요청과 목적지 정보를 바탕으로 여행지 추천과 목적지 요약을 mock JSON으로 반환하는 실험용 에이전트입니다.",
+  "description": "사용자의 여행 요청과 목적지 정보를 바탕으로 TourAPI 지역/키워드 여행지 추천 또는 안전한 mock fallback 여행지 추천을 반환하는 에이전트입니다.",
   "role": "여행지 추천 / 목적지 요약",
   "inputs": [
     "destination",
@@ -11,11 +11,19 @@
   "outputs": [
     "summary",
     "recommendations",
+    "data_source",
+    "destination",
     "debug_info"
   ],
   "data_sources": [
+    "tour_api",
+    "rule_based_fallback",
     "mock_fallback"
   ],
+  "env_vars": [
+    "TOUR_API_SERVICE_KEY"
+  ],
+  "fallback_policy": "TOUR_API_SERVICE_KEY가 있으면 TourAPI 지역 기반 areaBasedList2 또는 user_request 기반 searchKeyword2 추천을 시도합니다. 키가 없거나 API 호출/응답/파싱/결과 없음 문제가 발생하면 기존 mock_fallback 구조를 유지하고 debug_info.fallback_reason에 사유를 남깁니다. API 키 원문은 응답과 debug_info에 노출하지 않습니다.",
   "version": "0.1.0",
   "input_schema": {
     "type": "object",
@@ -60,6 +68,17 @@
           "type": "object"
         }
       },
+      "data_source": {
+        "type": "string",
+        "enum": [
+          "tour_api",
+          "rule_based_fallback",
+          "mock_fallback"
+        ]
+      },
+      "destination": {
+        "type": "string"
+      },
       "reasons": {
         "type": "array",
         "items": {
@@ -71,14 +90,19 @@
         "items": {
           "type": "string"
         }
+      },
+      "debug_info": {
+        "type": "object"
       }
     },
     "required": [
       "agent",
       "summary",
+      "data_source",
       "recommendations",
       "reasons",
-      "next_agents"
+      "next_agents",
+      "debug_info"
     ]
   },
   "entrypoint": "main.py",
