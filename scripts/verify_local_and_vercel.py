@@ -50,6 +50,12 @@ EXPECTED_FEATURE_MAP = {
     "planning": "travel_planning_agent",
 }
 
+ALLOWED_TRANSPORT_DATA_SOURCES = {
+    "odsay_api",
+    "mock_fallback",
+    "rule_based_fallback",
+}
+
 
 class VerificationError(Exception):
     pass
@@ -91,6 +97,20 @@ CASES = [
             "location": "제주",
             "origin": "서울",
             "days": 3,
+            "budget_level": "medium",
+            "requested_features": ["transport"],
+        },
+    ),
+    Case(
+        "seoul busan transport",
+        "POST",
+        "/run-workflow",
+        {
+            "user_request": "",
+            "destination": "부산",
+            "location": "부산",
+            "origin": "서울",
+            "days": 2,
             "budget_level": "medium",
             "requested_features": ["transport"],
         },
@@ -191,6 +211,8 @@ def request_json(base_url: str, method: str, path: str, payload: dict[str, Any] 
         raise VerificationError(f"{method} {url} failed: {exc.reason}") from exc
     except TimeoutError as exc:
         raise VerificationError(f"{method} {url} timed out.") from exc
+    except OSError as exc:
+        raise VerificationError(f"{method} {url} failed: {exc}") from exc
 
     try:
         data = json.loads(raw)
@@ -288,6 +310,33 @@ def find_agent_result(data: dict[str, Any], agent_name: str) -> dict[str, Any] |
     return None
 
 
+def local_env_value(name: str) -> str:
+    value = os.environ.get(name)
+    if value:
+        return value
+
+    env_path = PROJECT_ROOT / ".env"
+    if not env_path.exists():
+        return ""
+
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        key, raw_value = stripped.split("=", 1)
+        if key.strip() == name:
+            return raw_value.strip().strip('"').strip("'")
+    return ""
+
+
+def assert_known_api_key_not_leaked(label: str, data: dict[str, Any], env_name: str) -> None:
+    key_value = local_env_value(env_name)
+    if not key_value:
+        return
+    serialized = json.dumps(data, ensure_ascii=False)
+    assert_true(key_value not in serialized, f"{label} leaked raw {env_name}.")
+
+
 def text_in_route(route: dict[str, Any], keyword: str) -> bool:
     searchable = [
         route.get("title"),
@@ -309,6 +358,44 @@ def first_intercity_route(routes: list[dict[str, Any]]) -> dict[str, Any]:
         if route.get("type") == "intercity":
             return route
     return routes[0] if routes else {}
+
+
+def assert_seoul_busan_transport_contract(label: str, data: dict[str, Any]) -> None:
+    selected_agents = data.get("selected_agents") or []
+    loaded_agent_names = {agent.get("name") for agent in data.get("loaded_agents", [])}
+    transport_result = find_agent_result(data, "travel_transport_agent")
+
+    assert_true(
+        selected_agents and selected_agents[0] == "travel_planning_agent",
+        f"{label} did not run travel_planning_agent first.",
+    )
+    assert_true(
+        "travel_transport_agent" in selected_agents,
+        f"{label} did not select travel_transport_agent.",
+    )
+    assert_true(
+        "travel_transport_agent" in loaded_agent_names,
+        f"{label} did not load travel_transport_agent.",
+    )
+    assert_true(transport_result is not None, f"{label} has no transport result.")
+
+    data_source = transport_result.get("data_source")
+    assert_true(
+        data_source in ALLOWED_TRANSPORT_DATA_SOURCES,
+        f"{label} transport data_source is not allowed: {data_source}",
+    )
+
+    debug_info = transport_result.get("debug_info") or {}
+    if data_source != "odsay_api":
+        assert_true(
+            bool(debug_info.get("fallback_reason")),
+            f"{label} fallback transport has no debug_info.fallback_reason.",
+        )
+    assert_true(
+        debug_info.get("service_key_leaked") is False,
+        f"{label} debug_info.service_key_leaked is not false.",
+    )
+    assert_known_api_key_not_leaked(label, data, "ODSAY_API_KEY")
 
 
 def assert_common_contract(case: Case, label: str, data: dict[str, Any]) -> None:
@@ -406,6 +493,9 @@ def assert_workflow_contract(case: Case, label: str, data: dict[str, Any]) -> No
             not text_in_route(first_intercity_route(routes), "KTX"),
             f"{label} first intercity route recommends KTX for 제주.",
         )
+
+    if case.name == "seoul busan transport":
+        assert_seoul_busan_transport_contract(label, data)
 
     if case.name == "jeju food":
         food_result = find_agent_result(data, "travel_food_agent")
@@ -516,6 +606,12 @@ def diff_responses(case: Case, local_data: dict[str, Any], vercel_data: dict[str
     )
 
 
+def transport_source_summary(data: dict[str, Any]) -> tuple[Any, Any]:
+    transport_result = find_agent_result(data, "travel_transport_agent") or {}
+    debug_info = transport_result.get("debug_info") or {}
+    return transport_result.get("data_source"), debug_info.get("fallback_reason")
+
+
 def run_case(case: Case, local_url: str, vercel_url: str) -> bool:
     try:
         local_data = request_json(local_url, case.method, case.path, case.payload)
@@ -523,6 +619,28 @@ def run_case(case: Case, local_url: str, vercel_url: str) -> bool:
 
         assert_common_contract(case, "local", local_data)
         assert_common_contract(case, "vercel", vercel_data)
+
+        if case.name == "seoul busan transport":
+            local_source, local_reason = transport_source_summary(local_data)
+            vercel_source, vercel_reason = transport_source_summary(vercel_data)
+            if local_source != vercel_source:
+                assert_true(
+                    vercel_source == "odsay_api" or bool(vercel_reason),
+                    "vercel seoul busan transport fallback_reason is missing.",
+                )
+                print(
+                    "[INFO] seoul busan transport data_source differs: "
+                    f"local={local_source} fallback_reason={local_reason or '-'}; "
+                    f"vercel={vercel_source} fallback_reason={vercel_reason or '-'}"
+                )
+            else:
+                print(
+                    "[INFO] seoul busan transport data_source: "
+                    f"local={local_source}; vercel={vercel_source}; "
+                    f"fallback_reason={vercel_reason or local_reason or '-'}"
+                )
+            print(f"[PASS] {case.name}")
+            return True
 
         diff = diff_responses(case, local_data, vercel_data)
         if diff:
