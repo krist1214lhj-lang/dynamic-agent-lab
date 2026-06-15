@@ -26,7 +26,7 @@
   "env_vars": [
     "ODSAY_API_KEY"
   ],
-  "fallback_policy": "ODSAY_API_KEY가 없거나 ODsay 호출이 실패하면 mock_fallback을 유지합니다. 제주/섬 지역은 ODsay보다 island_air_sea 규칙을 우선 적용하며 data_source는 rule_based_fallback으로 반환합니다. API 키 원문은 응답과 debug_info에 노출하지 않습니다.",
+  "fallback_policy": "교통 단독 요청에서는 ODSAY_API_KEY가 있으면 ODsay를 시도하고, 키가 없거나 호출이 실패하면 mock_fallback을 유지합니다. 다중 기능 전체 워크플로우에서는 로컬/Vercel 응답 안정성을 위해 mock_fallback을 유지합니다. 제주/섬 지역은 ODsay보다 island_air_sea 규칙을 우선 적용하며 data_source는 rule_based_fallback으로 반환합니다. API 키 원문은 응답과 debug_info에 노출하지 않습니다.",
   "island_policy": "destination이 제주이거나 transport_profile이 island_air_sea인 경우 항공편/선박 중심 규칙을 우선 적용합니다.",
   "version": "0.1.0",
   "input_schema": {

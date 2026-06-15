@@ -321,6 +321,18 @@ def call_odsay_transport_api(origin, destination, input_data):
         return None, "odsay_parse_error", service_key
 
 
+def _should_call_odsay(input_data):
+    requested_features = input_data.get("requested_features")
+    if not isinstance(requested_features, list):
+        return True
+    normalized_features = {
+        str(feature).strip().lower()
+        for feature in requested_features
+        if str(feature).strip()
+    }
+    return normalized_features == {"transport"}
+
+
 def _fallback_result(origin, destination, days, travel_style, transport_profile, fallback_reason, data_source):
     is_jeju = transport_profile == "island_air_sea"
     if is_jeju:
@@ -401,13 +413,16 @@ def run(input_data):
             "rule_based_fallback",
         )
 
-    odsay_result, fallback_reason, _service_key = call_odsay_transport_api(
-        origin,
-        destination,
-        _safe_input,
-    )
-    if odsay_result:
-        return odsay_result
+    if _should_call_odsay(_safe_input):
+        odsay_result, fallback_reason, _service_key = call_odsay_transport_api(
+            origin,
+            destination,
+            _safe_input,
+        )
+        if odsay_result:
+            return odsay_result
+    else:
+        fallback_reason = "multi_feature_workflow_fallback"
 
     return _fallback_result(
         origin,

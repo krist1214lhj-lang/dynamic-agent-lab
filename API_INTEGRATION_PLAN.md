@@ -8,7 +8,7 @@
 | travel_tour_agent | tour_api, mock_fallback | 예 | 연결됨. TourAPI 관광지 area/keyword 조회 경로 보유 | TourAPI 관광지 조회 | TOUR_API_SERVICE_KEY | 예 | 이미 연결됨, 점검 대상 |
 | travel_food_agent | tour_api, mock_fallback | 예 | 연결됨. TourAPI contentTypeId=39 음식점 조회 경로 보유 | TourAPI 음식점 조회 | TOUR_API_SERVICE_KEY | 예 | 이미 연결됨, 점검 대상 |
 | travel_event_agent | tour_api, mock_fallback | 예 | 연결됨. TourAPI contentTypeId=15 행사/축제 조회 경로 보유 | TourAPI 행사/축제 조회 | TOUR_API_SERVICE_KEY | 예 | 이미 연결됨, 점검 대상 |
-| travel_transport_agent | odsay_api, rule_based_fallback, mock_fallback | 예 | 연결됨. ODsay 대중교통 길찾기를 우선 호출하고 제주/섬은 island_air_sea 규칙 우선 | 1순위 ODsay 대중교통 길찾기 API, 2순위 카카오모빌리티 자동차 길찾기 API, 3순위 네이버 Maps Directions / Geocoding | ODSAY_API_KEY, KAKAO_MOBILITY_API_KEY 또는 KAKAO_REST_API_KEY, NAVER_MAPS_CLIENT_ID, NAVER_MAPS_CLIENT_SECRET | 예 | 1순위 구현됨, 점검 대상 |
+| travel_transport_agent | odsay_api, rule_based_fallback, mock_fallback | 예 | 연결됨. 교통 단독 요청에서는 ODsay 대중교통 길찾기를 호출하고, 다중 기능 전체 워크플로우는 로컬/Vercel 응답 안정성을 위해 fallback 유지. 제주/섬은 island_air_sea 규칙 우선 | 1순위 ODsay 대중교통 길찾기 API, 2순위 카카오모빌리티 자동차 길찾기 API, 3순위 네이버 Maps Directions / Geocoding | ODSAY_API_KEY, KAKAO_MOBILITY_API_KEY 또는 KAKAO_REST_API_KEY, NAVER_MAPS_CLIENT_ID, NAVER_MAPS_CLIENT_SECRET | 예 | 1순위 구현됨, 점검 대상 |
 | travel_destination_agent | mock_fallback | 선택 | 미연결. mock/rule 기반 목적지 추천 | TourAPI 기반 지역/키워드 추천 | TOUR_API_SERVICE_KEY | 예 | 2순위 |
 | travel_budget_agent | mock_fallback | 선택 | 미연결. mock/rule 기반 예상 비용 계산 | 국내여행 규칙형 계산, 해외여행 확장 시 환율 API | 추후 결정 | 예 | 3순위 |
 | travel_schedule_agent | mock_fallback | 직접 API 대상 아님 | 직접 API 없음. 다른 에이전트 결과를 조합해 일정 생성 | 없음 | 없음 | 예 | 직접 API 대상 아님 |
@@ -56,7 +56,7 @@
 ### travel_transport_agent
 
 - 실제 API 필요: 예.
-- 현재 상태: ODsay 대중교통 길찾기 API 연결 완료. 제주/섬 이동은 `island_air_sea` 규칙을 ODsay보다 우선하며, ODsay 키 누락/호출 실패/파싱 실패/좌표 누락 시 기존 mock/rule fallback으로 반환한다.
+- 현재 상태: ODsay 대중교통 길찾기 API 연결 완료. 교통 단독 요청에서는 ODsay를 시도하고, 다중 기능 전체 워크플로우는 로컬/Vercel 응답 안정성을 위해 기존 mock fallback을 유지한다. 제주/섬 이동은 `island_air_sea` 규칙을 ODsay보다 우선하며, ODsay 키 누락/호출 실패/파싱 실패/좌표 누락 시 기존 mock/rule fallback으로 반환한다.
 - API 후보:
   1. ODsay 대중교통 길찾기 API.
   2. 카카오모빌리티 자동차 길찾기 API.
@@ -134,7 +134,8 @@
 
 적용 원칙:
 
-- `ODSAY_API_KEY`가 있으면 ODsay 호출.
+- 교통 단독 요청에서 `ODSAY_API_KEY`가 있으면 ODsay 호출.
+- 다중 기능 전체 워크플로우는 로컬/Vercel 응답 안정성을 위해 기존 `mock_fallback` 유지.
 - `ODSAY_API_KEY`가 없거나 ODsay 호출이 실패하면 기존 `mock_fallback` 유지.
 - 서울 -> 제주, 부산 -> 제주 등 섬 이동은 항공/선박 규칙 우선.
 - API 키 원문은 절대 응답에 노출하지 않는다.
