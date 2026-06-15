@@ -10,7 +10,7 @@
 | travel_event_agent | tour_api, mock_fallback | 예 | 연결됨. TourAPI contentTypeId=15 행사/축제 조회 경로 보유 | TourAPI 행사/축제 조회 | TOUR_API_SERVICE_KEY | 예 | 이미 연결됨, 점검 대상 |
 | travel_transport_agent | odsay_api, rule_based_fallback, mock_fallback | 예 | 연결됨. 교통 단독 요청에서는 ODsay 대중교통 길찾기를 호출하고, 다중 기능 전체 워크플로우는 로컬/Vercel 응답 안정성을 위해 fallback 유지. 제주/섬은 island_air_sea 규칙 우선 | 1순위 ODsay 대중교통 길찾기 API, 2순위 카카오모빌리티 자동차 길찾기 API, 3순위 네이버 Maps Directions / Geocoding | ODSAY_API_KEY, KAKAO_MOBILITY_API_KEY 또는 KAKAO_REST_API_KEY, NAVER_MAPS_CLIENT_ID, NAVER_MAPS_CLIENT_SECRET | 예 | 1순위 구현됨, 점검 대상 |
 | travel_destination_agent | tour_api, mock_fallback | 선택 | 연결됨. TourAPI 지역 기반 areaBasedList2 또는 user_request 기반 searchKeyword2 추천 후 실패 시 fallback | TourAPI 기반 지역/키워드 추천 | TOUR_API_SERVICE_KEY | 예 | 2순위 구현됨, 점검 대상 |
-| travel_budget_agent | mock_fallback | 선택 | 미연결. mock/rule 기반 예상 비용 계산 | 국내여행 규칙형 계산, 해외여행 확장 시 환율 API | 추후 결정 | 예 | 3순위 |
+| travel_budget_agent | rule_based_budget | 선택 | 규칙형 엔진 구현됨. 여행기간/예산수준/목적지/숙박/식사/교통 기준 국내여행 예산 계산 | 해외여행 확장 시 환율 API | 추후 결정 | 예 | 3순위 구현됨, 점검 대상 |
 | travel_schedule_agent | mock_fallback | 직접 API 대상 아님 | 직접 API 없음. 다른 에이전트 결과를 조합해 일정 생성 | 없음 | 없음 | 예 | 직접 API 대상 아님 |
 | travel_planning_agent | local_duration_rules | 직접 API 대상 아님 | 직접 API 없음. 전체 계획 총괄/기간 전략/에이전트 조합 판단 | 없음 | 없음 | 예 | 직접 API 대상 아님 |
 
@@ -82,13 +82,13 @@
 ### travel_budget_agent
 
 - 실제 API 필요: 선택.
-- 현재 상태: mock/rule 기반인지 확인 완료. 실제 가격/환율 API 호출은 아직 없다.
+- 현재 상태: `rule_based_budget` 구현 완료. 여행기간, 예산수준, 목적지, 출발지, 숙박 여부, 식사 횟수, 장거리/현지 교통 규칙으로 국내여행 예산을 계산한다.
 - API 후보:
   - 국내여행은 우선 규칙형 계산.
   - 해외여행 확장 시 환율 API 검토.
-- 필요한 환경변수: 추후 결정.
+- 필요한 환경변수: 없음. 해외여행 확장 시 환율 API가 필요하면 추후 결정.
 - fallback 유지: 예.
-- 우선순위: 3순위.
+- 우선순위: 3순위 구현됨, 점검 대상.
 
 ### travel_schedule_agent
 
@@ -118,6 +118,7 @@
 3. `travel_budget_agent` 규칙형 계산 고도화
    - 국내여행은 API보다 교통/숙박/식비/활동비 단가 테이블 기반 계산이 먼저다.
    - 해외여행 확장 단계에서 환율 API를 검토한다.
+   - 국내여행 규칙형 계산은 구현 완료되었고, 다음 단계는 단가 테이블 품질 개선이다.
 4. 기존 API 연결 에이전트 품질 개선
    - `weather`
    - `tour`
@@ -190,6 +191,6 @@
 ## 7. 감사 결론
 
 - 이미 API가 붙은 에이전트: `travel_weather_agent`, `travel_tour_agent`, `travel_food_agent`, `travel_event_agent`, `travel_transport_agent`, `travel_destination_agent`.
-- 아직 `mock_fallback` 또는 local rule 중심인 에이전트: `travel_budget_agent`, `travel_schedule_agent`, `travel_planning_agent`.
-- 바로 다음 개선 추천: `travel_budget_agent` 규칙형 비용 계산 고도화.
+- 아직 local rule 중심인 에이전트: `travel_budget_agent`, `travel_schedule_agent`, `travel_planning_agent`.
+- 바로 다음 개선 추천: `travel_schedule_agent`가 실제 tour/food/event/transport 결과를 더 적극적으로 조합하도록 고도화.
 - 운영 확인 필요: Vercel `ODSAY_API_KEY`/`TOUR_API_SERVICE_KEY` 등록 여부, ODsay Server IP 제한 발생 여부, local/Vercel `data_source` 차이 발생 여부.

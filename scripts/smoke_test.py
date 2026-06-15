@@ -139,6 +139,17 @@ def local_env_value(name):
     return ""
 
 
+def assert_known_api_keys_not_leaked(data):
+    serialized = json.dumps(data, ensure_ascii=False)
+    for env_name in ["KMA_SERVICE_KEY", "TOUR_API_SERVICE_KEY", "ODSAY_API_KEY"]:
+        env_value = local_env_value(env_name)
+        if env_value:
+            assert_true(
+                env_value not in serialized,
+                f"{env_name} 원문이 응답에 노출되었습니다.",
+            )
+
+
 def test_agent_library():
     data = request_json("GET", "/agent-library")
     agent_names = {agent.get("name") for agent in data.get("agents", [])}
@@ -396,6 +407,52 @@ def test_busan_destination():
         )
 
 
+def test_busan_budget():
+    payload = {
+        "user_request": "",
+        "destination": "부산",
+        "location": "부산",
+        "origin": "서울",
+        "days": 3,
+        "budget_level": "medium",
+        "requested_features": ["budget"],
+    }
+    data = request_json("POST", "/run-workflow", payload)
+    budget_result = find_agent_result(data, "travel_budget_agent")
+    assert_planning_auto_included(data)
+
+    assert_true(
+        "travel_budget_agent" in data.get("selected_agents", []),
+        "selected_agents에 travel_budget_agent가 없습니다.",
+    )
+    assert_true(
+        any(agent.get("name") == "travel_budget_agent" for agent in data.get("loaded_agents", [])),
+        "loaded_agents에 travel_budget_agent가 없습니다.",
+    )
+    assert_true(budget_result is not None, "travel_budget_agent 결과가 없습니다.")
+    assert_true(
+        budget_result.get("data_source") == "rule_based_budget",
+        "budget data_source가 rule_based_budget이 아닙니다.",
+    )
+    assert_true(
+        budget_result.get("estimated_total_krw", 0) > 0,
+        "estimated_total_krw가 0보다 크지 않습니다.",
+    )
+
+    breakdown = budget_result.get("budget_breakdown") or {}
+    assert_true(breakdown.get("transport", 0) > 0, "budget_breakdown.transport가 없습니다.")
+    assert_true(breakdown.get("food", 0) > 0, "budget_breakdown.food가 없습니다.")
+    assert_true(
+        budget_result.get("duration_label") == "2박 3일",
+        "duration_label이 2박 3일이 아닙니다.",
+    )
+    assert_true(
+        budget_result.get("lodging_required") is True,
+        "lodging_required가 true가 아닙니다.",
+    )
+    assert_known_api_keys_not_leaked(data)
+
+
 def test_jeju_food():
     payload = {
         "user_request": "",
@@ -588,6 +645,7 @@ def main():
         ("jeju transport", test_jeju_transport),
         ("seoul busan transport", test_seoul_busan_transport),
         ("busan destination", test_busan_destination),
+        ("busan budget", test_busan_budget),
         ("jeju food", test_jeju_food),
         ("jeju event", test_jeju_event),
         ("jeju day trip planning", test_jeju_day_trip_planning),

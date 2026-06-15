@@ -1,23 +1,28 @@
 {
   "name": "travel_budget_agent",
-  "description": "사용자의 여행 목적지, 기간, 예산 수준을 바탕으로 예상 비용과 절약 팁을 mock JSON으로 반환하는 실험용 에이전트입니다.",
+  "description": "사용자의 여행 목적지, 출발지, 기간, 예산 수준, 숙박 여부, 식사 횟수, 장거리/현지 교통 규칙을 기준으로 국내여행 예상 예산을 계산하는 규칙형 에이전트입니다.",
   "role": "여행 예산 / 비용 계산",
   "inputs": [
     "destination",
+    "origin",
     "days",
     "budget_level",
-    "user_request"
+    "requested_features"
   ],
   "outputs": [
     "summary",
-    "budget_items",
+    "estimated_total_krw",
+    "budget_breakdown",
+    "assumptions",
     "saving_tips",
+    "warnings",
     "debug_info"
   ],
   "data_sources": [
-    "mock_fallback"
+    "rule_based_budget"
   ],
-  "version": "0.1.0",
+  "env_vars": [],
+  "version": "0.2.0",
   "input_schema": {
     "type": "object",
     "properties": {
@@ -25,27 +30,34 @@
         "type": "string",
         "description": "여행 목적지입니다."
       },
-      "duration_days": {
-        "type": "integer",
-        "description": "여행 기간입니다."
+      "origin": {
+        "type": "string",
+        "description": "출발지입니다."
       },
-      "traveler_count": {
+      "days": {
         "type": "integer",
-        "description": "여행 인원입니다."
+        "description": "여행 일수입니다."
       },
       "budget_level": {
         "type": "string",
-        "description": "예산 수준입니다. 예: low, medium, high"
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "description": "예산 수준입니다."
       },
-      "travel_style": {
-        "type": "string",
-        "description": "여행 스타일입니다. 예: backpacking, standard, luxury"
+      "requested_features": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     },
     "required": [
       "destination",
-      "duration_days",
-      "traveler_count"
+      "days",
+      "budget_level"
     ]
   },
   "output_schema": {
@@ -54,35 +66,79 @@
       "agent": {
         "type": "string"
       },
-      "summary": {
+      "data_source": {
+        "type": "string",
+        "enum": [
+          "rule_based_budget"
+        ]
+      },
+      "destination": {
         "type": "string"
       },
-      "estimated_budget": {
+      "origin": {
+        "type": "string"
+      },
+      "days": {
+        "type": "integer"
+      },
+      "duration_label": {
+        "type": "string"
+      },
+      "budget_level": {
+        "type": "string"
+      },
+      "lodging_required": {
+        "type": "boolean"
+      },
+      "lodging_nights": {
+        "type": "integer"
+      },
+      "meal_count": {
+        "type": "integer"
+      },
+      "estimated_total_krw": {
+        "type": "integer"
+      },
+      "budget_breakdown": {
         "type": "object",
         "properties": {
-          "transportation": {
-            "type": "string"
+          "long_distance_transport": {
+            "type": "integer"
           },
-          "accommodation": {
-            "type": "string"
+          "local_transport": {
+            "type": "integer"
+          },
+          "transport": {
+            "type": "integer"
+          },
+          "lodging": {
+            "type": "integer"
           },
           "food": {
-            "type": "string"
+            "type": "integer"
           },
-          "activities": {
-            "type": "string"
+          "tour_event": {
+            "type": "integer"
           },
-          "total": {
-            "type": "string"
+          "buffer": {
+            "type": "integer"
           }
         },
         "required": [
-          "transportation",
-          "accommodation",
+          "long_distance_transport",
+          "local_transport",
+          "transport",
+          "lodging",
           "food",
-          "activities",
-          "total"
+          "tour_event",
+          "buffer"
         ]
+      },
+      "assumptions": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       },
       "saving_tips": {
         "type": "array",
@@ -90,26 +146,25 @@
           "type": "string"
         }
       },
-      "risks": {
+      "warnings": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "next_agents": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        }
+      "debug_info": {
+        "type": "object"
       }
     },
     "required": [
       "agent",
-      "summary",
-      "estimated_budget",
+      "data_source",
+      "estimated_total_krw",
+      "budget_breakdown",
+      "assumptions",
       "saving_tips",
-      "risks",
-      "next_agents"
+      "warnings",
+      "debug_info"
     ]
   },
   "entrypoint": "main.py",

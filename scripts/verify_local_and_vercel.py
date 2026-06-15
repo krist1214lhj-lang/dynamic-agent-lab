@@ -61,6 +61,10 @@ ALLOWED_DESTINATION_DATA_SOURCES = {
     "rule_based_fallback",
 }
 
+ALLOWED_BUDGET_DATA_SOURCES = {
+    "rule_based_budget",
+}
+
 API_ENV_NAMES = [
     "KMA_SERVICE_KEY",
     "TOUR_API_SERVICE_KEY",
@@ -153,6 +157,20 @@ CASES = [
             "days": 3,
             "budget_level": "medium",
             "requested_features": ["destination"],
+        },
+    ),
+    Case(
+        "busan budget",
+        "POST",
+        "/run-workflow",
+        {
+            "user_request": "",
+            "destination": "부산",
+            "location": "부산",
+            "origin": "서울",
+            "days": 3,
+            "budget_level": "medium",
+            "requested_features": ["budget"],
         },
     ),
     Case(
@@ -522,6 +540,49 @@ def assert_busan_destination_contract(label: str, data: dict[str, Any]) -> None:
     assert_known_api_key_not_leaked(label, data, "TOUR_API_SERVICE_KEY")
 
 
+def assert_busan_budget_contract(label: str, data: dict[str, Any]) -> None:
+    selected_agents = data.get("selected_agents") or []
+    loaded_agent_names = {agent.get("name") for agent in data.get("loaded_agents", [])}
+    budget_result = find_agent_result(data, "travel_budget_agent")
+
+    assert_true(
+        selected_agents and selected_agents[0] == "travel_planning_agent",
+        f"{label} did not run travel_planning_agent first.",
+    )
+    assert_true(
+        "travel_budget_agent" in selected_agents,
+        f"{label} did not select travel_budget_agent.",
+    )
+    assert_true(
+        "travel_budget_agent" in loaded_agent_names,
+        f"{label} did not load travel_budget_agent.",
+    )
+    assert_true(budget_result is not None, f"{label} has no budget result.")
+
+    data_source = budget_result.get("data_source")
+    assert_true(
+        data_source in ALLOWED_BUDGET_DATA_SOURCES,
+        f"{label} budget data_source is not allowed: {data_source}",
+    )
+    assert_true(
+        budget_result.get("estimated_total_krw", 0) > 0,
+        f"{label} estimated_total_krw is not positive.",
+    )
+    breakdown = budget_result.get("budget_breakdown") or {}
+    for key in ["transport", "lodging", "food", "tour_event", "buffer"]:
+        assert_true(key in breakdown, f"{label} budget_breakdown has no {key}.")
+    assert_true(breakdown.get("transport", 0) > 0, f"{label} transport budget is not positive.")
+    assert_true(breakdown.get("food", 0) > 0, f"{label} food budget is not positive.")
+    assert_true(
+        budget_result.get("duration_label") == "2박 3일",
+        f"{label} duration_label is not 2박 3일.",
+    )
+    assert_true(
+        budget_result.get("lodging_required") is True,
+        f"{label} lodging_required is not true.",
+    )
+
+
 def assert_common_contract(case: Case, label: str, data: dict[str, Any]) -> None:
     if case.path == "/health":
         assert_true(data.get("status") == "ok", f"{label} health status is not ok.")
@@ -632,6 +693,9 @@ def assert_workflow_contract(case: Case, label: str, data: dict[str, Any]) -> No
     if case.name == "busan destination":
         assert_busan_destination_contract(label, data)
 
+    if case.name == "busan budget":
+        assert_busan_budget_contract(label, data)
+
     if case.name == "jeju food":
         food_result = find_agent_result(data, "travel_food_agent")
         assert_true(food_result is not None, f"{label} has no food result.")
@@ -672,6 +736,14 @@ def transport_source_summary(data: dict[str, Any]) -> tuple[Any, Any]:
     transport_result = find_agent_result(data, "travel_transport_agent") or {}
     debug_info = transport_result.get("debug_info") or {}
     return transport_result.get("data_source"), fallback_reason_for(transport_result)
+
+
+def budget_signature(data: dict[str, Any]) -> tuple[Any, Any]:
+    budget_result = find_agent_result(data, "travel_budget_agent") or {}
+    return (
+        budget_result.get("estimated_total_krw"),
+        budget_result.get("budget_breakdown") or {},
+    )
 
 
 def agent_result_map(data: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -764,6 +836,20 @@ def run_case(case: Case, local_url: str, vercel_url: str) -> bool:
                     f"local={local_source}; vercel={vercel_source}; "
                     f"fallback_reason={vercel_reason or local_reason or '-'}"
                 )
+            print(f"[PASS] {case.name}")
+            return True
+
+        if case.name == "busan budget":
+            local_budget = budget_signature(local_data)
+            vercel_budget = budget_signature(vercel_data)
+            assert_true(
+                local_budget == vercel_budget,
+                f"busan budget differs: local={local_budget}; vercel={vercel_budget}",
+            )
+            print(
+                "[INFO] busan budget rule_based_budget total: "
+                f"local={local_budget[0]}; vercel={vercel_budget[0]}"
+            )
             print(f"[PASS] {case.name}")
             return True
 

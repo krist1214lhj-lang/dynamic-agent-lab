@@ -2557,6 +2557,14 @@
         return value ? "있음" : "없음";
       }
 
+      function formatKrw(value) {
+        const amount = Number(value);
+        if (!Number.isFinite(amount)) {
+          return "정보 없음";
+        }
+        return `${amount.toLocaleString("ko-KR")}원`;
+      }
+
       function renderDurationStrategy(strategy) {
         if (!strategy || typeof strategy !== "object") {
           return "";
@@ -2639,6 +2647,57 @@
         `;
       }
 
+      function renderBudgetBreakdown(breakdown) {
+        if (!breakdown || typeof breakdown !== "object") {
+          return "";
+        }
+
+        const fields = [
+          ["교통비", breakdown.transport],
+          ["장거리 교통", breakdown.long_distance_transport],
+          ["현지 이동", breakdown.local_transport],
+          ["숙박비", breakdown.lodging],
+          ["식비", breakdown.food],
+          ["관광/행사비", breakdown.tour_event],
+          ["예비비", breakdown.buffer],
+        ];
+
+        return `
+          <section class="tour-section">
+            <h3>예산 상세</h3>
+            <dl class="route-meta">
+              ${fields.map(([label, value]) => `
+                <div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(formatKrw(value))}</dd></div>
+              `).join("")}
+            </dl>
+          </section>
+        `;
+      }
+
+      function renderBudgetAgentCard(agentResult) {
+        return `
+          <article class="agent-card">
+            <h2>여행 예산</h2>
+            <p>${escapeHtml(agentResult.summary || "여행 예산 결과입니다.")}</p>
+            <section class="tour-section">
+              <h3>총 예상 예산</h3>
+              <dl class="route-meta">
+                <div><dt>총액</dt><dd>${escapeHtml(formatKrw(agentResult.estimated_total_krw))}</dd></div>
+                <div><dt>예산 수준</dt><dd>${escapeHtml(agentResult.budget_level || "정보 없음")}</dd></div>
+                <div><dt>기간</dt><dd>${escapeHtml(agentResult.duration_label || "정보 없음")}</dd></div>
+                <div><dt>숙박</dt><dd>${escapeHtml(yesNo(agentResult.lodging_required))}</dd></div>
+                <div><dt>숙박 일수</dt><dd>${escapeHtml(String(agentResult.lodging_nights ?? 0))}박</dd></div>
+                <div><dt>식사 횟수</dt><dd>${escapeHtml(String(agentResult.meal_count ?? "정보 없음"))}회</dd></div>
+              </dl>
+            </section>
+            ${renderBudgetBreakdown(agentResult.budget_breakdown)}
+            ${renderList("계산 가정", agentResult.assumptions)}
+            ${renderList("절약 팁", agentResult.saving_tips)}
+            ${renderList("주의할 점", agentResult.warnings || agentResult.risks)}
+          </article>
+        `;
+      }
+
       function renderGenericAgentCard(agentResult) {
         return `
           <article class="agent-card">
@@ -2666,6 +2725,9 @@
         }
         if (agentResult.agent === "travel_transport_agent") {
           return renderTransportAgentCard(agentResult);
+        }
+        if (agentResult.agent === "travel_budget_agent") {
+          return renderBudgetAgentCard(agentResult);
         }
         return renderGenericAgentCard(agentResult);
       }
