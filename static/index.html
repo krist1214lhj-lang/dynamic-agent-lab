@@ -1066,17 +1066,17 @@
       .control-panel,
       .result-panel,
       .agent-library-section {
-        padding: 16px;
+        padding: 14px;
       }
 
       .workflow {
-        gap: 14px;
+        gap: 10px;
       }
 
       .section-heading {
         display: grid;
-        gap: 4px;
-        margin-bottom: 6px;
+        gap: 3px;
+        margin-bottom: 2px;
       }
 
       .section-kicker {
@@ -1084,7 +1084,7 @@
       }
 
       .condition-card {
-        gap: 12px;
+        gap: 8px;
         padding: 0;
         border: 0;
         background: transparent;
@@ -1104,7 +1104,7 @@
 
       .condition-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 8px;
       }
 
       .condition-grid label,
@@ -1142,10 +1142,11 @@
 
       .condition-grid label,
       .checkbox-grid label {
-        padding: 10px 12px;
-        border-radius: 14px;
-        min-height: 50px;
+        padding: 8px 10px;
+        border-radius: 13px;
+        min-height: 44px;
         cursor: pointer;
+        font-size: 0.94rem;
         transition:
           transform 160ms ease,
           border-color 160ms ease,
@@ -1173,12 +1174,12 @@
       }
 
       .checkbox-group {
-        gap: 10px;
+        gap: 7px;
       }
 
       .checkbox-grid {
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-        gap: 8px;
+        grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+        gap: 7px;
       }
 
       .checkbox-grid label {
@@ -1195,22 +1196,31 @@
       }
 
       .checkbox-grid input {
-        width: 16px;
-        height: 16px;
+        width: 15px;
+        height: 15px;
         accent-color: var(--mint);
       }
 
       textarea,
       select {
-        min-height: 48px;
-        border-radius: 14px;
+        min-height: 42px;
+        border-radius: 13px;
         border: 1px solid var(--line);
         background: rgba(255, 255, 255, 0.08);
         color: #f6fbff;
       }
 
       textarea {
-        min-height: 96px;
+        min-height: 72px;
+      }
+
+      label[for="user-request"] {
+        gap: 7px;
+      }
+
+      #duration-guidance {
+        min-height: auto;
+        line-height: 1.45;
       }
 
       textarea::placeholder {
@@ -1228,7 +1238,7 @@
 
       button {
         width: 100%;
-        min-height: 52px;
+        min-height: 50px;
         border-radius: 16px;
         border: 1px solid rgba(255, 255, 255, 0.08);
         color: #06101f;
@@ -1878,7 +1888,7 @@
         .control-panel,
         .result-panel,
         .agent-library-section {
-          padding: 16px;
+          padding: 14px;
         }
 
         .saved-plans-header,
@@ -1936,12 +1946,12 @@
 
         .condition-grid label,
         .checkbox-grid label {
-          min-height: 50px;
-          border-radius: 14px;
+          min-height: 44px;
+          border-radius: 13px;
         }
 
         button {
-          min-height: 52px;
+          min-height: 50px;
         }
       }
     </style>
@@ -2055,11 +2065,11 @@
               </div>
             </section>
 
+            <button id="run-button" type="button">여행 플랜 실행</button>
             <label for="user-request">
               추가 요청
               <textarea id="user-request" placeholder="예: 아이와 함께 가기 좋은 곳 위주로, 비 오는 날 실내 위주로 등"></textarea>
             </label>
-            <button id="run-button" type="button">여행 플랜 실행</button>
           </section>
         </section>
 
