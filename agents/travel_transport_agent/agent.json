@@ -1,6 +1,6 @@
 {
   "name": "travel_transport_agent",
-  "description": "사용자의 출발지, 목적지, 여행 기간을 바탕으로 도시 간 이동과 현지 교통 계획을 mock JSON과 규칙 기반 검증에 맞춰 반환하는 실험용 에이전트입니다.",
+  "description": "사용자의 출발지, 목적지, 여행 기간을 바탕으로 ODsay 대중교통 길찾기 또는 안전한 규칙 기반 fallback 교통 계획을 반환하는 에이전트입니다.",
   "role": "도시 간 이동 / 현지 교통 계획",
   "inputs": [
     "origin",
@@ -11,15 +11,23 @@
   ],
   "outputs": [
     "summary",
+    "data_source",
+    "transport_profile",
     "transport_overview",
     "routes",
     "transport_tips",
     "debug_info"
   ],
   "data_sources": [
-    "mock_fallback",
-    "rule_based_validator"
+    "odsay_api",
+    "rule_based_fallback",
+    "mock_fallback"
   ],
+  "env_vars": [
+    "ODSAY_API_KEY"
+  ],
+  "fallback_policy": "ODSAY_API_KEY가 없거나 ODsay 호출이 실패하면 mock_fallback을 유지합니다. 제주/섬 지역은 ODsay보다 island_air_sea 규칙을 우선 적용하며 data_source는 rule_based_fallback으로 반환합니다. API 키 원문은 응답과 debug_info에 노출하지 않습니다.",
+  "island_policy": "destination이 제주이거나 transport_profile이 island_air_sea인 경우 항공편/선박 중심 규칙을 우선 적용합니다.",
   "version": "0.1.0",
   "input_schema": {
     "type": "object",
@@ -54,7 +62,19 @@
         "type": "string"
       },
       "data_source": {
-        "type": "string"
+        "type": "string",
+        "enum": [
+          "odsay_api",
+          "rule_based_fallback",
+          "mock_fallback"
+        ]
+      },
+      "transport_profile": {
+        "type": "string",
+        "enum": [
+          "public_transport",
+          "island_air_sea"
+        ]
       },
       "summary": {
         "type": "string"
@@ -101,6 +121,27 @@
             },
             "notes": {
               "type": "string"
+            },
+            "route_type": {
+              "type": "string"
+            },
+            "summary": {
+              "type": "string"
+            },
+            "total_time_minutes": {
+              "type": ["integer", "null"]
+            },
+            "payment": {
+              "type": ["integer", "null"]
+            },
+            "transfer_count": {
+              "type": "integer"
+            },
+            "steps_summary": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         }

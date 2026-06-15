@@ -8,7 +8,7 @@
 | travel_tour_agent | tour_api, mock_fallback | 예 | 연결됨. TourAPI 관광지 area/keyword 조회 경로 보유 | TourAPI 관광지 조회 | TOUR_API_SERVICE_KEY | 예 | 이미 연결됨, 점검 대상 |
 | travel_food_agent | tour_api, mock_fallback | 예 | 연결됨. TourAPI contentTypeId=39 음식점 조회 경로 보유 | TourAPI 음식점 조회 | TOUR_API_SERVICE_KEY | 예 | 이미 연결됨, 점검 대상 |
 | travel_event_agent | tour_api, mock_fallback | 예 | 연결됨. TourAPI contentTypeId=15 행사/축제 조회 경로 보유 | TourAPI 행사/축제 조회 | TOUR_API_SERVICE_KEY | 예 | 이미 연결됨, 점검 대상 |
-| travel_transport_agent | mock_fallback, rule_based_validator | 예 | 미연결. 제주 island_air_sea 규칙과 국내 육상 mock/rule 중심 | 1순위 ODsay 대중교통 길찾기 API, 2순위 카카오모빌리티 자동차 길찾기 API, 3순위 네이버 Maps Directions / Geocoding | ODSAY_API_KEY, KAKAO_MOBILITY_API_KEY 또는 KAKAO_REST_API_KEY, NAVER_MAPS_CLIENT_ID, NAVER_MAPS_CLIENT_SECRET | 예 | 1순위 |
+| travel_transport_agent | odsay_api, rule_based_fallback, mock_fallback | 예 | 연결됨. ODsay 대중교통 길찾기를 우선 호출하고 제주/섬은 island_air_sea 규칙 우선 | 1순위 ODsay 대중교통 길찾기 API, 2순위 카카오모빌리티 자동차 길찾기 API, 3순위 네이버 Maps Directions / Geocoding | ODSAY_API_KEY, KAKAO_MOBILITY_API_KEY 또는 KAKAO_REST_API_KEY, NAVER_MAPS_CLIENT_ID, NAVER_MAPS_CLIENT_SECRET | 예 | 1순위 구현됨, 점검 대상 |
 | travel_destination_agent | mock_fallback | 선택 | 미연결. mock/rule 기반 목적지 추천 | TourAPI 기반 지역/키워드 추천 | TOUR_API_SERVICE_KEY | 예 | 2순위 |
 | travel_budget_agent | mock_fallback | 선택 | 미연결. mock/rule 기반 예상 비용 계산 | 국내여행 규칙형 계산, 해외여행 확장 시 환율 API | 추후 결정 | 예 | 3순위 |
 | travel_schedule_agent | mock_fallback | 직접 API 대상 아님 | 직접 API 없음. 다른 에이전트 결과를 조합해 일정 생성 | 없음 | 없음 | 예 | 직접 API 대상 아님 |
@@ -56,7 +56,7 @@
 ### travel_transport_agent
 
 - 실제 API 필요: 예.
-- 현재 상태: `mock_fallback` 중심인지 확인 완료. 현재 실제 교통 API는 호출하지 않고, 제주/섬 이동은 `island_air_sea` 규칙, 국내 육상 이동은 KTX/고속버스/현지 대중교통 mock/rule 기반으로 반환한다.
+- 현재 상태: ODsay 대중교통 길찾기 API 연결 완료. 제주/섬 이동은 `island_air_sea` 규칙을 ODsay보다 우선하며, ODsay 키 누락/호출 실패/파싱 실패/좌표 누락 시 기존 mock/rule fallback으로 반환한다.
 - API 후보:
   1. ODsay 대중교통 길찾기 API.
   2. 카카오모빌리티 자동차 길찾기 API.
@@ -67,7 +67,7 @@
   - `NAVER_MAPS_CLIENT_ID`
   - `NAVER_MAPS_CLIENT_SECRET`
 - fallback 유지: 예.
-- 우선순위: 1순위.
+- 우선순위: 1순위 구현됨, 점검 대상.
 
 ### travel_destination_agent
 
@@ -109,7 +109,7 @@
 
 1. `travel_transport_agent` + ODsay
    - 국내 여행 플랜에서 대중교통, 환승, 버스, 지하철, 도보 연결은 사용자가 바로 체감하는 핵심 정보다.
-   - ODsay를 1차 API로 붙이고, 실패 시 기존 규칙형 결과를 유지한다.
+   - ODsay 1차 API 연결은 완료되었고, 실패 시 기존 규칙형 결과를 유지한다.
 2. `travel_destination_agent` + TourAPI 지역/키워드 추천
    - 목적지 추천을 mock에서 실제 지역/키워드 기반 추천으로 개선한다.
    - `TOUR_API_SERVICE_KEY`를 기존 TourAPI 계열 에이전트와 공유할 수 있다.
@@ -165,7 +165,7 @@
 | --- | --- | --- |
 | KMA_SERVICE_KEY | travel_weather_agent | 현재 사용 중 |
 | TOUR_API_SERVICE_KEY | travel_tour_agent, travel_food_agent, travel_event_agent, 향후 travel_destination_agent | 현재 사용 중 |
-| ODSAY_API_KEY | 향후 travel_transport_agent | 신규 필요 |
+| ODSAY_API_KEY | travel_transport_agent | 현재 사용 중 |
 | KAKAO_MOBILITY_API_KEY 또는 KAKAO_REST_API_KEY | 향후 travel_transport_agent 자동차 길찾기 보조 | 후보 |
 | NAVER_MAPS_CLIENT_ID | 향후 travel_transport_agent 지도/좌표 보조 | 후보 |
 | NAVER_MAPS_CLIENT_SECRET | 향후 travel_transport_agent 지도/좌표 보조 | 후보 |
@@ -187,6 +187,6 @@
 ## 7. 감사 결론
 
 - 이미 API가 붙은 에이전트: `travel_weather_agent`, `travel_tour_agent`, `travel_food_agent`, `travel_event_agent`.
-- 아직 `mock_fallback` 또는 local rule 중심인 에이전트: `travel_transport_agent`, `travel_destination_agent`, `travel_budget_agent`, `travel_schedule_agent`, `travel_planning_agent`.
-- 바로 다음 API 통합 추천: `travel_transport_agent`에 `ODsay`를 1차로 적용.
-- 구현 전 확인 필요: `ODSAY_API_KEY` 발급 가능 여부, Vercel 환경변수 등록 가능 여부, ODsay 응답을 기존 `routes` 구조에 매핑하는 규칙.
+- 아직 `mock_fallback` 또는 local rule 중심인 에이전트: `travel_destination_agent`, `travel_budget_agent`, `travel_schedule_agent`, `travel_planning_agent`.
+- 바로 다음 API 통합 추천: `travel_destination_agent`에 TourAPI 지역/키워드 추천 적용.
+- 운영 확인 필요: Vercel `ODSAY_API_KEY` 등록 여부, ODsay Server IP 제한 발생 여부, local/Vercel transport `data_source` 차이 발생 여부.

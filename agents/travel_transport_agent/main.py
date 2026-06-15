@@ -1,4 +1,31 @@
 import json
+import os
+
+try:
+    import requests
+except ImportError:  # pragma: no cover - exercised when dependency is absent
+    requests = None
+
+
+ODsay_API_URL = "https://api.odsay.com/v1/api/searchPubTransPathT"
+
+CITY_COORDINATES = {
+    "서울": (126.9780, 37.5665),
+    "부산": (129.0756, 35.1796),
+    "제주": (126.5312, 33.4996),
+    "강릉": (128.8761, 37.7519),
+    "대전": (127.3845, 36.3504),
+    "대구": (128.6014, 35.8714),
+    "광주": (126.8526, 35.1595),
+    "인천": (126.7052, 37.4563),
+}
+
+PLACEHOLDER_KEYS = {
+    "",
+    "your_odsay_api_key_here",
+    "YOUR_ODSAY_API_KEY",
+    "ODSAY_API_KEY",
+}
 
 
 def _get_trip_context(input_data):
@@ -15,6 +42,25 @@ def _get_trip_context(input_data):
         days = 3
     travel_style = safe_input.get("travel_style", "대중교통 중심")
     return safe_input, origin, destination, days, travel_style
+
+
+def _odsay_key():
+    return os.getenv("ODSAY_API_KEY") or ""
+
+
+def _is_valid_odsay_key(service_key):
+    return bool(service_key) and service_key not in PLACEHOLDER_KEYS
+
+
+def _debug_info(service_key="", fallback_reason=None, data_source="mock_fallback"):
+    return {
+        "env_key_valid": _is_valid_odsay_key(service_key),
+        "env_key_length": len(service_key or ""),
+        "api_provider": "odsay",
+        "fallback_reason": fallback_reason,
+        "data_source": data_source,
+        "service_key_leaked": False,
+    }
 
 
 def _build_jeju_routes(origin):
@@ -96,12 +142,187 @@ def _build_land_routes(origin, destination):
     ]
 
 
-def run(input_data):
-    """Return mock transport guidance for later public transit or map API wiring."""
-    _safe_input, origin, destination, days, travel_style = _get_trip_context(input_data)
-    is_jeju = destination == "제주"
-    transport_profile = "island_air_sea" if is_jeju else "domestic_land"
+def _coerce_int(value, default=0):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
 
+
+def _line_name(lane):
+    if isinstance(lane, list) and lane:
+        first = lane[0] if isinstance(lane[0], dict) else {}
+        return first.get("name") or first.get("busNo") or first.get("subwayCode")
+    if isinstance(lane, dict):
+        return lane.get("name") or lane.get("busNo") or lane.get("subwayCode")
+    return None
+
+
+def _step_summary(step):
+    traffic_type = step.get("trafficType")
+    section_time = step.get("sectionTime")
+    start_name = step.get("startName") or step.get("startStationName")
+    end_name = step.get("endName") or step.get("endStationName")
+    line_name = _line_name(step.get("lane"))
+
+    if traffic_type == 1:
+        label = f"지하철 {line_name}" if line_name else "지하철"
+    elif traffic_type == 2:
+        label = f"버스 {line_name}" if line_name else "버스"
+    elif traffic_type == 3:
+        label = "도보"
+    else:
+        label = "이동"
+
+    parts = [label]
+    if start_name or end_name:
+        parts.append(f"{start_name or '출발지'} -> {end_name or '도착지'}")
+    if section_time is not None:
+        parts.append(f"{section_time}분")
+    return " · ".join(parts)
+
+
+def _parse_odsay_routes(payload, origin, destination):
+    result = payload.get("result") if isinstance(payload, dict) else None
+    paths = result.get("path") if isinstance(result, dict) else None
+    if not isinstance(paths, list) or not paths:
+        return []
+
+    routes = []
+    for index, path in enumerate(paths[:3], start=1):
+        if not isinstance(path, dict):
+            continue
+        info = path.get("info") if isinstance(path.get("info"), dict) else {}
+        sub_paths = path.get("subPath") if isinstance(path.get("subPath"), list) else []
+        steps = [
+            _step_summary(step)
+            for step in sub_paths
+            if isinstance(step, dict)
+        ]
+        total_time = _coerce_int(info.get("totalTime"), None)
+        payment = _coerce_int(info.get("payment"), None)
+        transfer_count = info.get("transferCount")
+        if transfer_count is None:
+            bus_count = _coerce_int(info.get("busTransitCount"))
+            subway_count = _coerce_int(info.get("subwayTransitCount"))
+            transfer_count = max(0, bus_count + subway_count - 1)
+
+        route = {
+            "route_type": "public_transport",
+            "summary": f"대중교통 경로 {index}",
+            "total_time_minutes": total_time,
+            "payment": payment,
+            "transfer_count": _coerce_int(transfer_count),
+            "first_start_station": info.get("firstStartStation") or origin,
+            "last_end_station": info.get("lastEndStation") or destination,
+            "steps_summary": steps[:8],
+            "type": "public_transport",
+            "from": origin,
+            "to": destination,
+            "method": "ODsay 대중교통",
+            "estimated_time": f"약 {total_time}분" if total_time is not None else "확인 필요",
+            "notes": f"환승 {_coerce_int(transfer_count)}회, 예상 요금 {payment}원"
+            if payment is not None
+            else f"환승 {_coerce_int(transfer_count)}회",
+        }
+        routes.append(route)
+    return routes
+
+
+def _safe_error(exc):
+    return type(exc).__name__
+
+
+def call_odsay_transport_api(origin, destination, input_data):
+    """Call ODsay public transport routing using mapped city coordinates."""
+    service_key = _odsay_key()
+    origin_coords = CITY_COORDINATES.get(origin)
+    destination_coords = CITY_COORDINATES.get(destination)
+    if not origin_coords or not destination_coords:
+        return None, "missing_coordinates_for_odsay", service_key
+    if not _is_valid_odsay_key(service_key):
+        return None, "missing_odsay_api_key", service_key
+    if requests is None:
+        return None, "missing_requests_dependency", service_key
+
+    try:
+        params = {
+            "apiKey": service_key,
+            "SX": origin_coords[0],
+            "SY": origin_coords[1],
+            "EX": destination_coords[0],
+            "EY": destination_coords[1],
+            "lang": 0,
+        }
+        response = requests.get(ODsay_API_URL, params=params, timeout=6)
+        if response.status_code >= 400:
+            return None, "odsay_http_error", service_key
+
+        try:
+            payload = response.json()
+        except ValueError:
+            return None, "odsay_parse_error", service_key
+
+        if isinstance(payload, dict) and payload.get("error"):
+            return None, "odsay_api_error", service_key
+
+        try:
+            routes = _parse_odsay_routes(payload, origin, destination)
+        except Exception:
+            return None, "odsay_parse_error", service_key
+
+        if not routes:
+            return None, "odsay_no_route", service_key
+
+        first_route = routes[0]
+        total_time = first_route.get("total_time_minutes")
+        estimated_time = f"약 {total_time}분" if total_time is not None else "ODsay 경로 결과 참고"
+        return {
+            "agent": "travel_transport_agent",
+            "data_source": "odsay_api",
+            "origin": origin,
+            "destination": destination,
+            "transport_profile": "public_transport",
+            "summary": f"{origin}에서 {destination}까지의 ODsay 대중교통 경로를 정리했습니다.",
+            "transport_overview": {
+                "origin": origin,
+                "destination": destination,
+                "main_transport": "ODsay 대중교통 길찾기",
+                "local_transport": "버스, 지하철, 도보",
+                "estimated_travel_time": estimated_time,
+            },
+            "routes": routes,
+            "recommendations": [
+                "출발 전 실제 운행 시간과 막차 시간을 다시 확인하세요.",
+                "환승 횟수와 도보 구간을 고려해 여유 시간을 확보하세요.",
+                "ODsay 결과가 실제 교통 상황과 다를 수 있으므로 현장 안내를 함께 확인하세요.",
+            ],
+            "transport_tips": [
+                "교통카드 또는 모바일 승차권을 미리 준비하세요.",
+                "짐이 많다면 환승이 적은 경로를 우선 검토하세요.",
+                "비나 폭염이 있으면 도보 구간이 짧은 경로를 선택하세요.",
+            ],
+            "risks": [
+                "ODsay API 결과는 호출 시점 기준이므로 운행 변경이 있을 수 있습니다.",
+                "심야 시간대에는 대중교통 경로가 제한될 수 있습니다.",
+                "교통 장애, 행사, 공사로 실제 이동 시간이 길어질 수 있습니다.",
+            ],
+            "next_agents": [
+                "travel_schedule_agent",
+                "travel_budget_agent",
+                "travel_weather_agent",
+            ],
+            "debug_info": _debug_info(service_key, None, "odsay_api"),
+        }, None, service_key
+    except requests.exceptions.RequestException:
+        return None, "odsay_request_exception", service_key
+    except Exception as exc:
+        _safe_error(exc)
+        return None, "odsay_parse_error", service_key
+
+
+def _fallback_result(origin, destination, days, travel_style, transport_profile, fallback_reason, data_source):
+    is_jeju = transport_profile == "island_air_sea"
     if is_jeju:
         summary = (
             f"{origin}에서 {destination}까지의 이동은 항공편을 우선 추천하고, "
@@ -133,7 +354,10 @@ def run(input_data):
 
     return {
         "agent": "travel_transport_agent",
-        "data_source": "mock_fallback",
+        "data_source": data_source,
+        "origin": origin,
+        "destination": destination,
+        "transport_profile": transport_profile,
         "summary": summary,
         "transport_overview": {
             "origin": origin,
@@ -144,6 +368,7 @@ def run(input_data):
         },
         "routes": routes,
         "transport_tips": transport_tips,
+        "recommendations": transport_tips,
         "risks": [
             "현재 결과는 mock 데이터이므로 실제 운행 시간, 요금, 좌석 여부와 다를 수 있습니다.",
             "기상 악화, 도로 정체, 행사 통제로 이동 시간이 길어질 수 있습니다.",
@@ -154,13 +379,45 @@ def run(input_data):
             "travel_budget_agent",
             "travel_weather_agent"
         ],
-        "debug_info": {
-            "origin": origin,
-            "destination": destination,
-            "transport_profile": transport_profile,
-            "used_mock_fallback": True
-        }
+        "debug_info": _debug_info(_odsay_key(), fallback_reason, data_source),
     }
+
+
+def run(input_data):
+    """Return ODsay public transit guidance with safe rule/mock fallback."""
+    _safe_input, origin, destination, days, travel_style = _get_trip_context(input_data)
+    requested_profile = _safe_input.get("transport_profile")
+    is_jeju = destination == "제주" or requested_profile == "island_air_sea"
+    transport_profile = "island_air_sea" if is_jeju else "public_transport"
+
+    if is_jeju:
+        return _fallback_result(
+            origin,
+            destination,
+            days,
+            travel_style,
+            "island_air_sea",
+            "island_air_sea_rule_priority",
+            "rule_based_fallback",
+        )
+
+    odsay_result, fallback_reason, _service_key = call_odsay_transport_api(
+        origin,
+        destination,
+        _safe_input,
+    )
+    if odsay_result:
+        return odsay_result
+
+    return _fallback_result(
+        origin,
+        destination,
+        days,
+        travel_style,
+        transport_profile,
+        fallback_reason or "odsay_api_error",
+        "mock_fallback",
+    )
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ import os
 import sys
 import urllib.error
 import urllib.request
+from pathlib import Path
 
 
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:8013")
@@ -116,6 +117,28 @@ def assert_planning_auto_included(data):
     )
 
 
+def local_env_value(name):
+    value = os.environ.get(name)
+    if value:
+        return value
+
+    env_path = Path(".env")
+    if not env_path.exists():
+        return ""
+
+    try:
+        for line in env_path.read_text(encoding="utf-8").splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#") or "=" not in stripped:
+                continue
+            key, raw_value = stripped.split("=", 1)
+            if key.strip() == name:
+                return raw_value.strip().strip("\"'")
+    except OSError:
+        return ""
+    return ""
+
+
 def test_agent_library():
     data = request_json("GET", "/agent-library")
     agent_names = {agent.get("name") for agent in data.get("agents", [])}
@@ -223,6 +246,27 @@ def test_jeju_transport():
         "input_data_summary.destination이 제주가 아닙니다.",
     )
     assert_true(transport_result is not None, "travel_transport_agent 결과가 없습니다.")
+    assert_true(
+        transport_result.get("transport_profile") == "island_air_sea",
+        "제주 교통 transport_profile이 island_air_sea가 아닙니다.",
+    )
+    debug_info = transport_result.get("debug_info") or {}
+    fallback_reason = debug_info.get("fallback_reason")
+    if fallback_reason:
+        assert_true(
+            fallback_reason in {
+                "island_air_sea_rule_priority",
+                "missing_odsay_api_key",
+                "missing_coordinates_for_odsay",
+                "odsay_http_error",
+                "odsay_api_error",
+                "odsay_parse_error",
+                "odsay_no_route",
+                "odsay_request_exception",
+                "missing_requests_dependency",
+            },
+            f"제주 교통 fallback_reason이 명확하지 않습니다: {fallback_reason}",
+        )
 
     routes = transport_result.get("routes") or []
     assert_true(
@@ -243,6 +287,57 @@ def test_jeju_transport():
         data.get("validation_report") is not None,
         "validation_report가 없습니다.",
     )
+
+
+def test_seoul_busan_transport():
+    payload = {
+        "user_request": "",
+        "destination": "부산",
+        "location": "부산",
+        "origin": "서울",
+        "days": 2,
+        "budget_level": "medium",
+        "requested_features": ["transport"],
+    }
+    data = request_json("POST", "/run-workflow", payload)
+    transport_result = find_agent_result(data, "travel_transport_agent")
+    assert_planning_auto_included(data)
+
+    assert_true(
+        "travel_transport_agent" in data.get("selected_agents", []),
+        "selected_agents에 travel_transport_agent가 없습니다.",
+    )
+    assert_true(transport_result is not None, "travel_transport_agent 결과가 없습니다.")
+
+    data_source = transport_result.get("data_source")
+    assert_true(
+        data_source in {"odsay_api", "mock_fallback", "rule_based_fallback"},
+        f"transport data_source가 허용되지 않은 값입니다: {data_source}",
+    )
+
+    debug_info = transport_result.get("debug_info") or {}
+    if data_source in {"mock_fallback", "rule_based_fallback"}:
+        assert_true(
+            bool(debug_info.get("fallback_reason")),
+            "fallback data_source인데 debug_info.fallback_reason이 없습니다.",
+        )
+
+    assert_true(
+        debug_info.get("service_key_leaked") is False,
+        "debug_info.service_key_leaked가 false가 아닙니다.",
+    )
+    assert_true(
+        "api_provider" not in debug_info or debug_info.get("api_provider") == "odsay",
+        "debug_info.api_provider가 odsay가 아닙니다.",
+    )
+
+    odsay_key = local_env_value("ODSAY_API_KEY")
+    if odsay_key:
+        serialized = json.dumps(data, ensure_ascii=False)
+        assert_true(
+            odsay_key not in serialized,
+            "ODSay API 키 원문이 응답에 노출되었습니다.",
+        )
 
 
 def test_jeju_food():
@@ -435,6 +530,7 @@ def main():
         ("feature map", test_feature_map),
         ("jeju weather", test_jeju_weather),
         ("jeju transport", test_jeju_transport),
+        ("seoul busan transport", test_seoul_busan_transport),
         ("jeju food", test_jeju_food),
         ("jeju event", test_jeju_event),
         ("jeju day trip planning", test_jeju_day_trip_planning),
