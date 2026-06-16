@@ -1555,6 +1555,75 @@
         overflow-wrap: anywhere;
       }
 
+      .final-daily-itinerary-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .final-day-card {
+        display: grid;
+        gap: 10px;
+        border: 1px solid rgba(165, 194, 255, 0.18);
+        border-radius: 16px;
+        padding: 14px;
+        background: rgba(255, 255, 255, 0.055);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      }
+
+      .final-day-card h4 {
+        margin: 0;
+        color: #ffffff;
+        font-size: 1rem;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+      }
+
+      .final-time-block-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .final-time-block {
+        display: grid;
+        gap: 5px;
+        border-top: 1px solid rgba(165, 194, 255, 0.13);
+        padding-top: 8px;
+      }
+
+      .final-time-block:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+
+      .final-time-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        color: #9fc4f4;
+        font-size: 0.82rem;
+        font-weight: 900;
+        line-height: 1.35;
+      }
+
+      .final-source-agent {
+        color: #b8c8df;
+        font-size: 0.76rem;
+        font-weight: 800;
+        opacity: 0.82;
+      }
+
+      .final-time-text {
+        color: #edf5ff;
+        line-height: 1.62;
+        overflow-wrap: anywhere;
+      }
+
+      .final-itinerary-empty {
+        color: #c8d8ee;
+        font-weight: 800;
+      }
+
       .detail-plan-section,
       .detail-plan-list {
         display: grid;
@@ -2847,6 +2916,17 @@
         return [`[${title}]`, ...normalizedLines, ""].join("\n");
       }
 
+      function copySectionText(title, lines, options = {}) {
+        const shouldPreserveOrder = Boolean(options.preserveOrder);
+        const normalizedLines = shouldPreserveOrder
+          ? lines.map(readableValue).map((line) => line.trim()).filter(Boolean)
+          : uniqueTextItems(lines, 12);
+        if (normalizedLines.length === 0) {
+          return "";
+        }
+        return [`${title}:`, ...normalizedLines, ""].join("\n");
+      }
+
       function agentItems(agentResult, keys, limit = 3) {
         if (!agentResult || typeof agentResult !== "object") {
           return [];
@@ -2868,43 +2948,175 @@
         return agentResult.weather_summary || agentResult.forecast || agentResult.weather || null;
       }
 
+      function scheduleTypeLabel(value) {
+        const normalizedValue = String(value || "").trim().toLowerCase();
+        const typeLabels = {
+          transport: "교통",
+          food: "맛집",
+          meal: "식사",
+          event: "행사",
+          festival: "행사",
+          tour: "관광",
+          attraction: "관광",
+          budget: "예산",
+          weather: "날씨",
+          lodging: "숙소",
+          schedule: "일정",
+        };
+        return typeLabels[normalizedValue] || readableValue(value) || "일정";
+      }
+
+      function scheduleSourceLabel(value) {
+        const sourceLabels = {
+          travel_transport_agent: "교통 에이전트",
+          travel_food_agent: "맛집 에이전트",
+          travel_event_agent: "행사 에이전트",
+          travel_tour_agent: "관광지 에이전트",
+          travel_budget_agent: "예산 에이전트",
+          travel_weather_agent: "날씨 에이전트",
+          travel_schedule_agent: "일정 에이전트",
+          travel_planning_agent: "계획 에이전트",
+        };
+        return sourceLabels[value] || "";
+      }
+
+      function sentenceFromText(value) {
+        const text = readableValue(value).replace(/\s+/g, " ").trim();
+        if (!text) {
+          return "";
+        }
+        if (/[.!?。？！]$/.test(text)) {
+          return text;
+        }
+        const parenthetical = text.match(/^(.*?)\s*\(([^)]+)\)$/);
+        const actionText = parenthetical ? parenthetical[1].trim() : text;
+        if (/(이동|방문|관람|산책|식사|구매|조정|활용|마무리|배치|확인)$/.test(actionText)) {
+          const actionSentence = `${actionText}합니다.`;
+          if (parenthetical) {
+            return `${actionSentence} ${parenthetical[2]}를 이용하는 일정입니다.`;
+          }
+          return actionSentence;
+        }
+        return `${text}입니다.`;
+      }
+
+      function scheduleBlockSentence(block) {
+        if (!block || typeof block !== "object") {
+          return "일정표 정보가 부족합니다.";
+        }
+
+        const titleSentence = sentenceFromText(block.title || block.name || block.summary);
+        const descriptionSentence = sentenceFromText(block.description || block.memo || block.notes);
+        if (titleSentence && descriptionSentence && titleSentence !== descriptionSentence) {
+          return `${titleSentence} ${descriptionSentence}`;
+        }
+        return titleSentence || descriptionSentence || "일정표 정보가 부족합니다.";
+      }
+
+      function finalDayTitle(day) {
+        const rawDay = readableValue(day?.day);
+        const dayLabel = rawDay
+          ? rawDay.endsWith("일차")
+            ? rawDay
+            : `${rawDay}일차`
+          : "일차";
+        const title = readableValue(day?.title) || "일정";
+        return `${dayLabel} · ${title}`;
+      }
+
+      function finalDayCopyTitle(day) {
+        return finalDayTitle(day).replace(" · ", " - ");
+      }
+
+      function renderFinalTimeBlock(block) {
+        const time = readableValue(block?.time) || "시간대";
+        const type = scheduleTypeLabel(block?.type);
+        const source = scheduleSourceLabel(block?.source_agent);
+        return `
+          <article class="final-time-block">
+            <div class="final-time-meta">
+              <span>${escapeHtml(`${time} · ${type}`)}</span>
+              ${source ? `<span class="final-source-agent">출처: ${escapeHtml(source)}</span>` : ""}
+            </div>
+            <p class="final-time-text">${escapeHtml(scheduleBlockSentence(block))}</p>
+          </article>
+        `;
+      }
+
+      function renderFinalDailyItinerary(dailyItinerary) {
+        if (!Array.isArray(dailyItinerary) || dailyItinerary.length === 0) {
+          return `<p class="final-itinerary-empty">일정표 정보가 부족합니다.</p>`;
+        }
+
+        return `
+          <div class="final-daily-itinerary-grid">
+            ${dailyItinerary.map((day) => {
+              const timeBlocks = Array.isArray(day?.time_blocks)
+                ? day.time_blocks.filter((block) => block && typeof block === "object")
+                : [];
+              return `
+                <article class="final-day-card">
+                  <h4>${escapeHtml(finalDayTitle(day))}</h4>
+                  <div class="final-time-block-list">
+                    ${
+                      timeBlocks.length > 0
+                        ? timeBlocks.map(renderFinalTimeBlock).join("")
+                        : `<p class="final-itinerary-empty">일정표 정보가 부족합니다.</p>`
+                    }
+                  </div>
+                </article>
+              `;
+            }).join("")}
+          </div>
+        `;
+      }
+
+      function dailyItineraryTextLines(dailyItinerary) {
+        if (!Array.isArray(dailyItinerary) || dailyItinerary.length === 0) {
+          return ["일정표 정보가 부족합니다."];
+        }
+
+        const lines = [];
+        dailyItinerary.forEach((day) => {
+          lines.push(finalDayCopyTitle(day));
+          const timeBlocks = Array.isArray(day?.time_blocks)
+            ? day.time_blocks.filter((block) => block && typeof block === "object")
+            : [];
+
+          if (timeBlocks.length === 0) {
+            lines.push("- 일정표 정보가 부족합니다.");
+            return;
+          }
+
+          timeBlocks.forEach((block) => {
+            const time = readableValue(block.time) || "시간대";
+            lines.push(`- ${time}: ${scheduleBlockSentence(block)}`);
+          });
+        });
+        return lines;
+      }
+
       function buildScheduleSummary(agentResult, days) {
         if (!agentResult || typeof agentResult !== "object") {
           return {
             html: `<p>추천 일정 정보는 선택되지 않았습니다.</p>`,
             textLines: ["추천 일정 정보는 선택되지 않았습니다."],
+            title: "추천 일정",
+            preserveCopyOrder: false,
           };
         }
 
+        const hasDailyItinerary = Object.prototype.hasOwnProperty.call(agentResult, "daily_itinerary");
         const dailyItinerary = Array.isArray(agentResult.daily_itinerary) ? agentResult.daily_itinerary : [];
         const itinerary = Array.isArray(agentResult.itinerary) ? agentResult.itinerary : [];
         const summary = agentResult.schedule_summary || agentResult.summary || "";
 
-        if (dailyItinerary.length > 0) {
-          const lines = [];
-          const html = dailyItinerary.map((day) => {
-            const dayTitle = `${readableValue(day.day) || ""}일차: ${readableValue(day.title) || "일정"}`.trim();
-            const blocks = Array.isArray(day.time_blocks) ? day.time_blocks.slice(0, 3) : [];
-            const blockLines = blocks.map((block) => {
-              const time = readableValue(block.time) || "시간대";
-              const title = readableValue(block.title) || "일정";
-              return `${time}: ${title}`;
-            });
-
-            lines.push(dayTitle);
-            blockLines.forEach((line) => lines.push(`- ${line}`));
-
-            return `
-              <div>
-                <strong>${escapeHtml(dayTitle)}</strong>
-                ${renderFinalList(blockLines, "추천 일정 정보가 없습니다.")}
-              </div>
-            `;
-          }).join("");
-
+        if (hasDailyItinerary) {
           return {
-            html,
-            textLines: lines.length > 0 ? lines : [summary || "추천 일정 정보가 없습니다."],
+            html: renderFinalDailyItinerary(dailyItinerary),
+            textLines: dailyItineraryTextLines(dailyItinerary),
+            title: "일차별 여행계획",
+            preserveCopyOrder: true,
           };
         }
 
@@ -2920,6 +3132,8 @@
           return {
             html: renderFinalFields(fields),
             textLines: fields.map(([label, value]) => `${label}: ${readableValue(value) || "정보 없음"}`),
+            title: "추천 일정",
+            preserveCopyOrder: false,
           };
         }
 
@@ -2933,12 +3147,16 @@
           return {
             html: renderFinalList(lines, "추천 일정 정보가 없습니다."),
             textLines: lines,
+            title: "추천 일정",
+            preserveCopyOrder: false,
           };
         }
 
         return {
           html: `<p>${escapeHtml(summary || "추천 일정 정보가 없습니다.")}</p>`,
           textLines: [summary || "추천 일정 정보가 없습니다."],
+          title: "추천 일정",
+          preserveCopyOrder: false,
         };
       }
 
@@ -3044,17 +3262,17 @@
         const eventItems = agentItems(eventResult, ["event_items", "events", "festival_items"], 3);
         const warnings = Array.isArray(planningResult?.warnings) ? planningResult.warnings : [];
         const copyText = [
-          "최종 여행계획서",
+          "[최종 여행계획서]",
           subtitle,
           "",
-          finalSectionText("여행 방향", [direction]),
-          finalSectionText("여행기간 전략", durationFields.map(([label, value]) => `${label}: ${readableValue(value) || "정보 없음"}`)),
-          finalSectionText("추천 일정", scheduleSummary.textLines),
-          finalSectionText("교통", transportSummary.textLines),
-          finalSectionText("날씨", weatherSummary.textLines),
-          finalSectionText("맛집", foodItems.length > 0 ? foodItems : ["맛집 정보는 선택되지 않았습니다."]),
-          finalSectionText("행사/축제", eventItems.length > 0 ? eventItems : ["행사/축제 정보는 선택되지 않았습니다."]),
-          warnings.length > 0 ? finalSectionText("주의사항", warnings) : "",
+          copySectionText("여행 방향", [direction]),
+          copySectionText("여행기간 전략", durationFields.map(([label, value]) => `${label}: ${readableValue(value) || "정보 없음"}`)),
+          copySectionText(scheduleSummary.title, scheduleSummary.textLines, { preserveOrder: scheduleSummary.preserveCopyOrder }),
+          copySectionText("교통", transportSummary.textLines),
+          copySectionText("날씨", weatherSummary.textLines),
+          copySectionText("맛집", foodItems.length > 0 ? foodItems : ["맛집 정보는 선택되지 않았습니다."]),
+          copySectionText("행사/축제", eventItems.length > 0 ? eventItems : ["행사/축제 정보는 선택되지 않았습니다."]),
+          warnings.length > 0 ? copySectionText("주의사항", warnings) : "",
         ].join("\n").trim();
 
         return `
@@ -3080,7 +3298,7 @@
                 ${renderFinalFields(durationFields)}
               </section>
               <section class="final-itinerary-section">
-                <h3>추천 일정</h3>
+                <h3>${escapeHtml(scheduleSummary.title)}</h3>
                 ${scheduleSummary.html}
               </section>
               <section class="final-itinerary-section">
