@@ -225,10 +225,164 @@
 
       .flow-list {
         display: grid;
-        gap: 8px;
+        gap: 10px;
         margin: 12px 0 0;
         padding: 0;
         list-style: none;
+      }
+
+      .agent-progress-card {
+        position: relative;
+        overflow: hidden;
+        display: grid;
+        gap: 16px;
+        border: 1px solid rgba(255, 208, 138, 0.24);
+        border-radius: 22px;
+        padding: 18px;
+        background:
+          linear-gradient(135deg, rgba(49, 78, 65, 0.88), rgba(30, 54, 48, 0.82)),
+          rgba(255, 255, 255, 0.06);
+        box-shadow:
+          0 18px 45px rgba(13, 27, 23, 0.32),
+          inset 0 1px 0 rgba(255, 255, 255, 0.07);
+      }
+
+      .agent-progress-card h2,
+      .agent-progress-card p {
+        margin: 0;
+      }
+
+      .agent-progress-header {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .agent-progress-header h2 {
+        color: #fff8ed;
+        font-size: 1.18rem;
+        line-height: 1.3;
+      }
+
+      .agent-progress-subtitle {
+        margin-top: 5px;
+        color: #e7d5b4;
+        line-height: 1.5;
+      }
+
+      .agent-progress-meter {
+        display: grid;
+        gap: 7px;
+      }
+
+      .agent-progress-track {
+        overflow: hidden;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .agent-progress-fill {
+        width: var(--progress, 0%);
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--sun), var(--coral), var(--mint));
+        transition: width 420ms ease;
+      }
+
+      .agent-progress-percent {
+        color: #f3dfbc;
+        font-size: 0.82rem;
+        font-weight: 900;
+        text-align: right;
+      }
+
+      .agent-progress-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 10px;
+      }
+
+      .agent-step-card {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 10px;
+        align-items: center;
+        min-height: 76px;
+        border: 1px solid rgba(255, 232, 194, 0.16);
+        border-radius: 17px;
+        padding: 11px;
+        background: rgba(255, 255, 255, 0.055);
+      }
+
+      .agent-step-card.complete {
+        border-color: rgba(159, 228, 194, 0.48);
+        background: rgba(159, 228, 194, 0.1);
+      }
+
+      .agent-step-card.active {
+        border-color: rgba(255, 208, 138, 0.64);
+        background: linear-gradient(135deg, rgba(255, 208, 138, 0.16), rgba(240, 160, 109, 0.12));
+        animation: agentPulse 1.2s ease-in-out infinite;
+      }
+
+      .agent-step-card.pending {
+        opacity: 0.72;
+      }
+
+      .agent-step-card.failed {
+        border-color: rgba(255, 124, 124, 0.42);
+        background: rgba(140, 36, 72, 0.12);
+      }
+
+      .agent-step-icon {
+        display: inline-grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 14px;
+        color: #143329;
+        background: linear-gradient(135deg, var(--sun), var(--mint));
+        font-size: 0.78rem;
+        font-weight: 1000;
+      }
+
+      .agent-step-copy {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .agent-step-title {
+        color: #fff8ed;
+        font-size: 0.93rem;
+        font-weight: 900;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+      }
+
+      .agent-step-role {
+        color: #d8c6a7;
+        font-size: 0.76rem;
+        font-weight: 800;
+        line-height: 1.35;
+      }
+
+      .agent-step-status {
+        color: #ffe2b5;
+        font-size: 0.75rem;
+        font-weight: 900;
+      }
+
+      @keyframes agentPulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 rgba(255, 208, 138, 0);
+        }
+        50% {
+          box-shadow: 0 0 28px rgba(255, 208, 138, 0.2);
+        }
       }
 
       .flow-list li {
@@ -882,27 +1036,29 @@
       }
 
       :root {
-        --bg-0: #050b1a;
-        --bg-1: #07132a;
-        --bg-2: #0b1e3f;
-        --panel: rgba(10, 18, 38, 0.66);
-        --panel-strong: rgba(8, 14, 30, 0.84);
-        --line: rgba(165, 194, 255, 0.16);
-        --line-strong: rgba(165, 194, 255, 0.28);
-        --text: #eef5ff;
-        --muted: #9bb2d9;
-        --mint: #78f5d1;
-        --sky: #67b7ff;
-        --violet: #9a7bff;
-        --glow: rgba(95, 191, 255, 0.26);
+        --bg-0: #10251f;
+        --bg-1: #18372f;
+        --bg-2: #28483f;
+        --panel: rgba(38, 58, 50, 0.68);
+        --panel-strong: rgba(24, 43, 37, 0.88);
+        --line: rgba(255, 232, 194, 0.18);
+        --line-strong: rgba(255, 210, 158, 0.36);
+        --text: #fff9ed;
+        --muted: #d6c5a9;
+        --mint: #9fe4c2;
+        --sky: #8fc7d5;
+        --violet: #e4a37f;
+        --coral: #f0a06d;
+        --sun: #ffd08a;
+        --glow: rgba(240, 160, 109, 0.24);
       }
 
       body {
         color: var(--text);
         background:
-          radial-gradient(circle at 18% 12%, rgba(103, 183, 255, 0.18), transparent 24%),
-          radial-gradient(circle at 82% 18%, rgba(154, 123, 255, 0.16), transparent 26%),
-          radial-gradient(circle at 50% 100%, rgba(120, 245, 209, 0.12), transparent 30%),
+          linear-gradient(130deg, rgba(255, 208, 138, 0.14) 0 18%, transparent 18% 100%),
+          linear-gradient(220deg, rgba(143, 199, 213, 0.14) 0 24%, transparent 24% 100%),
+          linear-gradient(180deg, rgba(159, 228, 194, 0.08), transparent 38%),
           linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 46%, var(--bg-2) 100%);
       }
 
@@ -919,11 +1075,11 @@
       }
 
       main.app-shell {
-        width: min(1280px, calc(100% - 28px));
+        width: min(1120px, calc(100% - 28px));
         margin: 0 auto;
-        padding: 18px 0 34px;
+        padding: 22px 0 38px;
         display: grid;
-        gap: 14px;
+        gap: 16px;
       }
 
       .hero-section,
@@ -941,20 +1097,23 @@
         position: relative;
         overflow: hidden;
         display: grid;
-        grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
-        gap: 14px;
-        padding: 18px 22px;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+        padding: 24px;
+        text-align: center;
       }
 
       .hero-section::after {
         content: "";
         position: absolute;
-        inset: auto -120px -120px auto;
-        width: 320px;
-        height: 320px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(103, 183, 255, 0.26), transparent 70%);
-        filter: blur(16px);
+        inset: auto 4% 0;
+        height: 120px;
+        border-radius: 999px 999px 0 0;
+        background:
+          linear-gradient(135deg, transparent 0 44%, rgba(255, 208, 138, 0.22) 45% 55%, transparent 56%),
+          linear-gradient(90deg, transparent 0 68%, rgba(240, 160, 109, 0.18) 68% 82%, transparent 82%),
+          linear-gradient(180deg, rgba(143, 199, 213, 0.12), rgba(159, 228, 194, 0.08));
+        filter: blur(2px);
         pointer-events: none;
       }
 
@@ -984,15 +1143,18 @@
 
       .hero-subtitle {
         margin-top: 10px;
-        max-width: 66ch;
-        color: #b8caea;
-        font-size: 0.98rem;
+        max-width: 68ch;
+        margin-left: auto;
+        margin-right: auto;
+        color: #f0dfc2;
+        font-size: 1rem;
         line-height: 1.55;
       }
 
       .hero-badges {
         display: flex;
         flex-wrap: wrap;
+        justify-content: center;
         gap: 8px;
         margin-top: 12px;
       }
@@ -1013,24 +1175,26 @@
       }
 
       .hero-badge.live {
-        color: #c9f3ff;
-        background: rgba(103, 183, 255, 0.14);
+        color: #fff1d2;
+        background: rgba(255, 208, 138, 0.14);
       }
 
       .hero-badge.ready {
         color: #d7fff0;
-        background: rgba(120, 245, 209, 0.14);
+        background: rgba(159, 228, 194, 0.14);
       }
 
       .hero-badge.tested {
-        color: #eadcff;
-        background: rgba(154, 123, 255, 0.16);
+        color: #ffe4d4;
+        background: rgba(240, 160, 109, 0.16);
       }
 
       .hero-stats {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
+        width: min(760px, 100%);
+        margin: 0 auto;
       }
 
       .hero-stat {
@@ -1058,8 +1222,8 @@
 
       .main-grid {
         display: grid;
-        grid-template-columns: minmax(320px, 0.96fr) minmax(0, 1.24fr);
-        gap: 14px;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
         align-items: start;
       }
 
@@ -1103,8 +1267,126 @@
       }
 
       .condition-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+
+      .trip-board {
+        display: grid;
+        gap: 16px;
+      }
+
+      .trip-option-section {
+        display: grid;
+        gap: 9px;
+      }
+
+      .trip-option-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .trip-option-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        color: #fff7ea;
+        font-weight: 900;
+      }
+
+      .trip-icon {
+        display: inline-grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border: 1px solid rgba(255, 210, 158, 0.28);
+        border-radius: 11px;
+        color: #143329;
+        background: linear-gradient(135deg, var(--sun), var(--coral));
+        font-size: 0.8rem;
+        font-weight: 1000;
+      }
+
+      .trip-option-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+        gap: 9px;
+      }
+
+      .trip-option-grid.compact {
+        grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+      }
+
+      .trip-card-button {
+        display: grid;
+        justify-items: start;
+        gap: 5px;
+        width: 100%;
+        min-height: 74px;
+        border: 1px solid rgba(255, 232, 194, 0.18);
+        border-radius: 18px;
+        padding: 12px;
+        color: #fff8ed;
+        background: rgba(255, 255, 255, 0.07);
+        box-shadow: none;
+        text-align: left;
+      }
+
+      .trip-card-button:hover,
+      .trip-card-button.active {
+        transform: translateY(-2px);
+        border-color: rgba(255, 208, 138, 0.58);
+        background:
+          linear-gradient(135deg, rgba(255, 208, 138, 0.16), rgba(240, 160, 109, 0.14)),
+          rgba(255, 255, 255, 0.08);
+        box-shadow: 0 14px 30px rgba(15, 28, 24, 0.22);
+      }
+
+      .trip-card-button.active {
+        outline: 2px solid rgba(255, 208, 138, 0.24);
+      }
+
+      .trip-card-icon {
+        display: inline-grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 12px;
+        color: #143329;
+        background: linear-gradient(135deg, var(--sun), var(--mint));
+        font-size: 0.82rem;
+        font-weight: 1000;
+      }
+
+      .trip-card-title {
+        color: #fff8ed;
+        font-size: 0.98rem;
+        font-weight: 900;
+        line-height: 1.25;
+      }
+
+      .trip-card-meta {
+        color: #dbc9a7;
+        font-size: 0.78rem;
+        font-weight: 800;
+        line-height: 1.35;
+      }
+
+      .native-field {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        clip-path: inset(50%);
+        white-space: nowrap;
       }
 
       .condition-grid label,
@@ -1178,27 +1460,61 @@
       }
 
       .checkbox-grid {
-        grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
-        gap: 7px;
+        grid-template-columns: repeat(auto-fit, minmax(146px, 1fr));
+        gap: 9px;
       }
 
       .checkbox-grid label {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: center;
         justify-content: flex-start;
+        gap: 10px;
         position: relative;
         overflow: hidden;
         background: rgba(255, 255, 255, 0.05);
       }
 
       .checkbox-grid label:has(input:checked) {
-        border-color: rgba(120, 245, 209, 0.52);
-        background: linear-gradient(135deg, rgba(103, 183, 255, 0.18), rgba(154, 123, 255, 0.18));
-        box-shadow: 0 14px 28px rgba(30, 48, 95, 0.22);
+        border-color: rgba(255, 208, 138, 0.58);
+        background: linear-gradient(135deg, rgba(255, 208, 138, 0.17), rgba(159, 228, 194, 0.13));
+        box-shadow: 0 14px 28px rgba(26, 49, 42, 0.22);
       }
 
       .checkbox-grid input {
-        width: 15px;
-        height: 15px;
-        accent-color: var(--mint);
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .feature-icon {
+        display: inline-grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 12px;
+        color: #143329;
+        background: rgba(255, 208, 138, 0.86);
+        font-size: 0.78rem;
+        font-weight: 1000;
+      }
+
+      .feature-copy {
+        display: grid;
+        gap: 2px;
+      }
+
+      .feature-title {
+        color: #fff8ed;
+        font-weight: 900;
+        line-height: 1.25;
+      }
+
+      .feature-meta {
+        color: #dac8a8;
+        font-size: 0.76rem;
+        font-weight: 800;
+        line-height: 1.3;
       }
 
       textarea,
@@ -2142,10 +2458,40 @@
                 <p class="section-kicker">Command Center</p>
                 <h2>여행 조건 선택</h2>
               </div>
-              <div class="condition-grid">
-                <label for="destination-select">
+              <div class="trip-board">
+                <section class="trip-option-section" aria-label="목적지 카드 선택">
+                  <div class="trip-option-header">
+                    <div class="trip-option-title"><span class="trip-icon">TO</span>목적지</div>
+                  </div>
+                  <div class="trip-option-grid compact" data-card-select="destination-select"></div>
+                </section>
+
+                <section class="trip-option-section" aria-label="출발지 카드 선택">
+                  <div class="trip-option-header">
+                    <div class="trip-option-title"><span class="trip-icon">GO</span>출발지</div>
+                  </div>
+                  <div class="trip-option-grid compact" data-card-select="origin-select"></div>
+                </section>
+
+                <section class="trip-option-section" aria-label="기간 카드 선택">
+                  <div class="trip-option-header">
+                    <div class="trip-option-title"><span class="trip-icon">DAY</span>기간</div>
+                  </div>
+                  <div class="trip-option-grid" data-card-select="duration-select"></div>
+                </section>
+
+                <section class="trip-option-section" aria-label="예산 카드 선택">
+                  <div class="trip-option-header">
+                    <div class="trip-option-title"><span class="trip-icon">PAY</span>예산</div>
+                  </div>
+                  <div class="trip-option-grid" data-card-select="budget-select"></div>
+                </section>
+              </div>
+
+              <div class="condition-grid" aria-hidden="true">
+                <label class="native-field" for="destination-select">
                   목적지
-                  <select id="destination-select">
+                  <select id="destination-select" tabindex="-1">
                     <option value="서울">서울</option>
                     <option value="부산" selected>부산</option>
                     <option value="제주">제주</option>
@@ -2162,9 +2508,9 @@
                   </select>
                 </label>
 
-                <label for="origin-select">
+                <label class="native-field" for="origin-select">
                   출발지
-                  <select id="origin-select">
+                  <select id="origin-select" tabindex="-1">
                     <option value="서울" selected>서울</option>
                     <option value="부산">부산</option>
                     <option value="대구">대구</option>
@@ -2174,9 +2520,9 @@
                   </select>
                 </label>
 
-                <label for="duration-select">
+                <label class="native-field" for="duration-select">
                   기간
-                  <select id="duration-select">
+                  <select id="duration-select" tabindex="-1">
                     <option value="1">당일치기</option>
                     <option value="2">1박 2일</option>
                     <option value="3" selected>2박 3일</option>
@@ -2185,9 +2531,9 @@
                   </select>
                 </label>
 
-                <label for="budget-select">
+                <label class="native-field" for="budget-select">
                   예산
-                  <select id="budget-select">
+                  <select id="budget-select" tabindex="-1">
                     <option value="low" selected>저렴</option>
                     <option value="medium">보통</option>
                     <option value="high">여유</option>
@@ -2202,14 +2548,14 @@
               <div class="checkbox-group">
                 <strong>필요한 정보</strong>
                 <div class="checkbox-grid">
-                  <label><input type="checkbox" name="feature" value="destination" checked />여행지 추천</label>
-                  <label><input type="checkbox" name="feature" value="budget" checked />예산</label>
-                  <label><input type="checkbox" name="feature" value="food" checked />맛집</label>
-                  <label><input type="checkbox" name="feature" value="event" checked />행사/축제</label>
-                  <label><input type="checkbox" name="feature" value="schedule" checked />일정</label>
-                  <label><input type="checkbox" name="feature" value="weather" checked />날씨</label>
-                  <label><input type="checkbox" name="feature" value="tour" checked />관광지</label>
-                  <label><input type="checkbox" name="feature" value="transport" checked />교통</label>
+                  <label><input type="checkbox" name="feature" value="destination" checked /><span class="feature-icon">SP</span><span class="feature-copy"><span class="feature-title">여행지 추천</span><span class="feature-meta">후보와 방향</span></span></label>
+                  <label><input type="checkbox" name="feature" value="budget" checked /><span class="feature-icon">BG</span><span class="feature-copy"><span class="feature-title">예산</span><span class="feature-meta">비용 감각</span></span></label>
+                  <label><input type="checkbox" name="feature" value="food" checked /><span class="feature-icon">FD</span><span class="feature-copy"><span class="feature-title">맛집</span><span class="feature-meta">식사 동선</span></span></label>
+                  <label><input type="checkbox" name="feature" value="event" checked /><span class="feature-icon">EV</span><span class="feature-copy"><span class="feature-title">행사/축제</span><span class="feature-meta">현지 분위기</span></span></label>
+                  <label><input type="checkbox" name="feature" value="schedule" checked /><span class="feature-icon">SC</span><span class="feature-copy"><span class="feature-title">일정</span><span class="feature-meta">하루 흐름</span></span></label>
+                  <label><input type="checkbox" name="feature" value="weather" checked /><span class="feature-icon">WT</span><span class="feature-copy"><span class="feature-title">날씨</span><span class="feature-meta">준비물 판단</span></span></label>
+                  <label><input type="checkbox" name="feature" value="tour" checked /><span class="feature-icon">TR</span><span class="feature-copy"><span class="feature-title">관광지</span><span class="feature-meta">볼거리 선택</span></span></label>
+                  <label><input type="checkbox" name="feature" value="transport" checked /><span class="feature-icon">MV</span><span class="feature-copy"><span class="feature-title">교통</span><span class="feature-meta">이동 계획</span></span></label>
                 </div>
               </div>
             </section>
@@ -2298,6 +2644,58 @@
       let currentWorkflowResult = null;
       let savedPlansExpanded = false;
       let savedPlanSortMode = "updated_desc";
+      let agentProgressTimer = null;
+      let agentProgressStep = 0;
+
+      const tripOptionMeta = {
+        "destination-select": {
+          서울: ["SE", "도시 산책"],
+          부산: ["BU", "바다와 맛"],
+          제주: ["JJ", "섬 여행"],
+          강릉: ["GN", "커피와 해변"],
+          전주: ["JJ", "한옥과 미식"],
+          대구: ["DG", "도심 탐방"],
+          대전: ["DJ", "가벼운 이동"],
+          광주: ["GJ", "예술과 맛"],
+          인천: ["IC", "항구와 섬"],
+          여수: ["YS", "밤바다"],
+          경주: ["GJ", "역사 여행"],
+          속초: ["SC", "산과 바다"],
+          춘천: ["CC", "호수 산책"],
+        },
+        "origin-select": {
+          서울: ["SE", "출발 거점"],
+          부산: ["BU", "남해 출발"],
+          대구: ["DG", "내륙 출발"],
+          대전: ["DJ", "중부 출발"],
+          광주: ["GJ", "호남 출발"],
+          인천: ["IC", "공항/항구"],
+        },
+        "duration-select": {
+          1: ["1D", "핵심만"],
+          2: ["2D", "짧고 알차게"],
+          3: ["3D", "균형 있게"],
+          4: ["4D", "여유 있게"],
+          5: ["5D", "천천히"],
+        },
+        "budget-select": {
+          low: ["LOW", "실속형"],
+          medium: ["MID", "균형형"],
+          high: ["HIGH", "여유형"],
+        },
+      };
+
+      const agentProgressSteps = [
+        ["travel_planning_agent", "PL", "여행 방향", "전체 여정을 조율합니다."],
+        ["travel_destination_agent", "DS", "목적지 감각", "도시의 매력을 고릅니다."],
+        ["travel_budget_agent", "BG", "예산 계산", "비용 균형을 잡습니다."],
+        ["travel_schedule_agent", "SC", "일정 구성", "하루 흐름을 만듭니다."],
+        ["travel_weather_agent", "WT", "날씨 확인", "준비물을 가늠합니다."],
+        ["travel_tour_agent", "TR", "관광지 선택", "볼거리를 추립니다."],
+        ["travel_transport_agent", "MV", "이동 설계", "교통 동선을 맞춥니다."],
+        ["travel_food_agent", "FD", "맛집 탐색", "식사 후보를 찾습니다."],
+        ["travel_event_agent", "EV", "행사 탐색", "현지 이벤트를 살핍니다."],
+      ];
 
       function escapeHtml(value) {
         return String(value ?? "")
@@ -3420,6 +3818,100 @@
         `;
       }
 
+      function agentStepByName(agentName) {
+        return agentProgressSteps.find(([name]) => name === agentName) || [agentName, "AI", agentName, "여행 정보를 확인합니다."];
+      }
+
+      function renderAgentProgressPanel(options = {}) {
+        const selectedAgents = Array.isArray(options.selectedAgents) ? options.selectedAgents : [];
+        const loadedAgents = Array.isArray(options.loadedAgents) ? options.loadedAgents : [];
+        const selectedSet = new Set(selectedAgents.length > 0 ? selectedAgents : agentProgressSteps.map(([name]) => name));
+        const loadedSet = new Set(loadedAgents);
+        const activeIndex = Number(options.activeIndex || 0);
+        const mode = options.mode || "running";
+        const completedCount = mode === "complete"
+          ? agentProgressSteps.filter(([agentName]) => loadedSet.has(agentName)).length
+          : Math.min(activeIndex, agentProgressSteps.length);
+        const percent = mode === "complete"
+          ? Math.round((completedCount / agentProgressSteps.length) * 100)
+          : Math.min(96, Math.round(((activeIndex + 1) / agentProgressSteps.length) * 100));
+
+        return `
+          <article class="agent-progress-card">
+            <div class="agent-progress-header">
+              <div>
+                <p class="section-kicker">Travel Agents</p>
+                <h2>${mode === "complete" ? "여행 준비가 정리되었습니다" : "여행 에이전트가 움직이는 중입니다"}</h2>
+                <p class="agent-progress-subtitle">
+                  ${mode === "complete" ? "각 에이전트의 결과를 모아 최종 여행계획서로 정리했습니다." : "목적지, 예산, 일정, 이동, 맛집 정보를 단계별로 맞춰 보고 있습니다."}
+                </p>
+              </div>
+              <span class="status-badge ${mode === "complete" ? "complete" : ""}">${mode === "complete" ? "완료" : "진행 중"}</span>
+            </div>
+            <div class="agent-progress-meter" style="--progress: ${percent}%">
+              <div class="agent-progress-track"><div class="agent-progress-fill"></div></div>
+              <div class="agent-progress-percent">${percent}%</div>
+            </div>
+            <div class="agent-progress-grid">
+              ${agentProgressSteps.map(([agentName, icon, title, role], index) => {
+                const isSelected = selectedSet.has(agentName);
+                const isLoaded = loadedSet.has(agentName);
+                const stateClass = mode === "complete"
+                  ? isLoaded
+                    ? "complete"
+                    : isSelected
+                      ? "failed"
+                      : "pending"
+                  : index < activeIndex
+                    ? "complete"
+                    : index === activeIndex
+                      ? "active"
+                      : "pending";
+                const statusText = mode === "complete"
+                  ? isLoaded
+                    ? "완료"
+                    : isSelected
+                      ? "확인 필요"
+                      : "대기"
+                  : index < activeIndex
+                    ? "정리됨"
+                    : index === activeIndex
+                      ? "작업 중"
+                      : "대기";
+                return `
+                  <section class="agent-step-card ${stateClass}">
+                    <span class="agent-step-icon">${escapeHtml(icon)}</span>
+                    <span class="agent-step-copy">
+                      <span class="agent-step-title">${escapeHtml(title)}</span>
+                      <span class="agent-step-role">${escapeHtml(role)}</span>
+                      <span class="agent-step-status">${escapeHtml(statusText)}</span>
+                    </span>
+                  </section>
+                `;
+              }).join("")}
+            </div>
+          </article>
+        `;
+      }
+
+      function startAgentProgress() {
+        window.clearInterval(agentProgressTimer);
+        agentProgressStep = 0;
+        result.innerHTML = renderAgentProgressPanel({ mode: "running", activeIndex: agentProgressStep });
+        agentProgressTimer = window.setInterval(() => {
+          agentProgressStep = (agentProgressStep + 1) % agentProgressSteps.length;
+          const progressContainer = result.querySelector(".agent-progress-card");
+          if (progressContainer) {
+            result.innerHTML = renderAgentProgressPanel({ mode: "running", activeIndex: agentProgressStep });
+          }
+        }, 850);
+      }
+
+      function stopAgentProgress() {
+        window.clearInterval(agentProgressTimer);
+        agentProgressTimer = null;
+      }
+
       function renderExecutionFlow(data) {
         const selectedAgents = Array.isArray(data.selected_agents)
           ? data.selected_agents
@@ -3440,22 +3932,11 @@
         }
 
         return `
-          <article class="flow-card">
-            <h2>에이전트 실행 흐름</h2>
-            <ol class="flow-list">
-              ${selectedAgents.map((agentName, index) => {
-                const isLoaded = loadedAgentNames.has(agentName);
-                const badgeClass = isLoaded ? "complete" : "failed";
-                const label = isLoaded ? "완료" : "실패 또는 미로드";
-                return `
-                  <li>
-                    <span class="agent-name">${index + 1}. ${escapeHtml(agentName)}</span>
-                    <span class="status-badge ${badgeClass}">${label}</span>
-                  </li>
-                `;
-              }).join("")}
-            </ol>
-          </article>
+          ${renderAgentProgressPanel({
+            mode: "complete",
+            selectedAgents,
+            loadedAgents: Array.from(loadedAgentNames),
+          })}
         `;
       }
 
@@ -3907,6 +4388,52 @@
         durationGuidance.textContent = durationGuidanceText(durationSelect.value);
       }
 
+      function renderTripCardsForSelect(selectElement) {
+        const container = document.querySelector(`[data-card-select="${selectElement.id}"]`);
+        if (!container) {
+          return;
+        }
+
+        const meta = tripOptionMeta[selectElement.id] || {};
+        container.innerHTML = Array.from(selectElement.options).map((option) => {
+          const [icon, detail] = meta[option.value] || [option.textContent.slice(0, 2).toUpperCase(), ""];
+          const isActive = option.value === selectElement.value;
+          return `
+            <button class="trip-card-button ${isActive ? "active" : ""}" type="button" data-select-target="${escapeHtml(selectElement.id)}" data-select-value="${escapeHtml(option.value)}" aria-pressed="${String(isActive)}">
+              <span class="trip-card-icon">${escapeHtml(icon)}</span>
+              <span class="trip-card-title">${escapeHtml(option.textContent)}</span>
+              <span class="trip-card-meta">${escapeHtml(detail)}</span>
+            </button>
+          `;
+        }).join("");
+      }
+
+      function syncTripCards(selectElement) {
+        const cards = document.querySelectorAll(`[data-select-target="${selectElement.id}"]`);
+        cards.forEach((card) => {
+          const isActive = card.dataset.selectValue === selectElement.value;
+          card.classList.toggle("active", isActive);
+          card.setAttribute("aria-pressed", String(isActive));
+        });
+      }
+
+      function renderTripCards() {
+        [destinationSelect, originSelect, durationSelect, budgetSelect].forEach(renderTripCardsForSelect);
+      }
+
+      function handleTripCardSelect(card) {
+        const selectElement = document.querySelector(`#${card.dataset.selectTarget}`);
+        if (!(selectElement instanceof HTMLSelectElement)) {
+          return;
+        }
+
+        setSelectValue(selectElement, card.dataset.selectValue);
+        syncTripCards(selectElement);
+        if (selectElement === durationSelect) {
+          updateDurationGuidance();
+        }
+      }
+
       function getWorkflowSummary(data) {
         const summary = data?.input_data_summary && typeof data.input_data_summary === "object"
           ? data.input_data_summary
@@ -3966,6 +4493,7 @@
         const hasOption = Array.from(selectElement.options).some((option) => option.value === normalizedValue);
         if (hasOption) {
           selectElement.value = normalizedValue;
+          syncTripCards(selectElement);
         }
       }
 
@@ -4374,7 +4902,8 @@
 
         button.disabled = true;
         currentWorkflowResult = null;
-        status.textContent = "워크플로 실행 중...";
+        status.textContent = "여행 준비 단계를 조율하는 중...";
+        startAgentProgress();
         console.log("request payload", payload);
 
         try {
@@ -4392,9 +4921,11 @@
             throw new Error(JSON.stringify(data, null, 2));
           }
 
+          stopAgentProgress();
           renderResult(data);
           status.textContent = `${data.selected_agents.length}개 에이전트 실행 완료`;
         } catch (error) {
+          stopAgentProgress();
           status.textContent = "요청 처리 중 오류가 발생했습니다.";
           currentWorkflowResult = null;
           renderErrorResultState(String(error.message || error));
@@ -4407,9 +4938,27 @@
       clearSavedPlansButton.addEventListener("click", clearSavedPlans);
 
       durationSelect.addEventListener("change", updateDurationGuidance);
+      [destinationSelect, originSelect, durationSelect, budgetSelect].forEach((selectElement) => {
+        selectElement.addEventListener("change", () => {
+          syncTripCards(selectElement);
+        });
+      });
       savedPlanSortSelect.addEventListener("change", () => {
         savedPlanSortMode = savedPlanSortSelect.value;
         renderSavedPlans();
+      });
+
+      document.querySelector(".trip-board").addEventListener("click", (event) => {
+        if (!(event.target instanceof Element)) {
+          return;
+        }
+
+        const card = event.target.closest("button[data-select-target]");
+        if (!card) {
+          return;
+        }
+
+        handleTripCardSelect(card);
       });
 
       result.addEventListener("click", (event) => {
@@ -4458,6 +5007,7 @@
         }
       });
 
+      renderTripCards();
       renderSavedPlans();
       updateDurationGuidance();
       loadAgentLibrary();
