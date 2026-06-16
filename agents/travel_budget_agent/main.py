@@ -111,6 +111,8 @@ def _assumptions(days, origin, destination, budget_level, requested_features):
         assumptions.append("출발지와 목적지가 같아도 기본 현지 이동비는 포함했습니다.")
     if "event" in requested_features or "tour" in requested_features:
         assumptions.append("관광/행사 선택에 따른 활동비를 일 단위로 포함했습니다.")
+    if "lodging" in requested_features:
+        assumptions.append("숙박 추천 기능이 선택되어 숙박비 항목을 별도로 반영했습니다.")
     assumptions.append(f"예산 수준은 {budget_level} 단가표를 적용했습니다.")
     return assumptions
 

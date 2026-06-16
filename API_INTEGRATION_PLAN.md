@@ -13,6 +13,7 @@
 | travel_budget_agent | rule_based_budget | 선택 | 규칙형 엔진 구현됨. 여행기간/예산수준/목적지/숙박/식사/교통 기준 국내여행 예산 계산 | 해외여행 확장 시 환율 API | 추후 결정 | 예 | 3순위 구현됨, 점검 대상 |
 | travel_schedule_agent | integrated_rule_schedule, rule_based_schedule | 직접 API 대상 아님 | 직접 API 없음. planning/transport/budget/food/event/tour/destination/weather 결과를 조합해 시간대별 일정표 생성 | 없음 | 없음 | 예 | 직접 API 대상 아님 |
 | travel_planning_agent | local_duration_rules | 직접 API 대상 아님 | 직접 API 없음. 전체 계획 총괄/기간 전략/에이전트 조합 판단 | 없음 | 없음 | 예 | 직접 API 대상 아님 |
+| travel_lodging_agent | tour_api, mock_fallback | 예 | 연결됨. TourAPI contentTypeId=32 숙박시설 조회 경로 보유 | TourAPI 숙박시설 조회 | TOUR_API_SERVICE_KEY | 예 | 완료 |
 
 ## 2. 에이전트별 판단
 
@@ -105,6 +106,15 @@
 - 권장 방향: API 호출보다는 입력 조건과 선택 feature에 따른 orchestration 품질 개선이 우선이다.
 - 필요한 환경변수: 없음.
 - fallback 유지: 예.
+
+### travel_lodging_agent
+
+- 실제 API 필요: 예.
+- 현재 상태: TourAPI `contentTypeId=32` 연결 완료.
+- 현재 동작: 성공 시 `data_source`는 `tour_api`, 실패 시 `mock_fallback`. 당일치기(`days=1`)는 `rule_based_fallback`으로 숙박 불필요 안내 반환.
+- 필요한 환경변수: `TOUR_API_SERVICE_KEY`.
+- fallback 유지: 예.
+- 우선순위: 완료.
 
 ## 3. API 연결 우선순위
 

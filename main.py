@@ -84,6 +84,7 @@ AGENT_NAMES = [
     "travel_food_agent",
     "travel_event_agent",
     "travel_transport_agent",
+    "travel_lodging_agent",
 ]
 
 ROUTING_RULES: dict[str, list[str]] = {
@@ -92,10 +93,11 @@ ROUTING_RULES: dict[str, list[str]] = {
     "travel_budget_agent": ["예산", "비용", "돈", "저렴"],
     "travel_schedule_agent": ["일정", "코스", "몇박", "2박", "3일", "계획"],
     "travel_weather_agent": ["날씨", "기온", "비", "우산", "강수", "흐림", "맑음"],
-    "travel_tour_agent": ["관광지", "명소", "볼거리", "행사", "축제", "숙박", "호텔", "사진", "투어"],
+    "travel_tour_agent": ["관광지", "명소", "볼거리", "행사", "축제", "사진", "투어"],
     "travel_food_agent": ["맛집", "음식", "식당", "먹거리", "로컬푸드", "향토음식", "점심", "저녁"],
     "travel_event_agent": ["축제", "행사", "이벤트", "공연", "문화행사", "페스티벌", "전시", "체험", "버스킹"],
     "travel_transport_agent": ["교통", "이동", "지하철", "버스", "택시", "기차", "KTX", "공항", "노선", "동선"],
+    "travel_lodging_agent": ["숙소", "호텔", "숙박", "펜션", "리조트", "게스트하우스", "체크인", "체크아웃"],
 }
 
 FEATURE_AGENT_MAP: dict[str, str] = {
@@ -108,6 +110,7 @@ FEATURE_AGENT_MAP: dict[str, str] = {
     "food": "travel_food_agent",
     "event": "travel_event_agent",
     "planning": "travel_planning_agent",
+    "lodging": "travel_lodging_agent",
 }
 
 DEFAULT_AGENT = "travel_destination_agent"

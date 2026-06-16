@@ -1,0 +1,31 @@
+{
+  "name": "travel_lodging_agent",
+  "title": "숙박시설 추천 에이전트",
+  "description": "여행기간, 목적지, 예산 수준을 기준으로 숙박시설을 추천합니다. TourAPI 숙박정보를 우선 사용하고 실패 시 fallback 추천을 제공합니다.",
+  "version": "1.0.0",
+  "category": "travel",
+  "entrypoint": "main.py",
+  "function": "run",
+  "data_sources": ["tour_api", "rule_based_fallback", "mock_fallback"],
+  "env_vars": ["TOUR_API_SERVICE_KEY"],
+  "input_schema": {
+    "destination": "string",
+    "origin": "string",
+    "days": "number",
+    "budget_level": "string",
+    "requested_features": "array"
+  },
+  "output_schema": {
+    "agent": "string",
+    "data_source": "string",
+    "destination": "string",
+    "days": "number",
+    "lodging_required": "boolean",
+    "lodging_nights": "number",
+    "lodging_items": "array",
+    "recommendations": "array",
+    "summary": "string",
+    "debug_info": "object"
+  },
+  "fallback_policy": "TOUR_API_SERVICE_KEY가 없거나 TourAPI 호출에 실패하면 rule_based_fallback 또는 mock_fallback으로 정상 응답합니다. 당일치기 여행은 숙박 불필요 안내를 반환합니다."
+}

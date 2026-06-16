@@ -35,6 +35,7 @@ EXPECTED_AGENTS = {
     "travel_food_agent",
     "travel_event_agent",
     "travel_transport_agent",
+    "travel_lodging_agent",
 }
 
 EXPECTED_FEATURE_MAP = {
@@ -47,6 +48,7 @@ EXPECTED_FEATURE_MAP = {
     "food": "travel_food_agent",
     "event": "travel_event_agent",
     "planning": "travel_planning_agent",
+    "lodging": "travel_lodging_agent",
 }
 
 ALLOWED_TRANSPORT_DATA_SOURCES = {
@@ -71,6 +73,12 @@ ALLOWED_SCHEDULE_DATA_SOURCES = {
     "mock_fallback",
 }
 
+ALLOWED_LODGING_DATA_SOURCES = {
+    "tour_api",
+    "mock_fallback",
+    "rule_based_fallback",
+}
+
 API_ENV_NAMES = [
     "KMA_SERVICE_KEY",
     "TOUR_API_SERVICE_KEY",
@@ -90,6 +98,7 @@ FALLBACK_CHECK_AGENTS = {
     "travel_food_agent",
     "travel_event_agent",
     "travel_transport_agent",
+    "travel_lodging_agent",
 }
 
 
@@ -254,6 +263,34 @@ CASES = [
                 "tour",
                 "transport",
             ],
+        },
+    ),
+    Case(
+        "busan lodging",
+        "POST",
+        "/run-workflow",
+        {
+            "user_request": "",
+            "destination": "부산",
+            "location": "부산",
+            "origin": "서울",
+            "days": 3,
+            "budget_level": "medium",
+            "requested_features": ["lodging"],
+        },
+    ),
+    Case(
+        "jeju day trip lodging",
+        "POST",
+        "/run-workflow",
+        {
+            "user_request": "",
+            "destination": "제주",
+            "location": "제주",
+            "origin": "서울",
+            "days": 1,
+            "budget_level": "low",
+            "requested_features": ["lodging"],
         },
     ),
 ]
@@ -798,6 +835,26 @@ def assert_workflow_contract(case: Case, label: str, data: dict[str, Any]) -> No
             "travel_transport_agent",
         ]:
             assert_true(agent_name in result_names, f"{label} did not run {agent_name}.")
+
+    if case.name == "busan lodging":
+        lodging_result = find_agent_result(data, "travel_lodging_agent")
+        assert_true(lodging_result is not None, f"{label} has no lodging result.")
+        assert_true(lodging_result.get("lodging_required") is True, f"{label} lodging_required is not true.")
+        assert_true(lodging_result.get("lodging_nights") == 2, f"{label} lodging_nights is not 2.")
+        assert_true(
+            lodging_result.get("data_source") in ALLOWED_LODGING_DATA_SOURCES,
+            f"{label} lodging data_source is not allowed: {lodging_result.get('data_source')}",
+        )
+
+    if case.name == "jeju day trip lodging":
+        lodging_result = find_agent_result(data, "travel_lodging_agent")
+        assert_true(lodging_result is not None, f"{label} has no lodging result.")
+        assert_true(lodging_result.get("lodging_required") is False, f"{label} lodging_required is not false.")
+        assert_true(lodging_result.get("lodging_nights") == 0, f"{label} lodging_nights is not 0.")
+        assert_true(
+            lodging_result.get("debug_info", {}).get("fallback_reason") == "day_trip_no_lodging_required",
+            f"{label} day trip fallback reason is incorrect.",
+        )
 
 
 def transport_source_summary(data: dict[str, Any]) -> tuple[Any, Any]:

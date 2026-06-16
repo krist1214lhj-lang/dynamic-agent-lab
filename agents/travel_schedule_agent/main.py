@@ -10,6 +10,7 @@ OPTIONAL_AGENT_NAMES = [
     "travel_tour_agent",
     "travel_destination_agent",
     "travel_weather_agent",
+    "travel_lodging_agent",
 ]
 
 
@@ -252,29 +253,36 @@ def _compose_two_day_trip(origin, destination, context):
     event = context["event_items"]
     tour = context["tour_items"]
     transport_result = context["transport_result"]
-    evening_title = _pick(event, 0, f"{destination} 야간 산책")
+    lodging_result = context["results"].get("travel_lodging_agent")
+    
+    day1_blocks = [
+        _block("오전", "transport", _transport_title(origin, destination, transport_result), "장거리 이동 후 숙소 또는 주요 권역으로 이동합니다.", "travel_transport_agent" if transport_result else "rule_based_schedule"),
+        _block("점심", "food", _pick(food, 0, "추천 맛집 방문"), "도착 직후 부담 없는 식사로 일정을 시작합니다.", "travel_food_agent" if food else "rule_based_schedule"),
+        _block("오후", "tour", _pick(tour, 0, f"{destination} 주요 관광지"), "숙소 접근성이 좋은 대표 관광지를 먼저 방문합니다.", "travel_tour_agent" if tour else "rule_based_schedule"),
+    ]
+    
+    if lodging_result:
+        day1_blocks.append(_block("체크인", "lodging", "숙소 체크인", "추천된 숙소 또는 예약한 숙소에 짐을 풀고 잠시 휴식합니다.", "travel_lodging_agent"))
+        
+    day1_blocks.extend([
+        _block("저녁", "food", _pick(food, 1, "현지 저녁 식사"), "저녁은 숙소 주변 또는 야간 일정 동선에 맞춥니다.", "travel_food_agent" if food else "rule_based_schedule"),
+        _block("야간", "event", _pick(event, 0, f"{destination} 야간 산책"), "행사/축제가 있으면 저녁 이후에 배치하고, 없으면 가벼운 산책으로 마무리합니다.", "travel_event_agent" if event else "rule_based_schedule"),
+    ])
+
+    day2_blocks = []
+    if lodging_result:
+        day2_blocks.append(_block("체크아웃", "lodging", "숙소 체크아웃", "오전 일정을 시작하기 전 숙소 정리를 마칩니다.", "travel_lodging_agent"))
+
+    day2_blocks.extend([
+        _block("오전", "tour", _pick(tour, 1, f"{destination} 오전 관광"), "혼잡이 적은 시간에 주요 관광지를 방문합니다.", "travel_tour_agent" if tour else "rule_based_schedule"),
+        _block("점심", "food", _pick(food, 2, "마무리 점심"), "귀가 전 마지막 식사를 여유 있게 배치합니다.", "travel_food_agent" if food else "rule_based_schedule"),
+        _block("오후", "tour", _pick(event or tour, 1, "기념품 구매와 마무리 산책"), "남은 시간은 짧은 관광 또는 기념품 구매에 사용합니다.", "travel_event_agent" if event else "rule_based_schedule"),
+        _block("귀가", "transport", _transport_title(origin, destination, transport_result, is_return=True), "귀가 교통 시간보다 여유 있게 이동합니다.", "travel_transport_agent" if transport_result else "rule_based_schedule"),
+    ])
+
     return [
-        {
-            "day": 1,
-            "title": f"{destination} 도착과 오후 관광",
-            "time_blocks": [
-                _block("오전", "transport", _transport_title(origin, destination, transport_result), "장거리 이동 후 숙소 또는 주요 권역으로 이동합니다.", "travel_transport_agent" if transport_result else "rule_based_schedule"),
-                _block("점심", "food", _pick(food, 0, "추천 맛집 방문"), "도착 직후 부담 없는 식사로 일정을 시작합니다.", "travel_food_agent" if food else "rule_based_schedule"),
-                _block("오후", "tour", _pick(tour, 0, f"{destination} 주요 관광지"), "숙소 접근성이 좋은 대표 관광지를 먼저 방문합니다.", "travel_tour_agent" if tour else "rule_based_schedule"),
-                _block("저녁", "food", _pick(food, 1, "현지 저녁 식사"), "저녁은 숙소 주변 또는 야간 일정 동선에 맞춥니다.", "travel_food_agent" if food else "rule_based_schedule"),
-                _block("야간", "event", evening_title, "행사/축제가 있으면 저녁 이후에 배치하고, 없으면 가벼운 산책으로 마무리합니다.", "travel_event_agent" if event else "rule_based_schedule"),
-            ],
-        },
-        {
-            "day": 2,
-            "title": f"{destination} 오전 관광과 귀가",
-            "time_blocks": [
-                _block("오전", "tour", _pick(tour, 1, f"{destination} 오전 관광"), "혼잡이 적은 시간에 주요 관광지를 방문합니다.", "travel_tour_agent" if tour else "rule_based_schedule"),
-                _block("점심", "food", _pick(food, 2, "마무리 점심"), "귀가 전 마지막 식사를 여유 있게 배치합니다.", "travel_food_agent" if food else "rule_based_schedule"),
-                _block("오후", "tour", _pick(event or tour, 1, "기념품 구매와 마무리 산책"), "남은 시간은 짧은 관광 또는 기념품 구매에 사용합니다.", "travel_event_agent" if event else "rule_based_schedule"),
-                _block("귀가", "transport", _transport_title(origin, destination, transport_result, is_return=True), "귀가 교통 시간보다 여유 있게 이동합니다.", "travel_transport_agent" if transport_result else "rule_based_schedule"),
-            ],
-        },
+        {"day": 1, "title": f"{destination} 도착과 오후 관광", "time_blocks": day1_blocks},
+        {"day": 2, "title": f"{destination} 오전 관광과 귀가", "time_blocks": day2_blocks},
     ]
 
 
@@ -283,6 +291,8 @@ def _compose_multi_day_trip(origin, destination, days, budget_level, context):
     event = context["event_items"]
     tour = context["tour_items"]
     transport_result = context["transport_result"]
+    lodging_result = context["results"].get("travel_lodging_agent")
+    
     itinerary = []
     for day in range(1, days + 1):
         if day == 1:
@@ -290,15 +300,20 @@ def _compose_multi_day_trip(origin, destination, days, budget_level, context):
                 _block("오전", "transport", _transport_title(origin, destination, transport_result), "장거리 이동 후 숙소 또는 핵심 권역으로 이동합니다.", "travel_transport_agent" if transport_result else "rule_based_schedule"),
                 _block("점심", "food", _pick(food, 0, "도착 후 추천 맛집"), "첫 식사는 이동 피로를 고려해 접근성이 좋은 곳으로 잡습니다.", "travel_food_agent" if food else "rule_based_schedule"),
                 _block("오후", "tour", _pick(tour, 0, f"{destination} 대표 관광지"), "첫날은 가벼운 대표 관광지 위주로 구성합니다.", "travel_tour_agent" if tour else "rule_based_schedule"),
-                _block("저녁", "food", _pick(food, 1, "현지 저녁 식사"), "숙소 주변에서 무리 없는 저녁 일정을 잡습니다.", "travel_food_agent" if food else "rule_based_schedule"),
             ]
+            if lodging_result:
+                blocks.append(_block("체크인", "lodging", "숙소 체크인", "추천된 숙소에 체크인하고 여장을 풉니다.", "travel_lodging_agent"))
+            blocks.append(_block("저녁", "food", _pick(food, 1, "현지 저녁 식사"), "숙소 주변에서 무리 없는 저녁 일정을 잡습니다.", "travel_food_agent" if food else "rule_based_schedule"))
         elif day == days:
-            blocks = [
+            blocks = []
+            if lodging_result:
+                blocks.append(_block("체크아웃", "lodging", "숙소 체크아웃", "여행 마지막 날, 체크아웃 후 남은 일정을 시작합니다.", "travel_lodging_agent"))
+            blocks.extend([
                 _block("오전", "tour", _pick(tour, day, "카페 또는 산책 코스"), "체크아웃 전후로 부담 없는 여유 일정을 배치합니다.", "travel_tour_agent" if tour else "rule_based_schedule"),
                 _block("점심", "food", _pick(food, day, "마지막 점심"), "귀가 전 식사 시간을 충분히 확보합니다.", "travel_food_agent" if food else "rule_based_schedule"),
                 _block("오후", "tour", "기념품 구매와 마무리 산책", "남은 시간은 짧은 동선으로 정리합니다.", "rule_based_schedule"),
                 _block("귀가", "transport", _transport_title(origin, destination, transport_result, is_return=True), "교통 지연 가능성을 고려해 여유 있게 이동합니다.", "travel_transport_agent" if transport_result else "rule_based_schedule"),
-            ]
+            ])
         else:
             event_title = _pick(event, day - 2, _pick(tour, day, f"{destination} 핵심 관광"))
             blocks = [
