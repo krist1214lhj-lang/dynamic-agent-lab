@@ -31,17 +31,17 @@
       }
 
       main.app-shell {
-        width: min(1100px, calc(100% - 60px));
+        width: min(1100px, calc(100% - 40px));
         margin: 0 auto;
-        padding: 100px 0;
+        padding: 50px 0;
         display: grid;
-        gap: 60px;
+        gap: 30px;
       }
 
       /* Hero: Extreme Thinness & Brightness */
-      .hero-section { text-align: left; margin-bottom: 20px; }
+      .hero-section { text-align: left; margin-bottom: 0px; }
       .hero-section h1 { 
-        font-size: clamp(4rem, 12vw, 8rem); 
+        font-size: clamp(3rem, 10vw, 6rem); 
         font-weight: 100; 
         color: var(--accent); 
         text-transform: uppercase; 
@@ -50,9 +50,9 @@
       }
       .hero-subtitle { 
         color: var(--muted); 
-        font-size: 1.3rem; 
+        font-size: 1.15rem; 
         font-weight: 300; 
-        margin-top: 40px; 
+        margin-top: 25px; 
         max-width: 550px;
         line-height: 1.5;
       }
@@ -66,18 +66,18 @@
       .search-bar-row {
         display: grid;
         grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr auto;
-        gap: 15px;
+        gap: 12px;
         align-items: end;
-        margin-bottom: 30px;
+        margin-bottom: 20px;
       }
 
       .search-field input[type="date"] {
         background: #fff;
         border: 1px solid var(--line);
         color: var(--accent);
-        padding: 18px 20px;
-        border-radius: 20px;
-        font-size: 1rem;
+        padding: 14px 18px;
+        border-radius: 18px;
+        font-size: 0.95rem;
         cursor: pointer;
         font-family: inherit;
         transition: all 0.4s;
@@ -85,26 +85,26 @@
       .search-field input[type="date"]:hover { border-color: #000; }
 
       @media (max-width: 900px) {
-        .search-bar-row { grid-template-columns: 1fr 1fr; gap: 15px; }
+        .search-bar-row { grid-template-columns: 1fr 1fr; gap: 12px; }
         .search-bar-row button#run-button { grid-column: span 2; }
       }
 
-      .search-field { display: flex; flex-direction: column; gap: 12px; color: var(--accent); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.8; }
+      .search-field { display: flex; flex-direction: column; gap: 8px; color: var(--accent); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.8; }
       .search-field select {
         background: #fff;
         border: 1px solid var(--line);
         color: var(--accent);
-        padding: 20px 25px;
-        border-radius: 20px;
-        font-size: 1.1rem;
+        padding: 14px 20px;
+        border-radius: 18px;
+        font-size: 1rem;
         cursor: pointer;
         font-weight: 400;
         transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
         appearance: none;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23bbb'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='1' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
         background-repeat: no-repeat;
-        background-position: right 20px center;
-        background-size: 18px;
+        background-position: right 15px center;
+        background-size: 16px;
       }
       .search-field select:hover { border-color: #000; transform: translateY(-2px); }
 
@@ -112,31 +112,31 @@
         background: var(--accent);
         color: #fff;
         border: 0;
-        height: 68px;
-        padding: 0 50px;
+        height: 56px;
+        padding: 0 40px;
         border-radius: 999px;
         font-weight: 700;
-        font-size: 1rem;
+        font-size: 0.95rem;
         cursor: pointer;
         transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
         letter-spacing: 0.1em;
       }
-      button#run-button:hover { transform: scale(1.02) translateY(-2px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
+      button#run-button:hover { transform: scale(1.02) translateY(-2px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); }
 
       /* Option Chips: Airy Outlines */
-      .options-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 50px; justify-content: flex-start; }
+      .options-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 25px; justify-content: flex-start; }
       .checkbox-grid { display: contents; }
       .checkbox-grid label { 
         background: #fff; 
         border: 1px solid var(--line); 
-        padding: 14px 30px; 
+        padding: 10px 24px; 
         border-radius: 999px; 
         cursor: pointer; 
         font-weight: 400;
         display: flex;
         align-items: center;
-        gap: 12px;
-        font-size: 0.95rem;
+        gap: 10px;
+        font-size: 0.9rem;
         color: var(--muted);
         transition: all 0.3s ease;
       }
@@ -146,16 +146,16 @@
       .feature-icon { font-size: 0.65rem; font-weight: 900; opacity: 0.3; }
 
       /* 취향 입력창 */
-      .extra-request-row { margin-top: 50px; }
+      .extra-request-row { margin-top: 25px; }
       textarea#user-request {
         width: 100%;
-        min-height: 100px;
-        padding: 35px;
-        border-radius: 30px;
+        min-height: 80px;
+        padding: 25px;
+        border-radius: 25px;
         border: 1px solid var(--line);
         background: #fff;
         font-family: inherit;
-        font-size: 1.2rem;
+        font-size: 1.05rem;
         font-weight: 300;
         resize: none;
         transition: all 0.4s;
@@ -164,16 +164,16 @@
       textarea#user-request:focus { outline: none; border-color: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
       textarea#user-request::placeholder { color: #eee; }
 
-      /* Results: Maximum Brightness */
-      .result-view { display: grid; gap: 80px; margin-top: 100px; }
+      /* Results: Maximum Brightness & Compact */
+      .result-view { display: grid; gap: 40px; margin-top: 50px; }
       .result-card { background: transparent; border: 0; padding: 0; }
-      .result-card h2 { font-size: 3.2rem; font-weight: 100; margin-bottom: 30px; text-transform: uppercase; letter-spacing: -0.05em; }
-      .summary-text { color: var(--muted); font-size: 1.4rem; font-weight: 300; margin-bottom: 50px; line-height: 1.4; border-left: 1px solid #000; padding-left: 40px; }
+      .result-card h2 { font-size: 2.4rem; font-weight: 100; margin-bottom: 15px; text-transform: uppercase; letter-spacing: -0.05em; }
+      .summary-text { color: var(--muted); font-size: 1.15rem; font-weight: 300; margin-bottom: 25px; line-height: 1.4; border-left: 1px solid #000; padding-left: 20px; }
 
       /* Details Accordion */
-      .details-accordion { margin-top: 40px; border-radius: 30px; background: #fff; border: 1px solid var(--line); overflow: hidden; }
+      .details-accordion { margin-top: 20px; border-radius: 20px; background: #fff; border: 1px solid var(--line); overflow: hidden; }
       .details-accordion summary { 
-        padding: 30px 40px; 
+        padding: 18px 25px; 
         font-weight: 600; 
         cursor: pointer; 
         list-style: none; 
@@ -181,46 +181,46 @@
         justify-content: space-between; 
         align-items: center; 
         background: #fbfbfb;
-        font-size: 1rem;
+        font-size: 0.95rem;
       }
       .details-accordion summary::after { content: "+ VIEW DETAILS"; font-size: 0.6rem; font-weight: 900; opacity: 0.3; letter-spacing: 0.2em; }
       .details-accordion[open] summary::after { content: "- CLOSE"; }
-      .details-content { padding: 60px; }
+      .details-content { padding: 30px; }
 
       /* Circle Objects */
-      .circle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 60px; }
+      .circle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 30px; }
       .circle-item { text-align: center; }
       .circle-mask {
-        width: 210px;
-        height: 210px;
+        width: 150px;
+        height: 150px;
         border-radius: 50%;
         overflow: hidden;
         border: 1px solid var(--line);
         background: #fafafa;
-        padding: 10px;
-        margin: 0 auto 25px;
+        padding: 6px;
+        margin: 0 auto 15px;
         transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
       }
       .circle-item:hover .circle-mask { transform: scale(1.05) rotate(-2deg); }
       .circle-mask img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-      .item-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 8px; }
-      .item-meta { font-size: 0.9rem; color: var(--muted); font-weight: 300; }
+      .item-title { font-size: 1.05rem; font-weight: 800; margin-bottom: 5px; }
+      .item-meta { font-size: 0.85rem; color: var(--muted); font-weight: 300; }
 
       /* Timeline */
-      .day-group { margin-bottom: 80px; }
-      .day-title { font-size: 2.6rem; font-weight: 100; margin-bottom: 40px; border-bottom: 1px solid #eee; padding-bottom: 20px; text-transform: uppercase; }
-      .timeline-list { display: grid; gap: 40px; position: relative; padding-left: 60px; }
-      .timeline-list::before { content: ""; position: absolute; left: 20px; top: 0; bottom: 0; width: 1px; background: #eee; }
-      .timeline-icon { position: absolute; left: -52px; top: 5px; width: 45px; height: 45px; background: #fff; border: 1px solid #eee; border-radius: 50%; display: grid; place-items: center; font-size: 0.7rem; font-weight: 900; color: #ddd; z-index: 1; }
-      .timeline-block { background: #fff; padding: 40px; border-radius: 40px; border: 1px solid var(--line); transition: transform 0.4s; }
-      .timeline-block:hover { transform: translateX(10px); border-color: #000; }
-      .timeline-block strong { display: block; font-size: 1.3rem; font-weight: 700; margin-bottom: 10px; }
+      .day-group { margin-bottom: 40px; }
+      .day-title { font-size: 1.8rem; font-weight: 100; margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px; text-transform: uppercase; }
+      .timeline-list { display: grid; gap: 20px; position: relative; padding-left: 45px; }
+      .timeline-list::before { content: ""; position: absolute; left: 16px; top: 0; bottom: 0; width: 1px; background: #eee; }
+      .timeline-icon { position: absolute; left: -45px; top: 5px; width: 32px; height: 32px; background: #fff; border: 1px solid #eee; border-radius: 50%; display: grid; place-items: center; font-size: 0.65rem; font-weight: 900; color: #ddd; z-index: 1; }
+      .timeline-block { background: #fff; padding: 25px; border-radius: 25px; border: 1px solid var(--line); transition: transform 0.4s; }
+      .timeline-block:hover { transform: translateX(5px); border-color: #000; }
+      .timeline-block strong { display: block; font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
 
       /* Info Center */
-      .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; }
-      .info-box { padding: 40px; background: #fff; border-radius: 35px; border: 1px solid var(--line); text-align: center; }
-      .info-label { font-size: 0.8rem; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 15px; letter-spacing: 0.1em; }
-      .info-value { font-size: 1.6rem; font-weight: 300; color: var(--accent); }
+      .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+      .info-box { padding: 25px; background: #fff; border-radius: 25px; border: 1px solid var(--line); text-align: center; }
+      .info-label { font-size: 0.75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.1em; }
+      .info-value { font-size: 1.25rem; font-weight: 400; color: var(--accent); }
 
       /* Horizontal Itinerary Grid */
       .itinerary-grid {
@@ -369,16 +369,29 @@
       function escapeHtml(v) { return String(v||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
       function yesNo(v) { return v ? "있음" : "없음"; }
 
-      function renderCircleItem(item) {
+      function renderCircleItem(item, category) {
         const title = item.name || item.title || "정보 없음";
         const addr = item.address || item.addr1 || "정보 없음";
         const img = item.image ? `<img src="${item.image}" alt="${escapeHtml(title)}" loading="lazy" />` : `<div style="display:grid; place-items:center; height:100%; color:#eee; font-size:0.6rem; font-weight:900;">NO IMAGE</div>`;
+        
+        // 카테고리별 스마트 링크 라우팅 (해외 여행 대비 글로벌 호환)
+        let searchUrl = `https://map.naver.com/v5/search/${encodeURIComponent(title)}`; // 기본값: 국내 장소 검색
+        if (category === "Stay" || category === "Lodging") {
+          // 숙박: 글로벌 예약 사이트(Agoda) 연동
+          searchUrl = `https://www.agoda.com/ko-kr/search?text=${encodeURIComponent(title)}`;
+        } else if (category === "Visit" || category === "Taste" || category === "Event") {
+          // 해외 확장 고려 시 Google Maps 전환 가능 (현재는 국내 최적화 네이버 맵 유지)
+          // searchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(title)}`;
+        }
+        
         return `
-          <div class="circle-item">
-            <div class="circle-mask">${img}</div>
-            <div class="item-title">${escapeHtml(title)}</div>
-            <div class="item-meta">${escapeHtml(addr)}</div>
-          </div>
+          <a href="${searchUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none; color:inherit; display:block;">
+            <div class="circle-item">
+              <div class="circle-mask">${img}</div>
+              <div class="item-title">${escapeHtml(title)}</div>
+              <div class="item-meta">${escapeHtml(addr)}</div>
+            </div>
+          </a>
         `;
       }
 
@@ -410,18 +423,38 @@
         return `<article class="result-card"><h2>Weather</h2><p class="summary-text">${escapeHtml(res.summary)}</p>${renderAccordion("여행 기간 전체 날씨 확인", weatherHtml)}</article>`;
       }
 
+      function getTransportBookingLink(method) {
+        if (!method) return { url: "https://map.naver.com/v5/directions/-/-/-/transit", label: "경로 검색" };
+        if (method.includes("KTX") || method.includes("기차")) return { url: "https://www.letskorail.com/", label: "코레일 예매" };
+        if (method.includes("고속") || method.includes("시외")) return { url: "https://www.kobus.co.kr/", label: "고속버스 예매" };
+        if (method.includes("항공")) return { url: "https://flight.naver.com/", label: "항공권 예매" };
+        if (method.includes("선박")) return { url: "https://island.haewoon.co.kr/", label: "승선권 예매" };
+        return { url: "https://map.naver.com/v5/directions/-/-/-/transit", label: "경로 검색" };
+      }
+
       function renderTransportCard(res) {
         const routes = res.routes || [];
-        const routesHtml = `<div class="timeline-list">${routes.map((r, i) => `
+        const routesHtml = `<div class="timeline-list">${routes.map((r, i) => {
+          const booking = getTransportBookingLink(r.method);
+          return `
           <div class="timeline-item">
             <div class="timeline-icon">${i+1}</div>
-            <div class="timeline-block"><strong>${escapeHtml(r.method)}</strong><p>${escapeHtml(r.from)} → ${escapeHtml(r.to)} (${escapeHtml(r.estimated_time)})</p></div>
-          </div>`).join("")}</div>`;
+            <div class="timeline-block" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
+              <div>
+                <strong>${escapeHtml(r.method)}</strong>
+                <p>${escapeHtml(r.from)} → ${escapeHtml(r.to)} (${escapeHtml(r.estimated_time)})</p>
+              </div>
+              <a href="${booking.url}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:10px 20px; background:#000; color:#fff; text-decoration:none; border-radius:99px; font-size:0.85rem; font-weight:700; transition:transform 0.2s;">
+                ${booking.label} ↗
+              </a>
+            </div>
+          </div>`;
+        }).join("")}</div>`;
         return `<article class="result-card"><h2>Transport</h2><p class="summary-text">${escapeHtml(res.summary)}</p>${renderAccordion("Review Optimized Routes", routesHtml)}</article>`;
       }
 
       function renderGridCard(summary, items, category) {
-        const gridHtml = `<div class="circle-grid">${(items||[]).map(renderCircleItem).join("")}</div>`;
+        const gridHtml = `<div class="circle-grid">${(items||[]).map(i => renderCircleItem(i, category)).join("")}</div>`;
         return `<article class="result-card"><h2>${category}</h2><p class="summary-text">${escapeHtml(summary)}</p>${renderAccordion(`Explore Recommended ${category}`, gridHtml)}</article>`;
       }
 

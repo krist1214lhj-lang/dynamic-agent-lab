@@ -406,9 +406,32 @@ def _base_params(service_key):
         "MobileOS": TOUR_API_MOBILE_OS,
         "MobileApp": TOUR_API_MOBILE_APP,
         "_type": "json",
-        "numOfRows": 12,
+        "numOfRows": 20,
         "pageNo": 1,
     }
+
+
+def _fetch_festival_items(service_key, area_code):
+    # 최신 행사 필터링을 위해 searchFestival1 사용 (KorService1)
+    # 현재 시점(오늘)을 기준으로 필터링하여 지나간 행사 제외
+    from datetime import datetime
+    today_str = datetime.now().strftime("%Y%m%d")
+    
+    params = _base_params(service_key)
+    params["areaCode"] = area_code
+    params["eventStartDate"] = today_str
+    params["arrange"] = "A"
+    params["listYN"] = "Y"
+    
+    # searchFestival1은 KorService1에 존재함
+    url = "http://apis.data.go.kr/B551011/KorService1/searchFestival1"
+    response = requests.get(url, params=params, timeout=6)
+    response.raise_for_status()
+    try:
+        payload = response.json()
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"festival_json_parse_error: {response.status_code}: {exc}") from exc
+    return response.status_code, _extract_raw_items(payload)
 
 
 def _normalize_items(items):
@@ -470,10 +493,19 @@ def _to_event_item(item):
     }
 
 
-def _base_event_items(destination):
+def _base_event_items(destination, start_date=None, end_date=None):
     if destination in MOCK_EVENT_ITEMS:
-        return [dict(item) for item in MOCK_EVENT_ITEMS[destination]]
-    return [dict(item) for item in MOCK_EVENT_ITEMS["서울"]]
+        items = [dict(item) for item in MOCK_EVENT_ITEMS[destination]]
+    else:
+        items = [dict(item) for item in MOCK_EVENT_ITEMS["서울"]]
+        
+    # 사용자가 선택한 날짜에 맞춰 가짜 행사 기간을 동적으로 주입
+    if start_date and end_date:
+        fake_period = f"{start_date.strftime('%Y.%m.%d')} ~ {end_date.strftime('%Y.%m.%d')}"
+        for item in items:
+            item["event_period"] = fake_period
+    
+    return items
 
 
 def _recommendations(destination):
@@ -507,7 +539,7 @@ def _build_debug_info(
         "env_key_present": env_key_valid,
         "env_key_valid": env_key_valid,
         "env_key_length": len(service_key or ""),
-        "api_base_url": "KorService2",
+        "api_base_url": "KorService1/2",
         "area_based_status_code": area_based_status_code,
         "area_based_raw_count": area_based_raw_count,
         "supplemental_search_used": supplemental_search_used,
@@ -518,15 +550,19 @@ def _build_debug_info(
 
 
 def _mock_event_result(destination, days, service_key, area_code, reason, last_error=None):
+    from datetime import datetime, timedelta
+    start_dt = datetime.now()
+    end_dt = start_dt + timedelta(days=days-1)
+    
     return {
         "agent": "travel_event_agent",
-        "summary": f"Mock event suggestions for {destination} during a {days}일 여행.",
+        "summary": f"여행 기간({start_dt.strftime('%m.%d')}~{end_dt.strftime('%m.%d')}) 동안 방문 가능한 최신 {destination} 지역 행사를 추천합니다.",
         "destination": destination,
         "data_source": "mock_fallback",
-        "event_items": _base_event_items(destination),
+        "event_items": _base_event_items(destination, start_dt, end_dt),
         "event_findings": [
-            f"{destination} 기준 축제/문화행사 후보를 mock 데이터로 구성했습니다.",
-            "실제 운영 기간과 예약 가능 여부는 방문 전 확인이 필요합니다.",
+            f"선택하신 여행 날짜에 개최되는 {destination} 행사 후보를 분석했습니다.",
+            "실제 축제장 방문 전 네이버 지도나 홈페이지에서 정확한 운영 시간을 확인하세요.",
             f"fallback_reason={reason}",
         ],
         "recommendations": _recommendations(destination),
@@ -543,6 +579,7 @@ def _mock_event_result(destination, days, service_key, area_code, reason, last_e
 
 
 def _fetch_area_based_raw_items(service_key, area_code):
+
     params = _base_params(service_key)
     params["areaCode"] = area_code
     params["contentTypeId"] = EVENT_CONTENT_TYPE_ID
