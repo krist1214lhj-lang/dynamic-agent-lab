@@ -625,8 +625,26 @@ def _unique_items(items):
 
 
 def _pick_event_items(raw_items):
-    picked = [item for item in raw_items if isinstance(item, dict) and str(item.get("title") or "")]
-    picked = _unique_items(picked)
+    from datetime import datetime
+    today_str = datetime.now().strftime("%Y%m%d")
+    
+    valid_items = []
+    for item in raw_items:
+        if not isinstance(item, dict):
+            continue
+        title = str(item.get("title") or "").strip()
+        end_date = str(item.get("eventenddate") or "").strip()
+        
+        if not title:
+            continue
+            
+        # 종료일이 명시되어 있고, 그 종료일이 오늘보다 과거라면 필터링 아웃
+        if end_date and len(end_date) == 8 and end_date < today_str:
+            continue
+            
+        valid_items.append(item)
+
+    picked = _unique_items(valid_items)
     picked.sort(key=lambda item: (1 if _item_image(item) else 0, 1 if _item_address(item) != "주소 정보 없음" else 0), reverse=True)
     return picked[:MAX_EVENT_ITEMS]
 
