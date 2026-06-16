@@ -222,6 +222,46 @@
       .info-label { font-size: 0.8rem; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 15px; letter-spacing: 0.1em; }
       .info-value { font-size: 1.6rem; font-weight: 300; color: var(--accent); }
 
+      /* Horizontal Itinerary Grid */
+      .itinerary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+        margin-top: 40px;
+        align-items: start;
+      }
+
+      .day-card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 35px;
+        overflow: hidden;
+        transition: transform 0.3s;
+      }
+      .day-card:hover { transform: translateY(-5px); border-color: #000; }
+
+      .day-card-header {
+        padding: 25px;
+        background: #fbfbfb;
+        border-bottom: 1px solid var(--line);
+        text-align: center;
+      }
+      .day-card-header h3 { font-size: 1.8rem; font-weight: 100; text-transform: uppercase; }
+      .day-card-header p { font-size: 0.9rem; color: var(--muted); font-weight: 300; margin-top: 5px; }
+
+      .day-accordion { border: 0 !important; border-radius: 0 !important; background: transparent !important; }
+      .day-accordion summary { 
+        padding: 15px 25px; 
+        font-size: 0.85rem; 
+        font-weight: 700; 
+        background: #fff; 
+        color: #000;
+        letter-spacing: 0.05em;
+      }
+      .day-accordion summary::after { content: "+ SCHEDULE"; opacity: 0.4; }
+      .day-accordion[open] summary::after { content: "- CLOSE"; }
+      .day-accordion .details-content { padding: 25px; border-top: 1px solid var(--line); }
+
       /* Utils */
       .hidden { display: none !important; }
       .loading-container { display: flex; flex-direction: column; align-items: center; padding: 150px 0; gap: 40px; }
@@ -352,15 +392,22 @@
       }
 
       function renderWeatherCard(res) {
-        const d = res.weather_summary || res.forecast || {};
-        const infoHtml = `
-          <div class="info-grid">
-            <div class="info-box"><p class="info-label">Temperature</p><p class="info-value">${escapeHtml(d.temperature||"정보 없음")}</p></div>
-            <div class="info-box"><p class="info-label">Condition</p><p class="info-value">${escapeHtml(d.condition||"정보 없음")}</p></div>
-            <div class="info-box"><p class="info-label">Rain</p><p class="info-value">${escapeHtml(d.rain_probability||"정보 없음")}</p></div>
+        const daily = res.daily_forecast || [];
+        const weatherHtml = `
+          <div class="circle-grid" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px;">
+            ${daily.map(d => `
+              <div class="info-box" style="padding:20px; ${d.temperature === '추후 업데이트' ? 'opacity:0.6; background:#fcfcfc;' : ''}">
+                <p class="info-label">${escapeHtml(d.date)}</p>
+                <p class="info-value" style="font-size:1.2rem; font-weight:700; margin-bottom:5px;">${escapeHtml(d.condition)}</p>
+                <div style="font-size:0.85rem; color:var(--muted);">
+                  <span>기온: ${escapeHtml(d.temperature)}</span><br/>
+                  <span>강수: ${escapeHtml(d.rain_probability)}</span>
+                </div>
+              </div>
+            `).join("")}
           </div>
         `;
-        return `<article class="result-card"><h2>Weather</h2><p class="summary-text">${escapeHtml(res.summary)}</p>${renderAccordion("Check Detailed Weather Data", infoHtml)}</article>`;
+        return `<article class="result-card"><h2>Weather</h2><p class="summary-text">${escapeHtml(res.summary)}</p>${renderAccordion("여행 기간 전체 날씨 확인", weatherHtml)}</article>`;
       }
 
       function renderTransportCard(res) {
@@ -386,40 +433,67 @@
           <div class="info-box"><p class="info-label">Lodging</p><p class="info-value">${yesNo(strategy.lodging_required)}</p></div>
         </div>`;
         
-        const scheduleHtml = (res.daily_itinerary||[]).map(day => `
-          <div class="day-group">
-            <h3 class="day-title">DAY ${day.day}. ${escapeHtml(day.title)}</h3>
-            <div class="timeline-list">
-              ${(day.time_blocks||[]).map(b => `
-                <div class="timeline-item">
-                  <div class="timeline-icon">${escapeHtml(b.time.slice(0,2))}</div>
-                  <div class="timeline-block"><strong>${escapeHtml(b.title)}</strong><p>${escapeHtml(b.memo)}</p></div>
-                </div>`).join("")}
-            </div>
-          </div>`).join("");
+        const scheduleHtml = `
+          <div class="itinerary-grid">
+            ${(res.daily_itinerary||[]).map(day => `
+              <div class="day-card">
+                <div class="day-card-header">
+                  <h3>Day ${day.day}</h3>
+                  <p>${escapeHtml(day.title)}</p>
+                </div>
+                <details class="details-accordion day-accordion">
+                  <summary>View Timeline</summary>
+                  <div class="details-content">
+                    <div class="timeline-list" style="padding-left:30px;">
+                      ${(day.time_blocks||[]).map(b => `
+                        <div class="timeline-item">
+                          <div class="timeline-icon" style="width:28px; height:28px; left:-38px;">${escapeHtml(b.time.slice(0,2))}</div>
+                          <div class="timeline-block" style="padding:15px 20px; border-radius:25px;">
+                            <strong style="font-size:1rem;">${escapeHtml(b.title)}</strong>
+                            <p style="font-size:0.85rem; margin:0;">${escapeHtml(b.memo)}</p>
+                          </div>
+                        </div>`).join("")}
+                    </div>
+                  </div>
+                </details>
+              </div>`).join("")}
+          </div>`;
 
         return `
           <article class="result-card">
             <h2>Itinerary</h2>
             <p class="summary-text">${escapeHtml(res.summary || "Your curated journey flow.")}</p>
             ${renderAccordion("View Strategy & Settings", strategyHtml)}
-            <div style="margin-top:60px;">${scheduleHtml}</div>
+            ${scheduleHtml}
           </article>
         `;
       }
 
       function renderBudgetCard(res) {
-        const items = res.budget_items || [];
+        const budget = res.estimated_budget || {};
         const tips = res.saving_tips || [];
+        
+        // 항목별 한글 명칭 매핑
+        const categoryMap = {
+          "transportation": "교통비",
+          "accommodation": "숙박비",
+          "food": "식비",
+          "activities": "활동비",
+          "buffer": "예비비"
+        };
+
         const budgetHtml = `
           <div class="info-grid" style="margin-bottom:30px;">
-            <div class="info-box"><p class="info-label">Total Budget</p><p class="info-value" style="font-weight:700; color:#000;">${res.total_budget || "계산 중"}</p></div>
+            <div class="info-box">
+              <p class="info-label">Total Budget</p>
+              <p class="info-value" style="font-weight:700; color:#000;">${escapeHtml(budget.total || "계산 중")}</p>
+            </div>
           </div>
-          <div style="display:grid; gap:15px; margin-bottom:30px;">
-            ${items.map(i => `
+          <div style="display:grid; gap:12px; margin-bottom:30px;">
+            ${Object.entries(budget).filter(([k]) => k !== 'total').map(([key, value]) => `
               <div style="display:flex; justify-content:space-between; padding:15px 25px; border-radius:20px; background:#f9f9f9; border:1px solid #eee;">
-                <span style="font-weight:600;">${escapeHtml(i.category)}</span>
-                <span style="color:var(--muted);">${escapeHtml(i.estimated_cost)}</span>
+                <span style="font-weight:600;">${escapeHtml(categoryMap[key] || key)}</span>
+                <span style="color:var(--muted);">${escapeHtml(value)}</span>
               </div>
             `).join("")}
           </div>

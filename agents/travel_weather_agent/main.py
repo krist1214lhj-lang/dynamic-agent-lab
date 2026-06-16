@@ -157,20 +157,34 @@ def _translate_condition(sky_code=None, pty_code=None):
 
 
 def _parse_kma_items(items):
-    parsed = {}
+    # 날짜별 데이터 그룹화
+    daily_raw = {}
     for item in items:
+        date = item.get("fcstDate")
         category = item.get("category")
         value = item.get("fcstValue")
-        if category in {"TMP", "SKY", "PTY", "POP"} and category not in parsed:
-            parsed[category] = value
+        
+        if date not in daily_raw:
+            daily_raw[date] = {}
+        
+        if category in {"TMP", "SKY", "PTY", "POP"}:
+            # 하루 중 여러 시간대 데이터가 있으므로, 특정 시간대(예: 낮 12시 근처)를 우선하거나 평균적인 값을 취할 수 있음
+            # 여기서는 단순화를 위해 해당 날짜의 첫 번째(또는 대표) 값을 유지
+            if category not in daily_raw[date]:
+                daily_raw[date][category] = value
 
-    return {
-        "temperature": f"{parsed['TMP']}°C" if parsed.get("TMP") is not None else "확인 필요",
-        "condition": _translate_condition(parsed.get("SKY"), parsed.get("PTY")),
-        "rain_probability": (
-            f"{parsed['POP']}%" if parsed.get("POP") is not None else "확인 필요"
-        )
-    }
+    parsed_days = []
+    # 날짜순 정렬하여 결과 생성
+    for date in sorted(daily_raw.keys()):
+        d = daily_raw[date]
+        parsed_days.append({
+            "date": f"{date[4:6]}.{date[6:8]}",
+            "temperature": f"{d.get('TMP', '확인 필요')}°C",
+            "condition": _translate_condition(d.get("SKY"), d.get("PTY")),
+            "rain_probability": f"{d.get('POP', '확인 필요')}%"
+        })
+    
+    return parsed_days
 
 
 def fetch_kma_forecast(input_data, service_key):
@@ -244,10 +258,27 @@ def fetch_kma_forecast(input_data, service_key):
             return None, "empty_items", _build_debug_info(service_key, base_date, base_time, location=location, data_source="mock_fallback", debug_message="empty_items", days=days)
 
         try:
-            weather = _parse_kma_items(items)
+            daily_weather = _parse_kma_items(items)
         except Exception as exc:
             message = f"parse_error: {_safe_error_message(exc, service_key)}"
             return None, message, _build_debug_info(service_key, base_date, base_time, location=location, data_source="mock_fallback", debug_message=message, days=days)
+        
+        # 기상청 데이터가 부족할 경우 "추후 업데이트"로 보충
+        final_daily = []
+        start_dt = datetime.now()
+        for i in range(days):
+            current_date_str = (start_dt + timedelta(days=i)).strftime("%m.%d")
+            found = next((d for d in daily_weather if d["date"] == current_date_str), None)
+            if found:
+                final_daily.append(found)
+            else:
+                final_daily.append({
+                    "date": current_date_str,
+                    "temperature": "추후 업데이트",
+                    "condition": "예보 준비 중",
+                    "rain_probability": "추후 업데이트"
+                })
+
         debug_info = _build_debug_info(
             service_key,
             base_date,
@@ -257,23 +288,27 @@ def fetch_kma_forecast(input_data, service_key):
             debug_message="kma_api_success",
             days=days
         )
+        
+        primary = final_daily[0]
         forecast = {
             "location": location,
             "period": period,
-            "temperature": weather["temperature"],
-            "condition": weather["condition"],
-            "rain_probability": weather["rain_probability"]
+            "temperature": primary["temperature"],
+            "condition": primary["condition"],
+            "rain_probability": primary["rain_probability"],
+            "daily_forecast": final_daily
         }
 
         return {
             "agent": "travel_weather_agent",
             "summary": (
-                f"KMA short-term forecast was checked for {location} during a {period}."
+                f"KMA short-term forecast was checked for {location} for {days} days."
             ),
             "location": location,
             "forecast": forecast,
             "weather_summary": forecast,
             "weather": forecast,
+            "daily_forecast": final_daily,
             "weather_findings": [
                 "기상청 단기예보 API 응답에서 가능한 항목만 추출했습니다.",
                 f"{location} 기준 격자 좌표(nx={grid['nx']}, ny={grid['ny']})를 사용했습니다.",
@@ -335,24 +370,39 @@ def build_mock_weather_result(input_data, debug_message="mock_fallback", debug_i
         "data_source": "mock_fallback",
         "debug_message": debug_message
     })
+
+    # Mock 전일 날씨 생성
+    final_daily = []
+    start_dt = datetime.now()
+    for i in range(days):
+        current_date_str = (start_dt + timedelta(days=i)).strftime("%m.%d")
+        final_daily.append({
+            "date": current_date_str,
+            "temperature": temperature,
+            "condition": condition,
+            "rain_probability": rain_probability
+        })
+
     forecast = {
         "location": location,
         "period": period,
         "temperature": temperature,
         "condition": condition,
-        "rain_probability": rain_probability
+        "rain_probability": rain_probability,
+        "daily_forecast": final_daily
     }
 
     return {
         "agent": "travel_weather_agent",
         "summary": (
-            f"Mock weather estimate for {location} during a {period}. "
+            f"Mock weather estimate for {location} for {days} days. "
             f"No public weather API was called."
         ),
         "location": location,
         "forecast": forecast,
         "weather_summary": forecast,
         "weather": forecast,
+        "daily_forecast": final_daily,
         "weather_findings": [
             "여행 기간 중 실외 활동이 가능한 수준의 날씨로 가정했습니다.",
             "비 가능성은 mock 값이며 실제 예보와 다를 수 있습니다.",
