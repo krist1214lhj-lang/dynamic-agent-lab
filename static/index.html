@@ -1294,18 +1294,45 @@
 
       .saved-plan-controls {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
       }
 
-      .save-plan-button {
+      .save-plan-button,
+      .clear-saved-plans-button,
+      .saved-plan-sort-select,
+      .toggle-saved-plans-button {
         min-height: 50px;
       }
 
+      .saved-plan-sort-label {
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 900;
+      }
+
+      .saved-plan-sort-select {
+        border-color: var(--line-strong);
+        color: #eef8ff;
+        background: rgba(255, 255, 255, 0.07);
+      }
+
       .toggle-saved-plans-button {
-        min-height: 50px;
         color: #eef8ff;
         background: linear-gradient(135deg, rgba(103, 183, 255, 0.26), rgba(154, 123, 255, 0.34));
+      }
+
+      .clear-saved-plans-button {
+        color: #ffe8ef;
+        background: linear-gradient(135deg, rgba(140, 36, 72, 0.82), rgba(216, 79, 120, 0.88));
+      }
+
+      .clear-saved-plans-button:disabled {
+        color: #c9d4e3;
+        background: rgba(138, 149, 163, 0.45);
+        cursor: not-allowed;
       }
 
       .saved-plan-message {
@@ -1338,7 +1365,7 @@
 
       .saved-plan-main {
         display: grid;
-        gap: 8px;
+        gap: 10px;
       }
 
       .saved-plan-title {
@@ -1348,7 +1375,53 @@
         line-height: 1.35;
       }
 
-      .saved-plan-created {
+      .saved-plan-memo {
+        margin: 0;
+        color: #dce9ff;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+      }
+
+      .saved-plan-memo.empty {
+        color: var(--muted);
+      }
+
+      .saved-plan-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 8px;
+      }
+
+      .saved-plan-meta-item {
+        display: grid;
+        gap: 3px;
+        border: 1px solid rgba(165, 194, 255, 0.14);
+        border-radius: 12px;
+        padding: 9px 10px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .saved-plan-meta-label,
+      .saved-plan-date-label {
+        color: var(--muted);
+        font-size: 0.76rem;
+        font-weight: 900;
+      }
+
+      .saved-plan-meta-value {
+        color: #f6fbff;
+        font-weight: 800;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+      }
+
+      .saved-plan-dates {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 6px 12px;
+      }
+
+      .saved-plan-date {
         color: var(--muted);
         font-size: 0.84rem;
         font-weight: 700;
@@ -1370,6 +1443,13 @@
 
       .saved-plan-load {
         background: linear-gradient(135deg, var(--mint), var(--sky));
+      }
+
+      .saved-plan-edit,
+      .saved-plan-memo-edit,
+      .saved-plan-duplicate {
+        color: #eef8ff;
+        background: linear-gradient(135deg, rgba(103, 183, 255, 0.26), rgba(154, 123, 255, 0.34));
       }
 
       .saved-plan-delete {
@@ -2170,6 +2250,15 @@
             <div class="saved-plan-controls">
               <button id="save-plan-button" class="save-plan-button" type="button">현재 플랜 저장</button>
               <button id="toggle-saved-plans-button" class="toggle-saved-plans-button" type="button" aria-expanded="false" aria-controls="saved-plan-list">저장 목록 보기</button>
+              <button id="clear-saved-plans-button" class="clear-saved-plans-button" type="button" disabled>전체 삭제</button>
+              <label class="saved-plan-sort-label" for="saved-plan-sort-select">
+                정렬
+                <select id="saved-plan-sort-select" class="saved-plan-sort-select">
+                  <option value="updated_desc" selected>최근 수정순</option>
+                  <option value="created_desc">처음 저장순</option>
+                  <option value="title_asc">제목순</option>
+                </select>
+              </label>
             </div>
             <div id="saved-plan-message" class="saved-plan-message" aria-live="polite"></div>
             <div id="saved-plan-list" class="saved-plan-list"></div>
@@ -2199,6 +2288,8 @@
       const result = document.querySelector("#result");
       const savePlanButton = document.querySelector("#save-plan-button");
       const toggleSavedPlansButton = document.querySelector("#toggle-saved-plans-button");
+      const clearSavedPlansButton = document.querySelector("#clear-saved-plans-button");
+      const savedPlanSortSelect = document.querySelector("#saved-plan-sort-select");
       const savedPlanHeading = document.querySelector("#saved-plan-heading");
       const savedPlanMessage = document.querySelector("#saved-plan-message");
       const savedPlanList = document.querySelector("#saved-plan-list");
@@ -2206,6 +2297,7 @@
       const savedPlansStorageKey = "saved_travel_plans";
       let currentWorkflowResult = null;
       let savedPlansExpanded = false;
+      let savedPlanSortMode = "updated_desc";
 
       function escapeHtml(value) {
         return String(value ?? "")
@@ -3738,6 +3830,36 @@
         };
       }
 
+      function generateSavedPlanId(timestamp = new Date().toISOString()) {
+        const randomPart = Math.random().toString(36).slice(2, 10);
+        return `plan_${timestamp.replace(/[-:.TZ]/g, "")}_${randomPart}`;
+      }
+
+      function normalizeSavedPlan(plan) {
+        const source = plan && typeof plan === "object" ? plan : {};
+        const resultData = source.result && typeof source.result === "object" ? source.result : {};
+        const summary = getWorkflowSummary(resultData);
+        const createdAt = source.created_at || new Date().toISOString();
+        const updatedAt = source.updated_at || source.created_at || createdAt;
+        const requestedFeatures = Array.isArray(source.requested_features)
+          ? source.requested_features
+          : summary.requested_features;
+
+        return {
+          id: source.id || generateSavedPlanId(createdAt),
+          title: readableValue(source.title) || `${summary.destination} ${durationLabel(summary.days)} ${summary.budget_level} 여행 플랜`,
+          memo: readableValue(source.memo),
+          destination: source.destination || summary.destination,
+          origin: source.origin || summary.origin,
+          days: Number(source.days || summary.days || 1),
+          budget_level: source.budget_level || summary.budget_level,
+          requested_features: requestedFeatures,
+          created_at: createdAt,
+          updated_at: updatedAt,
+          result: resultData,
+        };
+      }
+
       function readSavedPlans() {
         try {
           const rawPlans = localStorage.getItem(savedPlansStorageKey);
@@ -3745,14 +3867,14 @@
             return [];
           }
           const parsedPlans = JSON.parse(rawPlans);
-          return Array.isArray(parsedPlans) ? parsedPlans : [];
+          return Array.isArray(parsedPlans) ? parsedPlans.map(normalizeSavedPlan) : [];
         } catch (_error) {
           return [];
         }
       }
 
       function writeSavedPlans(plans) {
-        localStorage.setItem(savedPlansStorageKey, JSON.stringify(plans));
+        localStorage.setItem(savedPlansStorageKey, JSON.stringify(plans.map(normalizeSavedPlan)));
       }
 
       function showSavedPlanMessage(message) {
@@ -3809,17 +3931,18 @@
       function createSavedPlan(data) {
         const summary = getWorkflowSummary(data);
         const createdAt = new Date().toISOString();
-        const randomPart = Math.random().toString(36).slice(2, 10);
 
         return {
-          id: `plan_${createdAt.replace(/[-:.TZ]/g, "")}_${randomPart}`,
+          id: generateSavedPlanId(createdAt),
           title: `${summary.destination} ${durationLabel(summary.days)} ${summary.budget_level} 여행 플랜`,
+          memo: "",
           destination: summary.destination,
           origin: summary.origin,
           days: summary.days,
           budget_level: summary.budget_level,
           requested_features: summary.requested_features,
           created_at: createdAt,
+          updated_at: createdAt,
           result: data,
         };
       }
@@ -3869,13 +3992,42 @@
         return `${count}개 저장됨`;
       }
 
+      function savedPlanTimestamp(plan, key) {
+        const value = key === "created_at" ? plan.created_at : plan.updated_at || plan.created_at;
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+      }
+
+      function sortSavedPlans(plans) {
+        const sortedPlans = [...plans];
+        if (savedPlanSortMode === "created_desc") {
+          return sortedPlans.sort((a, b) => savedPlanTimestamp(b, "created_at") - savedPlanTimestamp(a, "created_at"));
+        }
+        if (savedPlanSortMode === "title_asc") {
+          return sortedPlans.sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), "ko"));
+        }
+        return sortedPlans.sort((a, b) => savedPlanTimestamp(b, "updated_at") - savedPlanTimestamp(a, "updated_at"));
+      }
+
+      function savedPlanMetaItem(label, value) {
+        return `
+          <div class="saved-plan-meta-item">
+            <span class="saved-plan-meta-label">${escapeHtml(label)}</span>
+            <span class="saved-plan-meta-value">${escapeHtml(readableValue(value) || "정보 없음")}</span>
+          </div>
+        `;
+      }
+
       function renderSavedPlans() {
         const plans = readSavedPlans();
+        const visiblePlans = sortSavedPlans(plans);
         const countLabel = savedPlanCountLabel(plans.length);
 
         savedPlanHeading.textContent = `저장된 여행 플랜 · ${countLabel}`;
         toggleSavedPlansButton.textContent = savedPlansExpanded ? "저장 목록 숨기기" : "저장 목록 보기";
         toggleSavedPlansButton.setAttribute("aria-expanded", String(savedPlansExpanded));
+        clearSavedPlansButton.disabled = plans.length === 0;
+        savedPlanSortSelect.value = savedPlanSortMode;
 
         if (!savedPlansExpanded) {
           savedPlanList.innerHTML = "";
@@ -3890,19 +4042,35 @@
           return;
         }
 
-        savedPlanList.innerHTML = plans.map((plan) => `
+        savedPlanList.innerHTML = visiblePlans.map((plan) => {
+          const memo = readableValue(plan.memo);
+          return `
           <article class="saved-plan-item">
             <div class="saved-plan-main">
               <h3 class="saved-plan-title">${escapeHtml(plan.title || "여행 플랜")}</h3>
-              <span class="saved-plan-created">${escapeHtml(formatCreatedAt(plan.created_at))}</span>
+              <p class="saved-plan-memo ${memo ? "" : "empty"}">${escapeHtml(memo ? `메모: ${memo}` : "메모 없음")}</p>
+              <div class="saved-plan-meta-grid">
+                ${savedPlanMetaItem("목적지", plan.destination)}
+                ${savedPlanMetaItem("출발지", plan.origin)}
+                ${savedPlanMetaItem("기간", durationLabel(plan.days))}
+                ${savedPlanMetaItem("예산", plan.budget_level)}
+              </div>
+              <div class="saved-plan-dates">
+                <span class="saved-plan-date"><span class="saved-plan-date-label">저장</span> ${escapeHtml(formatCreatedAt(plan.created_at))}</span>
+                <span class="saved-plan-date"><span class="saved-plan-date-label">수정</span> ${escapeHtml(formatCreatedAt(plan.updated_at || plan.created_at))}</span>
+              </div>
               ${renderFeatureBadges(plan.requested_features)}
             </div>
             <div class="saved-plan-actions">
               <button class="saved-plan-load" type="button" data-plan-action="load" data-plan-id="${escapeHtml(plan.id)}">불러오기</button>
+              <button class="saved-plan-edit" type="button" data-plan-action="rename" data-plan-id="${escapeHtml(plan.id)}">이름변경</button>
+              <button class="saved-plan-memo-edit" type="button" data-plan-action="memo" data-plan-id="${escapeHtml(plan.id)}">메모수정</button>
+              <button class="saved-plan-duplicate" type="button" data-plan-action="duplicate" data-plan-id="${escapeHtml(plan.id)}">복제</button>
               <button class="saved-plan-delete" type="button" data-plan-action="delete" data-plan-id="${escapeHtml(plan.id)}">삭제</button>
             </div>
           </article>
-        `).join("");
+        `;
+        }).join("");
       }
 
       function saveCurrentPlan() {
@@ -3934,12 +4102,120 @@
         showSavedPlanMessage("저장된 플랜을 불러왔습니다.");
       }
 
+      function updateSavedPlan(planId, updater) {
+        const plans = readSavedPlans();
+        let didUpdate = false;
+        const updatedPlans = plans.map((plan) => {
+          if (plan.id !== planId) {
+            return plan;
+          }
+          didUpdate = true;
+          return normalizeSavedPlan({
+            ...plan,
+            ...updater(plan),
+            updated_at: new Date().toISOString(),
+          });
+        });
+
+        if (!didUpdate) {
+          showSavedPlanMessage("저장된 플랜을 찾지 못했습니다.");
+          renderSavedPlans();
+          return false;
+        }
+
+        writeSavedPlans(updatedPlans);
+        renderSavedPlans();
+        return true;
+      }
+
+      function renameSavedPlan(planId) {
+        const plan = readSavedPlans().find((item) => item.id === planId);
+        if (!plan) {
+          showSavedPlanMessage("저장된 플랜을 찾지 못했습니다.");
+          renderSavedPlans();
+          return;
+        }
+
+        const nextTitle = window.prompt("새 플랜 제목을 입력하세요.", plan.title || "여행 플랜");
+        if (nextTitle === null) {
+          return;
+        }
+
+        const trimmedTitle = nextTitle.trim();
+        if (!trimmedTitle) {
+          showSavedPlanMessage("빈 제목은 저장할 수 없습니다.");
+          return;
+        }
+
+        if (updateSavedPlan(planId, () => ({ title: trimmedTitle }))) {
+          showSavedPlanMessage("플랜 이름을 변경했습니다.");
+        }
+      }
+
+      function editSavedPlanMemo(planId) {
+        const plan = readSavedPlans().find((item) => item.id === planId);
+        if (!plan) {
+          showSavedPlanMessage("저장된 플랜을 찾지 못했습니다.");
+          renderSavedPlans();
+          return;
+        }
+
+        const nextMemo = window.prompt("플랜 메모를 입력하세요.", plan.memo || "");
+        if (nextMemo === null) {
+          return;
+        }
+
+        if (updateSavedPlan(planId, () => ({ memo: nextMemo.trim() }))) {
+          showSavedPlanMessage("플랜 메모를 저장했습니다.");
+        }
+      }
+
+      function duplicateSavedPlan(planId) {
+        const plans = readSavedPlans();
+        const plan = plans.find((item) => item.id === planId);
+        if (!plan) {
+          showSavedPlanMessage("저장된 플랜을 찾지 못했습니다.");
+          renderSavedPlans();
+          return;
+        }
+
+        const now = new Date().toISOString();
+        const duplicatedPlan = normalizeSavedPlan({
+          ...plan,
+          id: generateSavedPlanId(now),
+          title: `${plan.title || "여행 플랜"} 복사본`,
+          created_at: now,
+          updated_at: now,
+          result: plan.result,
+        });
+
+        writeSavedPlans([duplicatedPlan, ...plans]);
+        renderSavedPlans();
+        showSavedPlanMessage("저장된 플랜을 복제했습니다.");
+      }
+
       function deleteSavedPlan(planId) {
         const plans = readSavedPlans();
         const nextPlans = plans.filter((plan) => plan.id !== planId);
         writeSavedPlans(nextPlans);
         renderSavedPlans();
         showSavedPlanMessage("저장된 플랜을 삭제했습니다.");
+      }
+
+      function clearSavedPlans() {
+        const plans = readSavedPlans();
+        if (plans.length === 0) {
+          renderSavedPlans();
+          return;
+        }
+
+        if (!window.confirm("저장된 여행 플랜을 모두 삭제할까요?")) {
+          return;
+        }
+
+        writeSavedPlans([]);
+        renderSavedPlans();
+        showSavedPlanMessage("저장된 여행 플랜을 모두 삭제했습니다.");
       }
 
       async function copyTextToClipboard(text) {
@@ -4128,8 +4404,13 @@
       });
 
       savePlanButton.addEventListener("click", saveCurrentPlan);
+      clearSavedPlansButton.addEventListener("click", clearSavedPlans);
 
       durationSelect.addEventListener("change", updateDurationGuidance);
+      savedPlanSortSelect.addEventListener("change", () => {
+        savedPlanSortMode = savedPlanSortSelect.value;
+        renderSavedPlans();
+      });
 
       result.addEventListener("click", (event) => {
         if (!(event.target instanceof Element)) {
@@ -4162,6 +4443,15 @@
         const planId = actionButton.dataset.planId;
         if (actionButton.dataset.planAction === "load") {
           loadSavedPlan(planId);
+        }
+        if (actionButton.dataset.planAction === "rename") {
+          renameSavedPlan(planId);
+        }
+        if (actionButton.dataset.planAction === "memo") {
+          editSavedPlanMemo(planId);
+        }
+        if (actionButton.dataset.planAction === "duplicate") {
+          duplicateSavedPlan(planId);
         }
         if (actionButton.dataset.planAction === "delete") {
           deleteSavedPlan(planId);
