@@ -25,3 +25,4 @@ Thumbs.db
 
 # Local test cache
 .pytest_cache/
+.gstack/
