@@ -15,9 +15,7 @@
         --accent: #000000;
         --card-bg: #ffffff;
       }
-
       * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
-
       body {
         background: var(--bg);
         background-image: 
@@ -29,7 +27,6 @@
         letter-spacing: -0.05em;
         line-height: 1.6;
       }
-
       main.app-shell {
         width: min(1100px, calc(100% - 40px));
         margin: 0 auto;
@@ -37,13 +34,10 @@
         display: grid;
         gap: 30px;
       }
-
-      /* Auth UI */
       .auth-nav { position: absolute; top: 30px; right: 40px; display: flex; gap: 15px; align-items: center; z-index: 100; }
       .user-info { font-size: 0.85rem; font-weight: 700; color: var(--accent); }
       .nav-btn { background: transparent; border: 1px solid var(--line); padding: 8px 20px; border-radius: 99px; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: all 0.3s; }
       .nav-btn:hover { border-color: #000; background: #fafafa; }
-      
       .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: none; place-items: center; z-index: 1000; backdrop-filter: blur(10px); }
       .modal-content { background: #fff; width: min(400px, 90%); padding: 50px; border-radius: 40px; border: 1px solid var(--line); box-shadow: 0 30px 60px rgba(0,0,0,0.05); text-align: center; }
       .modal-content h3 { font-size: 2rem; font-weight: 100; text-transform: uppercase; margin-bottom: 30px; }
@@ -52,38 +46,16 @@
       .auth-btn { background: #000; color: #fff; border: 0; padding: 18px; border-radius: 20px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: transform 0.3s; }
       .auth-btn:hover { transform: translateY(-2px); }
       .auth-toggle { margin-top: 25px; font-size: 0.85rem; color: var(--muted); cursor: pointer; text-decoration: underline; }
-
-      /* Hero */
       .hero-section { text-align: left; margin-bottom: 0px; }
-      .hero-section h1 { 
-        font-size: clamp(3rem, 10vw, 6rem); 
-        font-weight: 100; 
-        color: var(--accent); 
-        text-transform: uppercase; 
-        line-height: 0.8;
-        letter-spacing: -0.07em;
-      }
-      .hero-subtitle { 
-        color: var(--muted); 
-        font-size: 1.15rem; 
-        font-weight: 300; 
-        margin-top: 25px; 
-        max-width: 550px;
-        line-height: 1.5;
-      }
-
-      /* Control Deck */
+      .hero-section h1 { font-size: clamp(3rem, 10vw, 6rem); font-weight: 100; color: var(--accent); text-transform: uppercase; line-height: 0.8; letter-spacing: -0.07em; }
+      .hero-subtitle { color: var(--muted); font-size: 1.15rem; font-weight: 300; margin-top: 25px; max-width: 550px; line-height: 1.5; }
       .control-panel { background: transparent; padding: 0; }
       .search-bar-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr auto; gap: 12px; align-items: end; margin-bottom: 20px; }
       .search-field { display: flex; flex-direction: column; gap: 8px; color: var(--accent); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.8; }
       .search-field input[type="date"], .search-field select { background: #fff; border: 1px solid var(--line); color: var(--accent); padding: 14px 18px; border-radius: 18px; font-size: 0.95rem; cursor: pointer; font-family: inherit; transition: all 0.4s; font-weight: 400; }
       .search-field input[type="date"]:hover, .search-field select:hover { border-color: #000; }
-      @media (max-width: 900px) { .search-bar-row { grid-template-columns: 1fr 1fr; gap: 12px; } .search-bar-row button#run-button { grid-column: span 2; } }
-
       button#run-button { background: var(--accent); color: #fff; border: 0; height: 56px; padding: 0 40px; border-radius: 999px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1); letter-spacing: 0.1em; }
       button#run-button:hover { transform: scale(1.02) translateY(-2px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); }
-
-      /* Tabs & Options */
       .additional-conditions-row { margin-top: 35px; border-top: 1px solid var(--line); padding-top: 25px; }
       .tab-header { display: flex; gap: 10px; margin-bottom: 20px; }
       .tab-btn { background: #fff; border: 1px solid var(--line); padding: 8px 24px; border-radius: 999px; font-weight: 500; font-size: 0.85rem; cursor: pointer; transition: all 0.3s; color: var(--muted); }
@@ -94,74 +66,82 @@
       .checkbox-grid label:hover { border-color: #000; color: #000; }
       .checkbox-grid label:has(input:checked) { background: var(--accent); color: #fff; border-color: var(--accent); }
       .checkbox-grid input { display: none; }
-
-      /* 취향 입력창 */
       .extra-request-row { margin-top: 25px; }
       textarea#user-request { width: 100%; min-height: 80px; padding: 25px; border-radius: 25px; border: 1px solid var(--line); background: #fff; font-family: inherit; font-size: 1.05rem; font-weight: 300; resize: none; transition: all 0.4s; text-align: left; }
       textarea#user-request:focus { outline: none; border-color: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
       textarea#user-request::placeholder { color: #eee; }
-
-      /* Results */
       .result-view { display: grid; gap: 40px; margin-top: 50px; }
+      .result-card { background: transparent; border: 0; padding: 0; margin-bottom: 80px; }
       .result-card h2 { font-size: 2.4rem; font-weight: 100; margin-bottom: 15px; text-transform: uppercase; letter-spacing: -0.05em; color: var(--accent); }
       .summary-text { color: var(--text); font-size: 1.15rem; font-weight: 400; margin-bottom: 25px; line-height: 1.4; border-left: 2px solid var(--accent); padding-left: 20px; }
       .details-accordion { margin-top: 20px; border-radius: 20px; background: #fff; border: 1px solid var(--line); overflow: hidden; }
       .details-accordion summary { padding: 18px 25px; font-weight: 600; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; background: #fbfbfb; font-size: 0.95rem; color: var(--text); }
-      .details-accordion summary::after { content: "+ VIEW DETAILS"; font-size: 0.6rem; font-weight: 900; opacity: 0.3; letter-spacing: 0.2em; }
-      .details-accordion[open] summary::after { content: "- CLOSE"; }
+      .details-accordion summary::after { content: "+ 상세보기"; font-size: 0.6rem; font-weight: 900; opacity: 0.3; letter-spacing: 0.2em; }
+      .details-accordion[open] summary::after { content: "- 닫기"; }
       .details-content { padding: 30px; }
+      .circle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 30px; }
+      .circle-item { text-align: center; }
+      .circle-mask { width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 1px solid var(--line); background: #fafafa; padding: 6px; margin: 0 auto 15px; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
+      .circle-item:hover .circle-mask { transform: scale(1.05) rotate(-2deg); }
+      .circle-mask img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
       .item-title { font-size: 1.05rem; font-weight: 800; margin-bottom: 5px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .item-meta { font-size: 0.85rem; color: var(--muted); font-weight: 300; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-      /* Feedback */
+      .itinerary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 40px; align-items: start; }
+      .day-card { background: #fff; border: 1px solid var(--line); border-radius: 35px; overflow: hidden; transition: transform 0.3s; }
+      .day-card:hover { transform: translateY(-5px); border-color: #000; }
+      .day-card-header { padding: 25px; background: #fbfbfb; border-bottom: 1px solid var(--line); text-align: center; }
+      .day-card-header h3 { font-size: 1.8rem; font-weight: 100; text-transform: uppercase; }
+      .day-card-header p { font-size: 0.9rem; color: var(--muted); font-weight: 300; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .day-accordion { border: 0 !important; border-radius: 0 !important; background: transparent !important; }
+      .day-accordion summary { padding: 15px 25px; font-size: 0.85rem; font-weight: 700; background: #fff; color: #000; letter-spacing: 0.05em; }
+      .day-accordion summary::after { content: "+ 일정보기"; opacity: 0.4; }
+      .day-accordion[open] summary::after { content: "- 닫기"; }
+      .day-accordion .details-content { padding: 25px; border-top: 1px solid var(--line); }
+      .timeline-list { display: grid; gap: 20px; position: relative; padding-left: 45px; }
+      .timeline-list::before { content: ""; position: absolute; left: 16px; top: 0; bottom: 0; width: 1px; background: #eee; }
+      .timeline-icon { position: absolute; left: -45px; top: 5px; width: 32px; height: 32px; background: #fff; border: 1px solid #eee; border-radius: 50%; display: grid; place-items: center; font-size: 0.65rem; font-weight: 900; color: #ddd; z-index: 1; }
+      .timeline-block { background: #fff; padding: 25px; border-radius: 25px; border: 1px solid var(--line); transition: transform 0.4s; }
+      .timeline-block strong { display: block; font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+      .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+      .info-box { padding: 25px; background: #fff; border-radius: 25px; border: 1px solid var(--line); text-align: center; }
+      .info-label { font-size: 0.75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.1em; }
+      .info-value { font-size: 1.25rem; font-weight: 400; color: var(--accent); overflow: hidden; text-overflow: ellipsis; }
       .feedback-section { margin-top: 150px; padding-top: 60px; border-top: 1px solid var(--line); }
       .feedback-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 60px; text-align: left; }
       .rating-box { padding: 40px; background: #fafafa; border-radius: 35px; border: 1px solid var(--line); }
-      .rating-stars { display: flex; gap: 8px; margin: 20px 0; }
-      .star-btn { font-size: 1.5rem; cursor: pointer; color: #ddd; transition: color 0.3s; background: none; border: 0; }
-      .star-btn.active { color: #000; }
-      .comment-list { display: grid; gap: 20px; margin-top: 30px; }
-      .comment-item { padding: 25px; border-bottom: 1px solid var(--line); }
-      .input-group { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
-      .input-group input, .input-group textarea { background: #fff; border: 1px solid var(--line); border-radius: 15px; padding: 15px 20px; font-family: inherit; font-size: 0.95rem; }
-      .feedback-btn { background: #000; color: #fff; border: 0; padding: 15px 30px; border-radius: 99px; font-weight: 700; cursor: pointer; transition: transform 0.3s; align-self: flex-end; }
-      .feedback-btn:hover { transform: translateY(-2px); }
-
-      /* Archive */
-      .plan-controls { display: flex; gap: 10px; margin-top: 15px; justify-content: flex-end; }
-      .control-btn { background: transparent; border: 0; font-size: 0.75rem; font-weight: 800; cursor: pointer; opacity: 0.4; transition: opacity 0.3s; padding: 5px 10px; }
-      .control-btn:hover { opacity: 1; }
-      .control-btn.delete { color: #e53e3e; }
       .archive-section { margin-top: 200px; padding-top: 60px; border-top: 1px solid var(--line); text-align: center; opacity: 0.4; transition: opacity 0.5s; }
       .archive-section:hover { opacity: 1; }
-
       .loading-container { display: flex; flex-direction: column; align-items: center; padding: 150px 0; gap: 40px; }
       .spinner { width: 70px; height: 70px; border: 1px solid #eee; border-top: 1px solid #000; border-radius: 50%; animation: spin 1.8s cubic-bezier(0.6, 0, 0.4, 1) infinite; }
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
       .hidden { display: none !important; }
+      .plan-controls { display: flex; gap: 10px; margin-top: 15px; justify-content: flex-end; }
+      .control-btn { background: transparent; border: 0; font-size: 0.75rem; font-weight: 800; cursor: pointer; opacity: 0.4; transition: 0.3s; }
+      .control-btn:hover { opacity: 1; }
+      .control-btn.edit { color: #2b6cb0; }
+      .control-btn.delete { color: #e53e3e; }
+      .customized-label { font-size: 0.6rem; vertical-align: middle; margin-left: 15px; padding: 4px 12px; background: #000; color: #fff; border-radius: 99px; font-weight: 700; letter-spacing: 0.1em; }
     </style>
   </head>
   <body>
     <nav class="auth-nav" id="auth-nav"></nav>
     <div class="modal-overlay" id="auth-modal">
       <div class="modal-content">
-        <h3 id="auth-title">Welcome</h3>
-        <div class="auth-form">
-          <input type="email" id="auth-email" placeholder="Email" />
-          <input type="password" id="auth-password" placeholder="Password" />
-          <button class="auth-btn" id="auth-submit-btn">SIGN IN</button>
+        <h3 id="auth-title">환영합니다</h3>
+        <div class="auth-form" id="auth-container">
+          <input type="email" id="auth-email" placeholder="이메일 주소" />
+          <input type="password" id="auth-password" placeholder="비밀번호" />
+          <button type="button" class="auth-btn" id="auth-submit-btn">로그인</button>
         </div>
-        <p class="auth-toggle" id="auth-toggle-mode">Don't have an account? Join us</p>
+        <p class="auth-toggle" id="auth-toggle-mode">계정이 없으신가요? 회원가입하기</p>
       </div>
     </div>
-
     <main class="app-shell">
       <section class="hero-section">
-        <p style="font-weight: 900; font-size: 0.7rem; letter-spacing: 0.3em; opacity: 0.3; margin-bottom: 20px;">01. TRAVEL ARCHITECTURE</p>
+        <p style="font-weight: 900; font-size: 0.7rem; letter-spacing: 0.3em; opacity: 0.3; margin-bottom: 20px;">01. 여행 아키텍처</p>
         <h1>ONE'S OWN<br/>Travel Lab</h1>
         <p class="hero-subtitle">데이터의 정교함과 당신의 고유한 감각이 만나는 지점. 가장 맑은 시선으로 여정을 그립니다.</p>
       </section>
-
       <section class="control-panel">
         <div class="search-bar-row">
           <label class="search-field">어디로 떠날까요?
@@ -189,7 +169,6 @@
           </label>
           <button id="run-button" type="button">여정 그리기</button>
         </div>
-
         <div class="options-row">
           <p class="search-field">포함할 정보</p>
           <div class="checkbox-grid" style="display: flex; flex-wrap: wrap; gap: 10px; width: 100%;">
@@ -204,7 +183,6 @@
             <label><input type="checkbox" name="feature" value="lodging" checked />숙박</label>
           </div>
         </div>
-
         <div class="additional-conditions-row">
           <p class="search-field">여행 추가 조건</p>
           <div class="tab-container">
@@ -226,7 +204,6 @@
               <label><input type="checkbox" name="theme" value="foodie" />맛집탐방</label>
               <label><input type="checkbox" name="theme" value="photo" />인생샷/SNS</label>
               <label><input type="checkbox" name="theme" value="culture" />역사/문화</label>
-              <label><input type="checkbox" name="theme" value="shopping" />쇼핑</label>
             </div>
             <div class="tab-content checkbox-grid" id="tab-priority">
               <label><input type="radio" name="priority" value="cost" />가성비 중시</label>
@@ -236,20 +213,17 @@
             </div>
           </div>
         </div>
-
         <div class="extra-request-row">
           <p class="search-field">특별한 취향</p>
           <textarea id="user-request" placeholder="예: '조용한 북카페 위주로', '생선 요리 못 먹어요'"></textarea>
         </div>
       </section>
-
       <section class="result-view" id="result"></section>
-
       <section class="feedback-section">
         <div class="feedback-grid">
           <div class="rating-box">
-            <p style="font-weight:900; font-size:0.7rem; letter-spacing:0.3em; margin-bottom:15px; opacity:0.3;">WEB EVALUATION</p>
-            <h3 style="font-size:1.8rem; font-weight:100; margin-bottom:10px;">How was your experience?</h3>
+            <p style="font-weight:900; font-size:0.7rem; letter-spacing:0.3em; margin-bottom:15px; opacity:0.3;">서비스 평가</p>
+            <h3 style="font-size:1.8rem; font-weight:100; margin-bottom:10px;">사용 경험이 어떠셨나요?</h3>
             <div class="rating-stars" id="rating-stars">
               <button class="star-btn" data-value="1">○</button>
               <button class="star-btn" data-value="2">○</button>
@@ -258,231 +232,189 @@
               <button class="star-btn" data-value="5">○</button>
             </div>
             <div class="input-group">
-              <textarea id="rating-comment" placeholder="의견 한마디" style="min-height:60px;"></textarea>
-              <button class="feedback-btn" id="submit-rating">제출</button>
+              <textarea id="rating-comment" placeholder="의견 한마디" style="min-height:60px; width:100%; padding:12px; border:1px solid #eee; border-radius:12px; margin-top:10px;"></textarea>
+              <button class="feedback-btn" id="submit-rating" style="background:#000; color:#fff; border:0; padding:10px 25px; border-radius:15px; font-weight:700; cursor:pointer; margin-top:10px;">제출</button>
             </div>
             <div id="average-rating" style="margin-top:40px; border-top:1px solid var(--line); padding-top:20px; font-size:0.85rem; font-weight:700;">평균 별점: 로딩 중...</div>
           </div>
           <div class="comments-box">
-            <p style="font-weight:900; font-size:0.7rem; letter-spacing:0.3em; margin-bottom:15px; opacity:0.3;">COMMUNITY COMMENTS</p>
+            <p style="font-weight:900; font-size:0.7rem; letter-spacing:0.3em; margin-bottom:15px; opacity:0.3;">커뮤니티 댓글</p>
             <div class="input-group" style="background:#fff; padding:30px; border-radius:30px; border:1px solid var(--line); margin-bottom:40px;">
-              <input type="text" id="comment-user" placeholder="이름" />
-              <textarea id="comment-content" placeholder="댓글을 남겨주세요." style="min-height:100px;"></textarea>
-              <button class="feedback-btn" id="submit-comment">작성</button>
+              <input type="text" id="comment-user" placeholder="이름" style="width:100%; padding:12px; border:1px solid #eee; border-radius:12px; margin-bottom:10px;" />
+              <textarea id="comment-content" placeholder="댓글을 남겨주세요." style="width:100%; min-height:100px; padding:12px; border:1px solid #eee; border-radius:12px; margin-bottom:10px;"></textarea>
+              <button class="feedback-btn" id="submit-comment" style="background:#000; color:#fff; border:0; padding:12px 30px; border-radius:15px; font-weight:700; cursor:pointer;">작성</button>
             </div>
             <div id="comment-list"></div>
           </div>
         </div>
       </section>
-
       <section class="archive-section">
-        <p style="font-weight: 900; font-size: 0.7rem; letter-spacing: 0.4em; margin-bottom: 30px;">STORED ARCHIVE</p>
+        <p style="font-weight: 900; font-size: 0.7rem; letter-spacing: 0.4em; margin-bottom: 30px;">저장된 여정 보관함</p>
         <div style="display: flex; gap: 20px; justify-content: center; margin-bottom: 50px;">
-          <button id="save-plan-button" class="nav-btn" style="height:50px; padding:0 35px;">SAVE THIS PLAN</button>
-          <button id="toggle-saved-plans-button" class="nav-btn" style="height:50px; padding:0 35px;">VIEW GALLERY</button>
+          <button id="save-plan-button" class="nav-btn" style="height:50px; padding:0 35px;">이 여정 저장하기</button>
+          <button id="toggle-saved-plans-button" class="nav-btn" style="height:50px; padding:0 35px;">보관함 열기</button>
         </div>
         <div id="saved-plan-list"></div>
       </section>
     </main>
-
     <script>
-      // --- Global States ---
-      let currentUser = null;
-      let authMode = "login";
-      let currentWorkflowResult = null;
-      let savedPlansExpanded = false;
-      const savedPlansStorageKey = "saved_travel_plans";
-
-      // --- DOM Elements ---
-      const authNav = document.querySelector("#auth-nav");
-      const authModal = document.querySelector("#auth-modal");
-      const authSubmitBtn = document.querySelector("#auth-submit-btn");
-      const authToggleMode = document.querySelector("#auth-toggle-mode");
-      const result = document.querySelector("#result");
-      const textarea = document.querySelector("#user-request");
-
-      // --- Initialization ---
+      let currentUser = null; let authMode = "login"; let currentWorkflowResult = null; let savedPlansExpanded = false;
       document.addEventListener("DOMContentLoaded", () => {
         const storedUser = localStorage.getItem("onesown_user");
         if (storedUser) currentUser = JSON.parse(storedUser);
-        updateAuthUI();
-        initTabs();
-        initRating();
-        loadComments();
-        loadRatings();
-
-        // Dates
-        const today = new Date();
-        const defaultEnd = new Date();
-        defaultEnd.setDate(today.getDate() + 2);
+        updateAuthUI(); initAuthLogic(); initTabs(); initRating(); loadComments(); loadRatings();
+        const today = new Date(); const next = new Date(); next.setDate(today.getDate() + 2);
         document.querySelector("#start-date").value = today.toISOString().split('T')[0];
-        document.querySelector("#end-date").value = defaultEnd.toISOString().split('T')[0];
+        document.querySelector("#end-date").value = next.toISOString().split('T')[0];
       });
-
-      // --- Auth Functions ---
       function updateAuthUI() {
+        const authNav = document.querySelector("#auth-nav");
         if (currentUser) {
-          authNav.innerHTML = `<span class="user-info">${currentUser.email}</span><button class="nav-btn" id="logout-btn">LOGOUT</button>`;
-          document.querySelector("#logout-btn").addEventListener("click", logout);
-          authModal.style.display = "none";
+          authNav.innerHTML = `<span class="user-info">${currentUser.email}</span><button class="nav-btn" id="logout-btn">로그아웃</button>`;
+          document.querySelector("#logout-btn").addEventListener("click", () => { currentUser = null; localStorage.removeItem("onesown_user"); localStorage.removeItem("onesown_token"); updateAuthUI(); alert("로그아웃 되었습니다."); });
+          document.querySelector("#auth-modal").style.display = "none";
         } else {
-          authNav.innerHTML = `<button class="nav-btn" id="open-auth-btn">LOGIN / JOIN</button>`;
-          document.querySelector("#open-auth-btn").addEventListener("click", () => authModal.style.display = "grid");
+          authNav.innerHTML = `<button class="nav-btn" id="open-auth-btn">회원가입 및 로그인</button>`;
+          document.querySelector("#open-auth-btn").addEventListener("click", () => document.querySelector("#auth-modal").style.display = "grid");
         }
         if (savedPlansExpanded) renderSavedPlans();
       }
-
-      function logout() { currentUser = null; localStorage.removeItem("onesown_user"); updateAuthUI(); alert("Logged out."); }
-
-      authModal.addEventListener("click", (e) => { if (e.target === authModal) authModal.style.display = "none"; });
-      authToggleMode.addEventListener("click", () => {
-        authMode = authMode === "login" ? "signup" : "login";
-        document.querySelector("#auth-title").textContent = authMode === "login" ? "Welcome" : "Join Us";
-        authSubmitBtn.textContent = authMode === "login" ? "SIGN IN" : "CREATE ACCOUNT";
-        authToggleMode.textContent = authMode === "login" ? "Don't have an account? Join us" : "Already have an account? Sign in";
-      });
-
-      authSubmitBtn.addEventListener("click", async () => {
-        const email = document.querySelector("#auth-email").value;
-        const password = document.querySelector("#auth-password").value;
-        if (!email || !password) return alert("Please fill in all fields.");
-        const endpoint = authMode === "login" ? "/auth/login" : "/auth/signup";
-        try {
-          const resp = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
-          const data = await resp.json();
-          if (!resp.ok) throw new Error(data.detail || "Auth failed");
-          if (authMode === "login") {
-            currentUser = data.user;
-            localStorage.setItem("onesown_user", JSON.stringify(currentUser));
-            await migrateLocalPlans();
-            updateAuthUI();
-          } else { alert("Account created. Please sign in."); authToggleMode.click(); }
-        } catch (e) { alert(e.message); }
-      });
-
-      async function migrateLocalPlans() {
-        const localPlans = readSavedPlans(); if (localPlans.length === 0) return;
-        for (const plan of localPlans) {
-          try { await fetch(`/api/plans?user_id=${currentUser.id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: plan.title, destination: plan.result.input_data?.destination || "Unknown", content_json: plan.result }) }); }
-          catch (e) { console.error(e); }
-        }
-        localStorage.removeItem(savedPlansStorageKey);
-      }
-
-      // --- Plan CRUD ---
-      function readSavedPlans() { try { const raw = localStorage.getItem(savedPlansStorageKey); return raw ? JSON.parse(raw) : []; } catch { return []; } }
-      function writeSavedPlans(plans) { try { localStorage.setItem(savedPlansStorageKey, JSON.stringify(plans.slice(0, 30))); return true; } catch { return false; } }
-
-      async function saveCurrentPlan() {
-        if (!currentWorkflowResult) return alert("저장할 플랜이 없습니다.");
-        const dest = currentWorkflowResult.input_data?.destination || "Unknown";
-        const title = prompt("여행 계획 제목:", `JOURNEY TO ${dest.toUpperCase()}`);
-        if (!title) return;
-        if (currentUser) {
+      function initAuthLogic() {
+        const modal = document.querySelector("#auth-modal"); const submitBtn = document.querySelector("#auth-submit-btn"); const toggleBtn = document.querySelector("#auth-toggle-mode");
+        modal.addEventListener("click", (e) => { if (e.target === modal) modal.style.display = "none"; });
+        toggleBtn.addEventListener("click", (e) => {
+          e.preventDefault(); authMode = authMode === "login" ? "signup" : "login";
+          document.querySelector("#auth-title").textContent = authMode === "login" ? "환영합니다" : "회원가입";
+          submitBtn.textContent = authMode === "login" ? "로그인" : "계정 생성";
+          toggleBtn.textContent = authMode === "login" ? "계정이 없으신가요? 회원가입하기" : "이미 계정이 있으신가요? 로그인하기";
+        });
+        submitBtn.addEventListener("click", async () => {
+          const email = document.querySelector("#auth-email").value; const password = document.querySelector("#auth-password").value;
+          if (!email || !password) return alert("정보 입력!");
           try {
-            const resp = await fetch(`/api/plans?user_id=${currentUser.id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, destination: dest, content_json: currentWorkflowResult }) });
-            if (resp.ok) { alert("서버에 보관되었습니다."); renderSavedPlans(); }
-          } catch (e) { alert("저장 실패"); }
-        } else {
-          const plans = readSavedPlans();
-          plans.unshift({ id: `local_${Date.now()}`, title, created_at: new Date().toISOString(), result: currentWorkflowResult });
-          writeSavedPlans(plans); alert("브라우저에 임시 보관되었습니다."); renderSavedPlans();
-        }
+            const endpoint = authMode === "login" ? "/auth/login" : "/auth/signup";
+            const resp = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
+            const data = await resp.json();
+            if (!resp.ok) throw new Error(data.detail || "인증 실패");
+            if (authMode === "login") {
+              currentUser = data.user; localStorage.setItem("onesown_user", JSON.stringify(currentUser));
+              localStorage.setItem("onesown_token", data.access_token || "");
+              updateAuthUI(); alert(`${currentUser.email}님 환영합니다!`);
+            } else { alert("가입 성공! 로그인 하세요."); toggleBtn.click(); }
+          } catch (e) { alert(e.message); }
+        });
       }
-
-      async function deletePlan(planId, isLocal) {
-        if (!confirm("삭제하시겠습니까?")) return;
-        if (isLocal) { writeSavedPlans(readSavedPlans().filter(p => p.id !== planId)); renderSavedPlans(); }
-        else { try { const resp = await fetch(`/api/plans/${planId}?user_id=${currentUser.id}`, { method: "DELETE" }); if (resp.ok) renderSavedPlans(); } catch (e) { alert("삭제 실패"); } }
-      }
-
-      async function editPlanTitle(planId, oldTitle, isLocal) {
-        const newTitle = prompt("새 제목:", oldTitle); if (!newTitle || newTitle === oldTitle) return;
-        if (isLocal) { const plans = readSavedPlans(); const plan = plans.find(p => p.id === planId); if (plan) { plan.title = newTitle; writeSavedPlans(plans); renderSavedPlans(); } }
-        else { try { const resp = await fetch(`/api/plans/${planId}?user_id=${currentUser.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: newTitle }) }); if (resp.ok) renderSavedPlans(); } catch (e) { alert("수정 실패"); } }
-      }
-
-      async function renderSavedPlans() {
-        const listContainer = document.querySelector("#saved-plan-list");
-        if (!savedPlansExpanded) { listContainer.innerHTML = ""; return; }
-        let plans = [], isServer = false;
-        if (currentUser) {
-          try { const resp = await fetch(`/api/plans?user_id=${currentUser.id}`); plans = await resp.json(); isServer = true; } 
-          catch (e) { plans = readSavedPlans(); }
-        } else { plans = readSavedPlans(); }
-        if (plans.length === 0) { listContainer.innerHTML = `<p style="padding:40px; text-align:center; color:var(--muted);">보관된 여정이 없습니다.</p>`; return; }
-        listContainer.innerHTML = `<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:20px; margin-top:30px;">
-          ${plans.map(p => {
-            const res = isServer ? p.content_json : p.result;
-            return `<div class="timeline-block" style="text-align:left;">
-              <div style="cursor:pointer;" onclick='loadSavedPlanData(${JSON.stringify(res).replace(/'/g, "&apos;")})'>
-                <p style="font-size:0.7rem; font-weight:900; opacity:0.3; margin-bottom:5px;">${new Date(p.created_at).toLocaleDateString()}</p>
-                <strong>${escapeHtml(p.title)}</strong>
-              </div>
-              <div class="plan-controls">
-                <button class="control-btn" onclick="editPlanTitle('${p.id}', '${escapeHtml(p.title)}', ${!isServer})">EDIT</button>
-                <button class="control-btn delete" onclick="deletePlan('${p.id}', ${!isServer})">DELETE</button>
-              </div></div>`;
-          }).join("")}</div>`;
-      }
-
-      function loadSavedPlanData(data) { currentWorkflowResult = data; displayWorkflowResult(data); window.scrollTo({ top: result.offsetTop - 50, behavior: 'smooth' }); }
-
-      // --- Helpers & UI ---
-      function escapeHtml(v) { return String(v||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-      function initTabs() { document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); btn.classList.add('active'); document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active'); }); }); }
-      
-      function initRating() {
-        let currentRating = 0; const stars = document.querySelectorAll(".star-btn");
-        stars.forEach(s => { s.addEventListener("click", () => { currentRating = parseInt(s.dataset.value); stars.forEach(btn => { btn.classList.toggle("active", parseInt(btn.dataset.value) <= currentRating); btn.textContent = parseInt(btn.dataset.value) <= currentRating ? "●" : "○"; }); }); });
-        document.querySelector("#submit-rating").addEventListener("click", async () => { if (currentRating === 0) return alert("별점 선택 필수"); try { await fetch("/ratings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ score: currentRating, comment: document.querySelector("#rating-comment").value }) }); alert("감사합니다!"); loadRatings(); } catch (e) {} });
-        document.querySelector("#submit-comment").addEventListener("click", async () => { try { await fetch("/comments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_name: document.querySelector("#comment-user").value || "익명", content: document.querySelector("#comment-content").value }) }); loadComments(); } catch (e) {} });
-      }
-
-      async function loadComments() { try { const resp = await fetch("/comments"); const data = await resp.json(); document.querySelector("#comment-list").innerHTML = data.reverse().map(c => `<div class="comment-item"><strong>${escapeHtml(c.user_name)}</strong><p>${escapeHtml(c.content)}</p></div>`).join(""); } catch (e) {} }
-      async function loadRatings() { try { const resp = await fetch("/ratings"); const data = await resp.json(); document.querySelector("#average-rating").innerHTML = `평균 별점: ● ${data.average} (${data.count}명)`; } catch (e) {} }
-
-      // --- Workflow ---
       document.querySelector("#run-button").addEventListener("click", async () => {
-        const start = document.querySelector("#start-date").value;
-        const end = document.querySelector("#end-date").value;
-        const days = Math.max(1, Math.ceil((new Date(end) - new Date(start)) / (1000 * 3600 * 24)) + 1);
-        const companions = Array.from(document.querySelectorAll('input[name="companion"]:checked')).map(c => c.value);
-        const themes = Array.from(document.querySelectorAll('input[name="theme"]:checked')).map(c => c.value);
-        const priority = document.querySelector('input[name="priority"]:checked')?.value || "";
-        const payload = { user_request: textarea.value, destination: document.querySelector("#destination-select").value, origin: document.querySelector("#origin-select").value, days, budget_level: document.querySelector("#budget-select").value, requested_features: Array.from(document.querySelectorAll('input[name="feature"]:checked')).map(c => c.value), additional_conditions: { companions, themes, priority } };
-        result.innerHTML = `<div class="loading-container"><div class="spinner"></div><p>CURATING...</p></div>`;
+        const resultArea = document.querySelector("#result");
+        const payload = {
+          user_request: document.querySelector("#user-request").value,
+          destination: document.querySelector("#destination-select").value,
+          origin: document.querySelector("#origin-select").value,
+          days: Math.max(1, Math.ceil((new Date(document.querySelector("#end-date").value) - new Date(document.querySelector("#start-date").value)) / (1000 * 3600 * 24)) + 1),
+          budget_level: document.querySelector("#budget-select").value,
+          requested_features: Array.from(document.querySelectorAll('input[name="feature"]:checked')).map(c => c.value),
+          additional_conditions: {
+            companions: Array.from(document.querySelectorAll('input[name="companion"]:checked')).map(c => c.value),
+            themes: Array.from(document.querySelectorAll('input[name="theme"]:checked')).map(c => c.value),
+            priority: document.querySelector('input[name="priority"]:checked')?.value || ""
+          }
+        };
+        resultArea.innerHTML = `<div class="loading-container"><div class="spinner"></div><p style="font-weight:900; font-size:2rem; letter-spacing:0.3em; margin-top:20px;">여정을 설계하고 있습니다...</p></div>`;
         try {
           const resp = await fetch("/run-workflow", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-          const data = await resp.json(); if (!resp.ok) throw new Error(data.detail);
+          const data = await resp.json();
+          if (!resp.ok) throw new Error(data.detail);
           currentWorkflowResult = data; displayWorkflowResult(data);
-        } catch (e) { result.innerHTML = `<p>Error: ${e.message}</p>`; }
+          window.scrollTo({ top: resultArea.offsetTop - 50, behavior: 'smooth' });
+        } catch (e) { resultArea.innerHTML = `<p style="text-align:center; padding:50px; color:#e53e3e;">오류: ${e.message}</p>`; }
       });
-
-      function renderCircleItem(item, category, destination) {
-        const title = item.name || item.title || "정보 없음";
-        const addr = item.address || item.addr1 || "정보 없음";
-        const img = item.image ? `<img src="${item.image}" alt="${title}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';" />` : "";
-        const fallbackImg = `<div style="display:${item.image ? 'none' : 'grid'}; place-items:center; height:100%; color:#eee; font-size:0.6rem; font-weight:900; background:#fafafa;">NO IMAGE</div>`;
-        return `<div class="circle-item"><div class="circle-mask" style="position:relative;">${img}${fallbackImg}</div><div class="item-title">${escapeHtml(title)}</div><div class="item-meta">${escapeHtml(addr)}</div></div>`;
+      function displayWorkflowResult(data) {
+        const area = document.querySelector("#result");
+        area.innerHTML = `<h1 style="font-weight:100; font-size:6rem; margin-bottom:120px; text-transform:uppercase; letter-spacing:-0.06em; text-align:center;">${escapeHtml(data.input_data.destination)}<br/>여행 설계</h1>` +
+                         data.agent_results.filter(r => !r.agent.includes("planning")).map(renderAgentResult).join("");
       }
-      function renderAccordion(title, html) { return `<details class="details-accordion"><summary>${title}</summary><div class="details-content">${html}</div></details>`; }
+      function escapeHtml(v) { return String(v||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+      function authHeaders(extra) { return Object.assign({ "Authorization": "Bearer " + (localStorage.getItem("onesown_token") || "") }, extra || {}); }
       function renderAgentResult(r) {
         let items = r.food_items || r.tour_items || r.event_items || r.lodging_items || [];
-        if (r.agent.includes("weather")) return `<article class="result-card"><h2>Weather</h2><p class="summary-text">${r.summary}</p></article>`;
-        if (r.agent.includes("transport")) return `<article class="result-card"><h2>Transport</h2><p class="summary-text">${r.summary}</p></article>`;
-        if (r.agent.includes("budget")) return `<article class="result-card"><h2>Budget</h2><p class="summary-text">${r.summary}</p><strong>${r.total}</strong></article>`;
-        if (r.agent.includes("schedule")) return `<article class="result-card"><h2>Itinerary</h2><p class="summary-text">${r.summary}</p></article>`;
-        return `<article class="result-card"><h2>${r.agent.split("_")[1].toUpperCase()}</h2><p class="summary-text">${r.summary}</p><div class="circle-grid">${items.map(i => renderCircleItem(i, "", r.destination)).join("")}</div></article>`;
+        const isP = r.debug_info && ((r.debug_info.companions?.length > 0) || (r.debug_info.themes?.length > 0) || r.debug_info.priority);
+        const label = isP ? `<span class="customized-label">CUSTOMIZED</span>` : "";
+        if (r.agent.includes("weather")) return renderWeatherCard(r, label);
+        if (r.agent.includes("transport")) return renderTransportCard(r, label);
+        if (r.agent.includes("budget")) return renderBudgetCard(r, label);
+        if (r.agent.includes("schedule")) return renderScheduleCard(r, label);
+        if (r.agent.includes("destination")) return renderDestinationCard(r, label);
+        const tMap = { "FOOD": "추천 맛집", "TOUR": "관광 명소", "EVENT": "지역 행사", "LODGING": "추천 숙소" };
+        const cat = r.agent.split("_")[1].toUpperCase();
+        const recs = r.recommendations ? `<div style="background:#fcfcfc; padding:25px; border-radius:25px; border:1px dashed var(--line); margin-bottom:30px;">${r.recommendations.map(t => `<p style="font-size:1rem; font-weight:700;">• ${escapeHtml(t)}</p>`).join("")}</div>` : "";
+        return `<article class="result-card"><h2>${tMap[cat] || cat} ${label}</h2><p class="summary-text">${escapeHtml(r.summary)}</p>${recs}<div class="circle-grid">${items.map(i => renderCircleItem(i, cat, r.destination)).join("")}</div></article>`;
       }
-      function displayWorkflowResult(data) { result.innerHTML = `<h1 style="text-align:center;">${data.input_data.destination}</h1>` + data.agent_results.filter(r => !r.agent.includes("planning")).map(renderAgentResult).join(""); }
-
+      function renderDestinationCard(res, label) {
+        const items = (res.recommendations || []).map(x => ({ name: x.name, address: x.address, image: x.image }));
+        return `<article class="result-card"><h2>추천 여행지 ${label}</h2><p class="summary-text">${escapeHtml(res.summary)}</p><div class="circle-grid">${items.map(i => renderCircleItem(i, "TOUR", res.destination)).join("")}</div></article>`;
+      }
+      function renderWeatherCard(res, label) {
+        const html = `<div class="info-grid">${(res.daily_forecast||[]).map(d => `<div class="info-box"><p class="info-label">${escapeHtml(d.date)}</p><p class="info-value" style="font-weight:700;">${escapeHtml(d.condition)}</p><p style="font-size:0.9rem;">${escapeHtml(d.temperature)}</p></div>`).join("")}</div>`;
+        return `<article class="result-card"><h2>날씨 예보 ${label}</h2><p class="summary-text">${escapeHtml(res.summary)}</p>${renderAccordion("상세 날씨 확인", html)}</article>`;
+      }
+      function renderTransportCard(res, label) {
+        const html = `<div class="timeline-list">${(res.routes||[]).map((r, i) => `<div class="timeline-item"><div class="timeline-icon">${i+1}</div><div class="timeline-block" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:20px;"><div><strong>${escapeHtml(r.method || r.mode)}</strong><p>${escapeHtml(r.from)} → ${escapeHtml(r.to)} (${escapeHtml(r.estimated_time)})</p></div><a href="${getTransportBookingLink(r.method || r.mode)}" target="_blank" style="display:inline-block; padding:12px 30px; background:#000; color:#fff; text-decoration:none; border-radius:99px; font-size:0.9rem; font-weight:800;">예매하기 ↗</a></div></div>`).join("")}</div>`;
+        return `<article class="result-card"><h2>교통 경로 ${label}</h2><p class="summary-text">${escapeHtml(res.summary)}</p>${renderAccordion("상세 경로 보기", html)}</article>`;
+      }
+      function renderBudgetCard(res, label) {
+        const html = `<div style="display:grid; gap:15px;">${Object.entries(res.estimated_budget||{}).filter(([k]) => k !== 'total').map(([key, val]) => `<div style="display:flex; justify-content:space-between; padding:20px 30px; border-radius:25px; background:#f9f9f9; border:1px solid #eee;"><span style="font-weight:600; text-transform:capitalize;">${escapeHtml(key)}</span><span style="color:var(--text); font-weight:700;">${escapeHtml(val)}</span></div>`).join("")}</div>`;
+        return `<article class="result-card"><h2>여행 예산 <span style="font-size:1rem; font-weight:700; opacity:0.5;">(1인 기준)</span> ${label}</h2><p class="summary-text" style="color:#000; font-weight:700;">${escapeHtml(res.summary)}</p><div style="font-size:3rem; font-weight:900; margin-bottom:5px;">${escapeHtml(res.total)}</div><p style="font-size:0.8rem; color:var(--muted); margin-bottom:40px;">※ 1인 기준 추정 경비입니다 (숙박은 1실 기준).</p>${renderAccordion("상세 예산 내역", html)}</article>`;
+      }
+      function renderScheduleCard(res, label) {
+        const html = `<div class="itinerary-grid">${(res.daily_itinerary||[]).map(day => `<div class="day-card"><div class="day-card-header"><h3>Day ${day.day}</h3><p>${escapeHtml(day.title)}</p></div><details class="details-accordion day-accordion" open><summary>일정 상세보기</summary><div class="details-content"><div class="timeline-list" style="padding-left:35px;">${(day.time_blocks||[]).map(b => `<div class="timeline-item"><div class="timeline-icon" style="width:30px; height:30px; left:-40px; font-size:0.6rem;">${b.time.slice(0,2)}</div><div class="timeline-block" style="padding:18px 25px; border-radius:25px;"><strong style="font-size:1.1rem;">${escapeHtml(b.title)}</strong><p style="margin-top:5px;">${escapeHtml(b.description || b.memo)}</p></div></div>`).join("")}</div></div></details></div>`).join("")}</div>`;
+        return `<article class="result-card"><h2>추천 일정 ${label}</h2><p class="summary-text">${escapeHtml(res.summary)}</p>${html}</article>`;
+      }
+      function renderCircleItem(item, cat, dest) {
+        const title = item.name || item.title || "정보 없음"; const addr = item.address || item.addr1 || "정보 없음";
+        const img = item.image ? `<img src="${encodeURI(item.image)}" alt="${escapeHtml(title)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';" />` : "";
+        const fallback = `<div style="display:${item.image ? 'none' : 'grid'}; place-items:center; height:100%; color:#eee; font-size:0.6rem; font-weight:900; background:#fafafa;">NO IMAGE</div>`;
+        let url = `https://map.naver.com/v5/search/${encodeURIComponent(title)}`;
+        if (cat === "STAY" || cat === "LODGING") url = `https://www.agoda.com/ko-kr/search?text=${encodeURIComponent(dest + " " + title)}`;
+        return `<div class="circle-item"><a href="${url}" target="_blank" style="text-decoration:none; color:inherit;"><div class="circle-mask" style="position:relative;">${img}${fallback}</div><div class="item-title">${escapeHtml(title)}</div><div class="item-meta">${escapeHtml(addr)}</div></a><a href="https://www.google.com/search?q=${encodeURIComponent(dest + " " + title + " 후기")}" target="_blank" style="font-size:0.65rem; color:var(--muted); text-decoration:underline; display:block; margin-top:8px;">리뷰 보기</a></div>`;
+      }
+      function getTransportBookingLink(method) {
+        const m = String(method||"").toUpperCase();
+        if (m.includes("KTX") || m.includes("기차")) return "https://www.letskorail.com/";
+        if (m.includes("고속") || m.includes("버스")) return "https://www.kobus.co.kr/";
+        if (m.includes("항공") || m.includes("FLIGHT")) return "https://flight.naver.com/";
+        if (m.includes("선박") || m.includes("SHIP")) return "https://island.haewoon.co.kr/";
+        return "https://map.naver.com/";
+      }
+      function renderAccordion(title, html) { return `<details class="details-accordion"><summary>${title}</summary><div class="details-content">${html}</div></details>`; }
+      async function saveCurrentPlan() {
+        if (!currentWorkflowResult || !currentUser) return alert("설계 결과가 없거나 로그인 안됨");
+        const title = prompt("제목:", `${currentWorkflowResult.input_data.destination} 여행`); if (!title) return;
+        const resp = await fetch(`/api/plans`, { method: "POST", headers: authHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ title, destination: currentWorkflowResult.input_data.destination, content_json: currentWorkflowResult }) });
+        if (resp.ok) { alert("저장됨"); renderSavedPlans(); }
+      }
+      async function renderSavedPlans() {
+        const list = document.querySelector("#saved-plan-list"); if (!savedPlansExpanded || !currentUser) { list.innerHTML = ""; return; }
+        const resp = await fetch(`/api/plans`, { headers: authHeaders() }); const plans = await resp.json();
+        list.innerHTML = `<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:25px; margin-top:40px;">${plans.map(p => `<div class="timeline-block" style="text-align:left;"><div style="cursor:pointer;" onclick='loadSavedPlanData(${JSON.stringify(p.content_json).replace(/'/g, "&apos;")})'><p style="font-size:0.75rem; font-weight:900; opacity:0.3;">${new Date(p.created_at).toLocaleDateString()}</p><strong>${escapeHtml(p.title)}</strong></div><div class="plan-controls"><button class="control-btn edit" onclick="renamePlan('${p.id}', '${escapeHtml(p.title).replace(/'/g, "&#39;")}')">수정</button><button class="control-btn delete" onclick="deletePlan('${p.id}')">삭제</button></div></div>`).join("")}</div>`;
+      }
+      async function renamePlan(id, currentTitle) {
+        const title = prompt("새 제목:", currentTitle); if (title === null || !title.trim()) return;
+        const resp = await fetch(`/api/plans/${id}`, { method: "PATCH", headers: authHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ title: title.trim() }) });
+        if (resp.ok) { renderSavedPlans(); } else { alert("수정 실패"); }
+      }
+      function loadSavedPlanData(data) { currentWorkflowResult = data; displayWorkflowResult(data); window.scrollTo({ top: document.querySelector("#result").offsetTop - 50, behavior: 'smooth' }); }
+      async function deletePlan(id) { if (confirm("삭제?")) { await fetch(`/api/plans/${id}`, { method: "DELETE", headers: authHeaders() }); renderSavedPlans(); } }
+      function initTabs() { document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); btn.classList.add('active'); document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active'); }); }); }
+      function initRating() {
+        let cur = 0; const stars = document.querySelectorAll(".star-btn");
+        stars.forEach(s => { s.addEventListener("click", () => { cur = parseInt(s.dataset.value); stars.forEach(b => { b.textContent = parseInt(b.dataset.value) <= cur ? "●" : "○"; b.classList.toggle("active", parseInt(b.dataset.value) <= cur); }); }); });
+        document.querySelector("#submit-rating").addEventListener("click", async () => { if (cur > 0) { await fetch("/ratings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ score: cur, comment: document.querySelector("#rating-comment").value }) }); alert("완료"); loadRatings(); } });
+        document.querySelector("#submit-comment").addEventListener("click", async () => { if (document.querySelector("#comment-content").value) { await fetch("/comments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_name: document.querySelector("#comment-user").value || "익명", content: document.querySelector("#comment-content").value }) }); document.querySelector("#comment-content").value = ""; loadComments(); } });
+      }
+      async function loadComments() { const resp = await fetch("/comments"); const data = await resp.json(); document.querySelector("#comment-list").innerHTML = data.reverse().map(c => `<div class="comment-item"><strong>${escapeHtml(c.user_name)}</strong><p style="margin-top:8px;">${escapeHtml(c.content)}</p></div>`).join(""); }
+      async function loadRatings() { const resp = await fetch("/ratings"); const data = await resp.json(); document.querySelector("#average-rating").innerHTML = `평균 별점: ● ${data.average} (${data.count}명 참여)`; }
       document.querySelector("#save-plan-button").addEventListener("click", saveCurrentPlan);
-      document.querySelector("#toggle-saved-plans-button").addEventListener("click", () => {
-        savedPlansExpanded = !savedPlansExpanded;
-        document.querySelector("#toggle-saved-plans-button").textContent = savedPlansExpanded ? "CLOSE GALLERY" : "VIEW GALLERY";
-        renderSavedPlans();
-      });
+      document.querySelector("#toggle-saved-plans-button").addEventListener("click", () => { savedPlansExpanded = !savedPlansExpanded; document.querySelector("#toggle-saved-plans-button").textContent = savedPlansExpanded ? "보관함 닫기" : "보관함 열기"; renderSavedPlans(); });
     </script>
   </body>
 </html>
