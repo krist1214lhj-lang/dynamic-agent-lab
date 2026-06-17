@@ -87,6 +87,13 @@ class LoginRequest(BaseModel): email: str; password: str
 class TravelPlanSaveRequest(BaseModel): title: str; destination: str; content_json: dict
 class TravelPlanUpdateRequest(BaseModel): title: Optional[str] = None; content_json: Optional[dict] = None
 
+class RecommendRequest(BaseModel):
+    budget_total: int
+    people: int = 1
+    days: int = 3
+    themes: list[str] = Field(default_factory=list)
+    origin: str | None = None
+
 class WorkflowRequest(BaseModel):
     user_request: str
     destination: str | None = None
@@ -234,6 +241,19 @@ def run_workflow_endpoint(payload: WorkflowRequest):
         "selected_agents": selected, "loaded_agents": loaded, "agent_results": res, 
         "validation_report": report, "final_summary": f"{dest} 여행 여정 설계 완료"
     }
+
+@app.post("/recommend")
+def recommend_endpoint(payload: RecommendRequest):
+    _, run_func = load_agent(resolve_agent_dir("travel_recommender_agent") / "agent.json")
+    result = run_func({
+        "budget_total": payload.budget_total,
+        "people": payload.people,
+        "days": payload.days,
+        "themes": payload.themes,
+        "origin": payload.origin or "서울",
+        "candidates": SUPPORTED_DESTINATIONS,
+    })
+    return {"input_echo": payload.dict(), **result}
 
 @app.get("/agent-library")
 def lib(): return {"agents": [{"name": d.name, "status": "available"} for d in INTERNAL_AGENT_LIBRARY.iterdir() if d.is_dir()], "available_count": 10, "total_agents": 10}
