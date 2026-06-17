@@ -45,7 +45,7 @@ def estimate_budget(origin, destination, days, level, people=1, themes=None, com
 
     nights = max(days - 1, 0)
     meal_count = days * 3 - 1 if days > 1 else 2
-    rooms = max(people // 2, 1)
+    rooms = math.ceil(people / 2)
 
     route = (origin, destination)
     long_dist = (LONG_DISTANCE_TRANSPORT.get(route) or DEFAULT_LONG_DISTANCE_TRANSPORT)[level]
