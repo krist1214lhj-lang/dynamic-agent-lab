@@ -258,7 +258,7 @@ def recommend_endpoint(payload: RecommendRequest):
 @app.get("/agent-library")
 def lib(): return {"agents": [{"name": d.name, "status": "available"} for d in INTERNAL_AGENT_LIBRARY.iterdir() if d.is_dir()], "available_count": 10, "total_agents": 10}
 @app.get("/feature-map")
-def feat(): return {"features": FEATURE_AGENT_MAP}
+def feat(): return {"features": FEATURE_AGENT_MAP, "feature_count": len(FEATURE_AGENT_MAP)}
 @app.get("/health")
 def health(): return {"status": "ok", "available_agents": 10, "supabase": "Initialized" if sb else "Not Configured"}
 @app.get("/")
