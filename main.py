@@ -28,6 +28,26 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 
+def _sb_call(method, url, **kwargs):
+    # 네트워크/연결 오류는 무음 실패 대신 502로 표면화함.
+    try:
+        return method(url, **kwargs)
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=502, detail=f"Supabase 연결 오류: {e}")
+
+def _sb_raise_for_status(resp):
+    # PostgREST 에러 응답을 무음 {} 대신 실제 상태코드로 올림.
+    if resp.ok:
+        return
+    try:
+        body = resp.json()
+    except ValueError:
+        body = None
+    detail = None
+    if isinstance(body, dict):
+        detail = body.get("message") or body.get("msg") or body.get("hint") or body.get("error_description")
+    raise HTTPException(status_code=resp.status_code, detail=detail or (resp.text or "Supabase 요청 실패"))
+
 class SupabaseClient:
     def __init__(self, url: str, key: str):
         self.url = url.rstrip("/")
@@ -54,26 +74,27 @@ class SupabaseTable:
         self.table_url = f"{client.url}/rest/v1/{table_name}"
         self.headers = client.auth_headers(user_token)
     def select_all(self):
-        resp = requests.get(f"{self.table_url}?order=created_at.desc", headers=self.headers)
+        resp = _sb_call(requests.get, f"{self.table_url}?order=created_at.desc", headers=self.headers)
         return resp.json() if resp.ok else []
     def select_mine(self):
         # RLS(USING auth.uid()=user_id)가 본인 행만 반환하므로 user_id 필터가 불필요함.
-        resp = requests.get(f"{self.table_url}?order=created_at.desc", headers=self.headers)
+        resp = _sb_call(requests.get, f"{self.table_url}?order=created_at.desc", headers=self.headers)
         return resp.json() if resp.ok else []
     def insert(self, data):
-        resp = requests.post(self.table_url, headers=self.headers, json=data)
-        if not resp.ok: return {}
+        resp = _sb_call(requests.post, self.table_url, headers=self.headers, json=data)
+        _sb_raise_for_status(resp)
         # PostgREST는 INSERT 성공 시 본문 없이 201을 반환할 수 있으므로 빈 본문을 허용함.
         try: return resp.json()
         except ValueError: return {"status": "success"}
     def patch(self, plan_id, data):
-        resp = requests.patch(f"{self.table_url}?id=eq.{plan_id}", headers=self.headers, json=data)
-        if not resp.ok: return {}
+        resp = _sb_call(requests.patch, f"{self.table_url}?id=eq.{plan_id}", headers=self.headers, json=data)
+        _sb_raise_for_status(resp)
         try: return resp.json()
         except ValueError: return {"status": "success"}
     def delete(self, item_id):
-        resp = requests.delete(f"{self.table_url}?id=eq.{item_id}", headers=self.headers)
-        return {"status": "success"} if resp.ok else {"status": "error"}
+        resp = _sb_call(requests.delete, f"{self.table_url}?id=eq.{item_id}", headers=self.headers)
+        _sb_raise_for_status(resp)
+        return {"status": "success"}
 
 sb: Optional[SupabaseClient] = None
 if SUPABASE_URL and SUPABASE_ANON_KEY:
