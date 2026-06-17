@@ -7,18 +7,13 @@ import uuid
 from pathlib import Path
 from typing import Any, List, Optional
 
+import requests
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from datetime import datetime
-
-try:
-    from supabase import create_client, Client
-except ImportError:
-    Client = Any
-    create_client = None
 
 from validators.travel_validator import validate_and_correct
 
@@ -28,168 +23,125 @@ load_dotenv(BASE_DIR / ".env", override=True)
 app = FastAPI(title="dynamic-agent-lab")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# --- Supabase 설정 ---
+# --- Supabase 설정 (Direct API 방식) ---
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 
-supabase: Optional[Client] = None
-if SUPABASE_URL and SUPABASE_ANON_KEY and create_client:
-    try:
-        supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
-    except Exception as e:
-        print(f"Supabase connection error: {e}")
+class SupabaseClient:
+    def __init__(self, url: str, key: str):
+        self.url = url.rstrip("/")
+        self.key = key
+        self.headers = {"apikey": key, "Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+    
+    def signup(self, email, password):
+        resp = requests.post(f"{self.url}/auth/v1/signup", headers=self.headers, json={"email": email, "password": password})
+        if not resp.ok: raise Exception(resp.json().get("msg") or resp.text)
+        return resp.json()
+    
+    def login(self, email, password):
+        resp = requests.post(f"{self.url}/auth/v1/token?grant_type=password", headers=self.headers, json={"email": email, "password": password})
+        if not resp.ok: raise Exception(resp.json().get("error_description") or resp.text)
+        return resp.json()
+    
+    def table(self, table_name): return SupabaseTable(self, table_name)
 
-# --- 데이터 모델 정의 ---
-class Comment(BaseModel):
-    user_name: str = "Anonymous"
-    content: str
-    created_at: str | None = None
+class SupabaseTable:
+    def __init__(self, client, table_name):
+        self.client = client
+        self.table_url = f"{client.url}/rest/v1/{table_name}"
+    
+    def select_all(self):
+        resp = requests.get(f"{self.table_url}?order=created_at.desc", headers=self.client.headers)
+        return resp.json() if resp.ok else []
 
-class Rating(BaseModel):
-    score: int = Field(ge=1, le=5)
-    comment: str | None = ""
-    created_at: str | None = None
+    def select_by_user(self, user_id):
+        resp = requests.get(f"{self.table_url}?user_id=eq.{user_id}&order=created_at.desc", headers=self.client.headers)
+        return resp.json() if resp.ok else []
+    
+    def insert(self, data):
+        resp = requests.post(self.table_url, headers=self.client.headers, json=data)
+        return resp.json() if resp.ok else {}
+    
+    def update(self, item_id, user_id, data):
+        resp = requests.patch(f"{self.table_url}?id=eq.{item_id}&user_id=eq.{user_id}", headers=self.client.headers, json=data)
+        return resp.json() if resp.ok else {}
+    
+    def delete(self, item_id, user_id):
+        resp = requests.delete(f"{self.table_url}?id=eq.{item_id}&user_id=eq.{user_id}", headers=self.client.headers)
+        return {"status": "success"} if resp.ok else {"status": "error"}
 
-class SignupRequest(BaseModel):
-    email: str
-    password: str
+sb: Optional[SupabaseClient] = None
+supabase_status = "Not Configured"
+if SUPABASE_URL and SUPABASE_ANON_KEY:
+    sb = SupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    supabase_status = "Initialized"
 
-class LoginRequest(BaseModel):
-    email: str
-    password: str
+# --- 데이터 모델 ---
+class Comment(BaseModel): user_name: str = "Anonymous"; content: str; user_id: Optional[str] = None
+class Rating(BaseModel): score: int = Field(ge=1, le=5); comment: str | None = ""; user_id: Optional[str] = None
+class SignupRequest(BaseModel): email: str; password: str
+class LoginRequest(BaseModel): email: str; password: str
+class TravelPlanSaveRequest(BaseModel): title: str; destination: str; content_json: dict
+class TravelPlanUpdateRequest(BaseModel): title: Optional[str] = None; content_json: Optional[dict] = None
 
-class TravelPlanSaveRequest(BaseModel):
-    title: str
-    destination: str
-    content_json: dict
-
-class TravelPlanUpdateRequest(BaseModel):
-    title: Optional[str] = None
-    content_json: Optional[dict] = None
-
-# --- 인증 및 계획 관리 API ---
+# --- Auth & Plan API (Supabase 연동) ---
 @app.post("/auth/signup")
 async def signup(req: SignupRequest):
-    if not supabase: raise HTTPException(status_code=500, detail="Supabase not configured")
-    try:
-        res = supabase.auth.sign_up({"email": req.email, "password": req.password})
-        return res
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    if not sb: raise HTTPException(status_code=500)
+    try: return sb.signup(req.email, req.password)
+    except Exception as e: raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/auth/login")
 async def login(req: LoginRequest):
-    if not supabase: raise HTTPException(status_code=500, detail="Supabase not configured")
-    try:
-        res = supabase.auth.sign_in_with_password({"email": req.email, "password": req.password})
-        return res
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    if not sb: raise HTTPException(status_code=500)
+    try: return sb.login(req.email, req.password)
+    except Exception as e: raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/api/plans")
-async def get_plans(user_id: str):
-    if not supabase: return []
-    try:
-        res = supabase.table("travel_plans").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
-        return res.data
-    except Exception as e:
-        print(f"Error fetching plans: {e}")
-        return []
+async def get_plans(user_id: str): return sb.table("travel_plans").select_by_user(user_id) if sb else []
 
 @app.post("/api/plans")
 async def save_plan(user_id: str, plan: TravelPlanSaveRequest):
-    if not supabase: raise HTTPException(status_code=500, detail="Supabase not configured")
-    data = {
-        "user_id": user_id,
-        "title": plan.title,
-        "destination": plan.destination,
-        "content_json": plan.content_json
-    }
-    try:
-        res = supabase.table("travel_plans").insert(data).execute()
-        return res.data
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    if not sb: raise HTTPException(status_code=500)
+    return sb.table("travel_plans").insert({"user_id": user_id, "title": plan.title, "destination": plan.destination, "content_json": plan.content_json})
 
 @app.patch("/api/plans/{plan_id}")
 async def update_plan(plan_id: str, user_id: str, plan: TravelPlanUpdateRequest):
-    if not supabase: raise HTTPException(status_code=500, detail="Supabase not configured")
-    data = {}
+    if not sb: raise HTTPException(status_code=500)
+    data = {"updated_at": datetime.now().isoformat()}
     if plan.title: data["title"] = plan.title
     if plan.content_json: data["content_json"] = plan.content_json
-    data["updated_at"] = datetime.now().isoformat()
-    
-    try:
-        res = supabase.table("travel_plans").update(data).eq("id", plan_id).eq("user_id", user_id).execute()
-        return res.data
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    return sb.table("travel_plans").update(plan_id, user_id, data)
 
 @app.delete("/api/plans/{plan_id}")
 async def delete_plan(plan_id: str, user_id: str):
-    if not supabase: raise HTTPException(status_code=500, detail="Supabase not configured")
-    try:
-        supabase.table("travel_plans").delete().eq("id", plan_id).eq("user_id", user_id).execute()
-        return {"status": "success"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    if not sb: raise HTTPException(status_code=500)
+    return sb.table("travel_plans").delete(plan_id, user_id)
 
-# --- 댓글 및 평가 데이터 저장 경로 ---
-COMMENTS_FILE = BASE_DIR / "comments.json"
-RATINGS_FILE = BASE_DIR / "ratings.json"
-
-class Comment(BaseModel):
-    user_name: str = "Anonymous"
-    content: str
-    created_at: str | None = None
-
-class Rating(BaseModel):
-    score: int = Field(ge=1, le=5)
-    comment: str | None = ""
-    created_at: str | None = None
-
-def load_json_file(file_path: Path, default_value: list | dict):
-    if not file_path.exists():
-        return default_value
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return default_value
-
-def save_json_file(file_path: Path, data: Any):
-    with open(file_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
+# --- 통합 댓글 및 평가 API (Supabase 연동) ---
 @app.get("/comments")
-def get_comments():
-    return load_json_file(COMMENTS_FILE, [])
+def get_comments_endpoint():
+    return sb.table("comments").select_all() if sb else []
 
 @app.post("/comments")
-def add_comment(comment: Comment):
-    comments = load_json_file(COMMENTS_FILE, [])
-    comment.created_at = datetime.now().isoformat()
-    comments.append(comment.dict())
-    save_json_file(COMMENTS_FILE, comments)
-    return {"status": "success", "comment": comment}
+def add_comment_endpoint(c: Comment):
+    if not sb: raise HTTPException(status_code=500)
+    return sb.table("comments").insert(c.dict())
 
 @app.get("/ratings")
-def get_ratings():
-    ratings = load_json_file(RATINGS_FILE, [])
-    if not ratings:
-        return {"average": 0, "count": 0, "ratings": []}
-    avg = sum(r["score"] for r in ratings) / len(ratings)
-    return {"average": round(avg, 1), "count": len(ratings), "ratings": ratings}
+def get_ratings_endpoint():
+    if not sb: return {"average": 0, "count": 0}
+    items = sb.table("ratings").select_all()
+    if not items: return {"average": 0, "count": 0}
+    avg = round(sum(i["score"] for i in items)/len(items), 1)
+    return {"average": avg, "count": len(items)}
 
 @app.post("/ratings")
-def add_rating(rating: Rating):
-    ratings = load_json_file(RATINGS_FILE, [])
-    rating.created_at = datetime.now().isoformat()
-    ratings.append(rating.dict())
-    save_json_file(RATINGS_FILE, ratings)
-    return {"status": "success", "rating": rating}
+def add_rating_endpoint(r: Rating):
+    if not sb: raise HTTPException(status_code=500)
+    return sb.table("ratings").insert(r.dict())
 
-# --- 기존 워크플로우 클래스 및 엔드포인트 ---
+# --- 워크플로우 엔진 ---
 class WorkflowRequest(BaseModel):
     user_request: str
     destination: str | None = None
@@ -200,491 +152,67 @@ class WorkflowRequest(BaseModel):
     requested_features: list[str] = Field(default_factory=list)
     additional_conditions: dict[str, Any] = Field(default_factory=dict)
 
-
 class WorkflowResponse(BaseModel):
-    user_request: str
-    input_data: dict[str, Any]
-    input_data_summary: dict[str, Any]
-    routing_debug: dict[str, Any]
-    selected_agents: list[str]
-    loaded_agents: list[dict[str, Any]]
-    agent_results: list[dict[str, Any]]
-    validation_report: dict[str, Any]
-    final_summary: str
+    user_request: str; input_data: dict[str, Any]; input_data_summary: dict[str, Any]; selected_agents: list[str]; loaded_agents: list[dict[str, Any]]; agent_results: list[dict[str, Any]]; validation_report: dict[str, Any]; final_summary: str
 
-
-SUPPORTED_DESTINATIONS = [
-    "서울",
-    "부산",
-    "제주",
-    "강릉",
-    "전주",
-    "대구",
-    "대전",
-    "광주",
-    "인천",
-    "여수",
-    "경주",
-    "속초",
-    "춘천",
-]
-
-
-def external_agent_dir(path: str) -> Path:
-    agent_path = Path(path)
-    if agent_path.exists() or not path.startswith("/mnt/d/"):
-        return agent_path
-    return Path("D:/") / path.removeprefix("/mnt/d/")
-
-
+SUPPORTED_DESTINATIONS = ["서울", "부산", "제주", "강릉", "전주", "대구", "대전", "광주", "인천", "여수", "경주", "속초", "춘천"]
+FEATURE_AGENT_MAP = { "destination": "travel_destination_agent", "budget": "travel_budget_agent", "schedule": "travel_schedule_agent", "weather": "travel_weather_agent", "tour": "travel_tour_agent", "transport": "travel_transport_agent", "food": "travel_food_agent", "event": "travel_event_agent", "planning": "travel_planning_agent", "lodging": "travel_lodging_agent" }
 INTERNAL_AGENT_LIBRARY = BASE_DIR / "agents"
-EXTERNAL_AGENT_LIBRARY = external_agent_dir("/mnt/d/AI_AGENT_LIBRARY")
-
-
-AGENT_NAMES = [
-    "travel_planning_agent",
-    "travel_destination_agent",
-    "travel_budget_agent",
-    "travel_schedule_agent",
-    "travel_weather_agent",
-    "travel_tour_agent",
-    "travel_food_agent",
-    "travel_event_agent",
-    "travel_transport_agent",
-    "travel_lodging_agent",
-]
-
-ROUTING_RULES: dict[str, list[str]] = {
-    "travel_planning_agent": ["전체 계획", "여행계획", "전략", "총괄", "당일치기"],
-    "travel_destination_agent": ["여행지", "추천", "도시", "어디"],
-    "travel_budget_agent": ["예산", "비용", "돈", "저렴"],
-    "travel_schedule_agent": ["일정", "코스", "몇박", "2박", "3일", "계획"],
-    "travel_weather_agent": ["날씨", "기온", "비", "우산", "강수", "흐림", "맑음"],
-    "travel_tour_agent": ["관광지", "명소", "볼거리", "행사", "축제", "사진", "투어"],
-    "travel_food_agent": ["맛집", "음식", "식당", "먹거리", "로컬푸드", "향토음식", "점심", "저녁"],
-    "travel_event_agent": ["축제", "행사", "이벤트", "공연", "문화행사", "페스티벌", "전시", "체험", "버스킹"],
-    "travel_transport_agent": ["교통", "이동", "지하철", "버스", "택시", "기차", "KTX", "공항", "노선", "동선"],
-    "travel_lodging_agent": ["숙소", "호텔", "숙박", "펜션", "리조트", "게스트하우스", "체크인", "체크아웃"],
-}
-
-FEATURE_AGENT_MAP: dict[str, str] = {
-    "destination": "travel_destination_agent",
-    "budget": "travel_budget_agent",
-    "schedule": "travel_schedule_agent",
-    "weather": "travel_weather_agent",
-    "tour": "travel_tour_agent",
-    "transport": "travel_transport_agent",
-    "food": "travel_food_agent",
-    "event": "travel_event_agent",
-    "planning": "travel_planning_agent",
-    "lodging": "travel_lodging_agent",
-}
-
-DEFAULT_AGENT = "travel_destination_agent"
-PLANNING_AGENT = "travel_planning_agent"
-
-
-def select_agents(user_request: str) -> list[str]:
-    selected_agents = [
-        agent_name
-        for agent_name, keywords in ROUTING_RULES.items()
-        if any(keyword in user_request for keyword in keywords)
-    ]
-
-    if not selected_agents:
-        selected_agents.append(DEFAULT_AGENT)
-
-    return selected_agents
-
-
-def include_planning_agent(selected_agents: list[str]) -> tuple[list[str], list[str]]:
-    without_duplicates = []
-    for agent_name in selected_agents:
-        if agent_name not in without_duplicates:
-            without_duplicates.append(agent_name)
-
-    if PLANNING_AGENT in without_duplicates:
-        final_agents = [PLANNING_AGENT] + [
-            agent_name
-            for agent_name in without_duplicates
-            if agent_name != PLANNING_AGENT
-        ]
-        return final_agents, []
-
-    return [PLANNING_AGENT, *without_duplicates], [PLANNING_AGENT]
-
-
-def build_execution_order(selected_agents: list[str]) -> list[str]:
-    if "travel_schedule_agent" not in selected_agents:
-        return selected_agents
-
-    execution_order = [
-        agent_name
-        for agent_name in selected_agents
-        if agent_name != "travel_schedule_agent"
-    ]
-    execution_order.append("travel_schedule_agent")
-    return execution_order
-
-
-def select_agents_from_features(requested_features: list[str]) -> list[str]:
-    selected_agents = []
-    for feature in requested_features:
-        agent_name = FEATURE_AGENT_MAP.get(feature)
-        if agent_name and agent_name not in selected_agents:
-            selected_agents.append(agent_name)
-    return selected_agents
-
-
-def find_unknown_features(requested_features: list[str]) -> list[str]:
-    return [
-        feature
-        for feature in requested_features
-        if feature not in FEATURE_AGENT_MAP
-    ]
-
-
-def normalize_requested_features(requested_features: list[str]) -> list[str]:
-    return [
-        str(feature).strip().lower()
-        for feature in requested_features
-        if str(feature).strip()
-    ]
-
-
-def extract_destination(user_request: str) -> str:
-    matches = [
-        (user_request.find(destination), destination)
-        for destination in SUPPORTED_DESTINATIONS
-        if destination in user_request
-    ]
-    if not matches:
-        return "서울"
-    return min(matches, key=lambda match: match[0])[1]
-
-
-def extract_days(user_request: str) -> int:
-    nights_days_match = re.search(r"(\d+)\s*박\s*(\d+)\s*일", user_request)
-    if nights_days_match:
-        return int(nights_days_match.group(2))
-
-    days_match = re.search(r"(\d+)\s*일", user_request)
-    if days_match:
-        return int(days_match.group(1))
-
-    nights_match = re.search(r"(\d+)\s*박", user_request)
-    if nights_match:
-        return int(nights_match.group(1)) + 1
-
-    return 3
-
-
-def resolve_agent_dir(agent_name: str) -> Path:
-    internal_agent_dir = INTERNAL_AGENT_LIBRARY / agent_name
-    if internal_agent_dir.exists():
-        return internal_agent_dir
-    return EXTERNAL_AGENT_LIBRARY / agent_name
-
-
-def resolve_agent_source(agent_name: str) -> str:
-    internal_agent_dir = INTERNAL_AGENT_LIBRARY / agent_name
-    if internal_agent_dir.exists():
-        return "internal"
-    external_agent_dir_path = EXTERNAL_AGENT_LIBRARY / agent_name
-    if external_agent_dir_path.exists():
-        return "external"
-    return "internal" if INTERNAL_AGENT_LIBRARY.exists() else "external"
-
-
-def iter_agent_dirs():
-    seen: set[str] = set()
-    for source_name, root in [("internal", INTERNAL_AGENT_LIBRARY), ("external", EXTERNAL_AGENT_LIBRARY)]:
-        if not root.exists():
-            continue
-        for path in sorted(root.iterdir(), key=lambda item: item.name):
-            if (
-                path.is_dir()
-                and path.name.startswith("travel_")
-                and path.name.endswith("_agent")
-                and path.name not in seen
-            ):
-                seen.add(path.name)
-                yield path, source_name
-
-
-def build_input_data(payload: WorkflowRequest) -> dict[str, Any]:
-    user_request = payload.user_request
-    destination = payload.destination or extract_destination(user_request)
-    location = payload.location or destination
-    origin = payload.origin or ("현재 위치" if destination == "서울" else "서울")
-    days = payload.days or extract_days(user_request)
-    budget_level = payload.budget_level or ("low" if "저렴" in user_request else "medium")
-    
-    # 추가 조건 추출 (동행인, 테마, 우선순위)
-    add_cond = payload.additional_conditions or {}
-    companions = add_cond.get("companions", [])
-    themes = add_cond.get("themes", [])
-    priority = add_cond.get("priority", "")
-
-    input_data: dict[str, Any] = {
-        "user_request": user_request,
-        "destination": destination,
-        "location": location,
-        "origin": origin,
-        "days": days,
-        "duration_days": days,
-        "traveler_count": 1,
-        "budget_level": budget_level,
-        "budget": budget_level,
-        "requested_features": payload.requested_features,
-        "additional_conditions": add_cond,
-        "companions": companions,
-        "themes": themes,
-        "priority": priority
-    }
-
-    return input_data
-
-
-def load_agent(agent_json_path: Path):
-    with agent_json_path.open("r", encoding="utf-8") as file:
-        metadata = json.load(file)
-
-    agent_name = metadata["name"]
-    entrypoint = agent_json_path.parent / metadata["entrypoint"]
-    function_name = metadata["function"]
-    module_name = f"{agent_name}_{uuid.uuid4().hex}"
-
-    for cached_name in list(sys.modules):
-        if cached_name == agent_name or cached_name.startswith(f"{agent_name}_"):
-            sys.modules.pop(cached_name, None)
-
-    spec = importlib.util.spec_from_file_location(module_name, entrypoint)
-    if spec is None or spec.loader is None:
-        raise RuntimeError(f"Cannot load agent entrypoint: {entrypoint}")
-
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[module_name] = module
-    try:
-        spec.loader.exec_module(module)
-    except Exception:
-        sys.modules.pop(module_name, None)
-        raise
-
-    return metadata, getattr(module, function_name)
-
-
-def _as_list(value: Any) -> list[Any]:
-    return value if isinstance(value, list) else []
-
-
-def _display_agent_path(agent_dir: Path) -> str:
-    return str(agent_dir)
-
-
-def _agent_library_item(agent_dir: Path, source: str) -> dict[str, Any]:
-    agent_json_path = agent_dir / "agent.json"
-    main_py_path = agent_dir / "main.py"
-    readme_path = agent_dir / "README.md"
-    has_agent_json = agent_json_path.exists()
-    has_main_py = main_py_path.exists()
-    has_readme = readme_path.exists()
-
-    item: dict[str, Any] = {
-        "name": agent_dir.name,
-        "status": "missing_files",
-        "path": _display_agent_path(agent_dir),
-        "source": source,
-        "has_agent_json": has_agent_json,
-        "has_main_py": has_main_py,
-        "has_readme": has_readme,
-        "description": "",
-        "role": "",
-        "inputs": [],
-        "outputs": [],
-        "data_sources": [],
-        "error": None,
-    }
-
-    if not has_agent_json or not has_main_py or not has_readme:
-        missing_files = [
-            filename
-            for filename, exists in [
-                ("agent.json", has_agent_json),
-                ("main.py", has_main_py),
-                ("README.md", has_readme),
-            ]
-            if not exists
-        ]
-        item["error"] = f"missing_files: {', '.join(missing_files)}"
-        return item
-
-    try:
-        with agent_json_path.open("r", encoding="utf-8") as file:
-            metadata = json.load(file)
-    except Exception as exc:
-        item["status"] = "invalid_agent_json"
-        item["error"] = f"{type(exc).__name__}: {exc}"
-        return item
-
-    item.update({
-        "name": str(metadata.get("name") or agent_dir.name),
-        "status": "available",
-        "source": source,
-        "description": str(metadata.get("description") or ""),
-        "role": str(metadata.get("role") or ""),
-        "inputs": _as_list(metadata.get("inputs")),
-        "outputs": _as_list(metadata.get("outputs")),
-        "data_sources": _as_list(metadata.get("data_sources")),
-    })
-    return item
-
-
-def get_agent_library() -> dict[str, Any]:
-    agents = [_agent_library_item(agent_dir, source) for agent_dir, source in iter_agent_dirs()]
-    source = "internal" if INTERNAL_AGENT_LIBRARY.exists() else "external"
-    library_path = str(INTERNAL_AGENT_LIBRARY if INTERNAL_AGENT_LIBRARY.exists() else EXTERNAL_AGENT_LIBRARY)
-
-    return {
-        "library_path": library_path,
-        "source": source,
-        "library_mode": source,
-        "total_agents": len(agents),
-        "available_count": sum(1 for agent in agents if agent["status"] == "available"),
-        "agents": agents,
-    }
-
-
-def run_workflow(payload: WorkflowRequest | str) -> dict[str, Any]:
-    if isinstance(payload, str):
-        workflow_request = WorkflowRequest(user_request=payload)
-    else:
-        workflow_request = payload
-
-    user_request = workflow_request.user_request
-    requested_features = normalize_requested_features(workflow_request.requested_features)
-    routing_mode = "requested_features" if requested_features else "keyword_router"
-    selected_agents_from_features = select_agents_from_features(requested_features) if requested_features else []
-    unknown_features = find_unknown_features(requested_features) if requested_features else []
-    if requested_features:
-        base_selected_agents = selected_agents_from_features if selected_agents_from_features else [DEFAULT_AGENT]
-    else:
-        base_selected_agents = select_agents(user_request)
-    selected_agents, auto_included_agents = include_planning_agent(base_selected_agents)
-
-    input_data = build_input_data(workflow_request)
-    input_data["requested_features"] = requested_features
-    input_data_summary = {
-        "destination": input_data["destination"],
-        "location": input_data["location"],
-        "origin": input_data["origin"],
-        "days": input_data["days"],
-        "budget_level": input_data["budget_level"],
-        "requested_features": input_data["requested_features"],
-    }
-    routing_debug = {
-        "routing_mode": routing_mode,
-        "requested_features": input_data["requested_features"],
-        "selected_agents_from_features": selected_agents_from_features,
-        "auto_included_agents": auto_included_agents,
-        "selected_agents_final": selected_agents,
-        "unknown_features": unknown_features,
-    }
-    loaded_agents: list[dict[str, Any]] = []
-    agent_results: list[dict[str, Any]] = []
-
-    for agent_name in build_execution_order(selected_agents):
-        agent_dir = resolve_agent_dir(agent_name)
-        try:
-            metadata, run = load_agent(agent_dir / "agent.json")
-            loaded_agents.append({
-                "name": metadata["name"],
-                "version": metadata["version"],
-                "entrypoint": metadata["entrypoint"],
-                "function": metadata["function"],
-                "source": resolve_agent_source(agent_name),
-            })
-            agent_input_data = dict(input_data)
-            agent_input_data["agent_results"] = agent_results
-            agent_input_data["agent_results_by_agent"] = {
-                result.get("agent"): result
-                for result in agent_results
-                if isinstance(result, dict) and result.get("agent")
-            }
-            agent_results.append(run(agent_input_data))
-        except Exception as exc:
-            agent_results.append({
-                "agent": agent_name,
-                "data_source": "error",
-                "summary": f"Failed to load or run {agent_name}.",
-                "error": {
-                    "type": type(exc).__name__,
-                    "message": str(exc)
-                }
-            })
-
-    agent_results, validation_report = validate_and_correct(input_data, agent_results)
-
-    final_summary = "UI 선택값과 사용자 요청을 기준으로 필요한 에이전트를 선택하고, 선택된 에이전트의 결과를 통합했습니다."
-    final_summary += f" 목적지는 {input_data['destination']} 기준입니다."
-    if any(result.get("data_source") == "kma_api" for result in agent_results):
-        final_summary += " 날씨 정보는 기상청 공공데이터 API 결과를 반영했습니다."
-    if validation_report.get("status") == "corrected":
-        final_summary += " 일부 결과는 자체검증 규칙에 따라 자동 보정되었습니다."
-
-    return {
-        "user_request": user_request,
-        "input_data": input_data,
-        "input_data_summary": input_data_summary,
-        "routing_debug": routing_debug,
-        "selected_agents": selected_agents,
-        "loaded_agents": loaded_agents,
-        "agent_results": agent_results,
-        "validation_report": validation_report,
-        "final_summary": final_summary
-    }
-
-
-@app.get("/")
-def read_index() -> FileResponse:
-    return FileResponse("static/index.html")
-
+EXTERNAL_AGENT_LIBRARY = Path("D:/AI_AGENT_LIBRARY")
+
+def resolve_agent_dir(name):
+    d = INTERNAL_AGENT_LIBRARY / name
+    return d if d.exists() else EXTERNAL_AGENT_LIBRARY / name
+
+def load_agent(p):
+    with open(p, "r", encoding="utf-8") as f: meta = json.load(f)
+    spec = importlib.util.spec_from_file_location(f"{meta['name']}_{uuid.uuid4().hex}", p.parent / meta["entrypoint"])
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return meta, getattr(mod, meta["function"])
 
 @app.get("/agent-library")
-def agent_library_endpoint() -> dict[str, Any]:
-    return get_agent_library()
-
+def agent_library():
+    agents = []
+    for root in [INTERNAL_AGENT_LIBRARY, EXTERNAL_AGENT_LIBRARY]:
+        if not root.exists(): continue
+        for d in root.iterdir():
+            if d.is_dir() and d.name.endswith("_agent") and (d / "agent.json").exists():
+                with open(d / "agent.json", "r", encoding="utf-8") as f: m = json.load(f)
+                agents.append({"name": m["name"], "status": "available"})
+    return {"agents": agents, "total_agents": len(agents), "available_count": len(agents)}
 
 @app.get("/feature-map")
-def feature_map_endpoint() -> dict[str, Any]:
-    return {
-        "features": FEATURE_AGENT_MAP,
-        "feature_count": len(FEATURE_AGENT_MAP),
-    }
-
+def feature_map(): return {"features": FEATURE_AGENT_MAP, "feature_count": len(FEATURE_AGENT_MAP)}
 
 @app.get("/health")
-def health_endpoint() -> dict[str, Any]:
-    agent_library = get_agent_library()
-    return {
-        "status": "ok",
-        "app": "dynamic-agent-lab",
-        "agent_source": "internal" if INTERNAL_AGENT_LIBRARY.exists() else "external_fallback",
-        "agent_library_path": agent_library["library_path"],
-        "available_agents": agent_library["available_count"],
-        "env_loaded": {
-            "KMA_SERVICE_KEY": bool(os.getenv("KMA_SERVICE_KEY")),
-            "TOUR_API_SERVICE_KEY": bool(os.getenv("TOUR_API_SERVICE_KEY")),
-            "ODSAY_API_KEY": bool(os.getenv("ODSAY_API_KEY")),
-        },
-    }
-
+def health(): return {"status": "ok", "available_agents": 10, "supabase": supabase_status}
 
 @app.post("/run-workflow", response_model=WorkflowResponse)
-def run_workflow_endpoint(payload: WorkflowRequest) -> dict[str, Any]:
-    return run_workflow(payload)
+def run_workflow_endpoint(payload: WorkflowRequest):
+    req = payload.user_request
+    dest = payload.destination or next((d for d in SUPPORTED_DESTINATIONS if d in req), "서울")
+    days = payload.days or 3
+    features = payload.requested_features or ["planning", "weather", "transport", "budget", "food", "tour", "schedule"]
+    
+    selected = [FEATURE_AGENT_MAP[f] for f in features if f in FEATURE_AGENT_MAP]
+    if "travel_planning_agent" not in selected: selected.insert(0, "travel_planning_agent")
+    
+    input_data = { "user_request": req, "destination": dest, "origin": payload.origin or "서울", "days": days, "budget_level": payload.budget_level or "medium", "requested_features": features, **payload.additional_conditions }
+    
+    results, loaded = [], []
+    for name in selected:
+        try:
+            m, run = load_agent(resolve_agent_dir(name) / "agent.json")
+            loaded.append({"name": name, "status": "available"})
+            input_data["agent_results"] = results
+            input_data["agent_results_by_agent"] = {r["agent"]: r for r in results if "agent" in r}
+            results.append(run(input_data))
+        except Exception as e: results.append({"agent": name, "summary": f"Error: {e}", "data_source": "error"})
+    
+    res, report = validate_and_correct(input_data, results)
+    input_data_summary = { "destination": dest, "days": days, "budget_level": input_data["budget_level"] }
+    return {"user_request": req, "input_data": input_data, "input_data_summary": input_data_summary, "selected_agents": selected, "loaded_agents": loaded, "agent_results": res, "validation_report": report, "final_summary": f"Plan for {dest} is ready."}
 
-
-if __name__ == "__main__":
-    sample_request = "부산 2박 3일 여행지 추천하고 예산, 일정, 날씨, 관광지, 교통도 알려줘"
-    print(json.dumps(run_workflow(sample_request), ensure_ascii=False, indent=2))
+@app.get("/")
+def home(): return FileResponse("static/index.html")

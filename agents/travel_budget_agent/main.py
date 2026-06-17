@@ -90,6 +90,7 @@ def run(input_data):
 
     return {
         "agent": "travel_budget_agent",
+        "data_source": "mock_plus_conditions",
         "total": f"{total:,}원",
         "summary": summary,
         "estimated_budget": {
