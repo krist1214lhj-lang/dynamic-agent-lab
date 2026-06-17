@@ -203,8 +203,22 @@
       }
       .circle-item:hover .circle-mask { transform: scale(1.05) rotate(-2deg); }
       .circle-mask img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-      .item-title { font-size: 1.05rem; font-weight: 800; margin-bottom: 5px; }
-      .item-meta { font-size: 0.85rem; color: var(--muted); font-weight: 300; }
+      .item-title { 
+        font-size: 1.05rem; 
+        font-weight: 800; 
+        margin-bottom: 5px; 
+        white-space: nowrap; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+      }
+      .item-meta { 
+        font-size: 0.85rem; 
+        color: var(--muted); 
+        font-weight: 300; 
+        white-space: nowrap; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+      }
 
       /* Timeline */
       .day-group { margin-bottom: 40px; }
@@ -214,13 +228,20 @@
       .timeline-icon { position: absolute; left: -45px; top: 5px; width: 32px; height: 32px; background: #fff; border: 1px solid #eee; border-radius: 50%; display: grid; place-items: center; font-size: 0.65rem; font-weight: 900; color: #ddd; z-index: 1; }
       .timeline-block { background: #fff; padding: 25px; border-radius: 25px; border: 1px solid var(--line); transition: transform 0.4s; }
       .timeline-block:hover { transform: translateX(5px); border-color: #000; }
-      .timeline-block strong { display: block; font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+      .timeline-block strong { 
+        display: block; 
+        font-size: 1.1rem; 
+        font-weight: 700; 
+        margin-bottom: 6px; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+      }
 
       /* Info Center */
       .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
       .info-box { padding: 25px; background: #fff; border-radius: 25px; border: 1px solid var(--line); text-align: center; }
       .info-label { font-size: 0.75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.1em; }
-      .info-value { font-size: 1.25rem; font-weight: 400; color: var(--accent); }
+      .info-value { font-size: 1.25rem; font-weight: 400; color: var(--accent); overflow: hidden; text-overflow: ellipsis; }
 
       /* Horizontal Itinerary Grid */
       .itinerary-grid {
@@ -247,7 +268,15 @@
         text-align: center;
       }
       .day-card-header h3 { font-size: 1.8rem; font-weight: 100; text-transform: uppercase; }
-      .day-card-header p { font-size: 0.9rem; color: var(--muted); font-weight: 300; margin-top: 5px; }
+      .day-card-header p { 
+        font-size: 0.9rem; 
+        color: var(--muted); 
+        font-weight: 300; 
+        margin-top: 5px; 
+        white-space: nowrap; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+      }
 
       .day-accordion { border: 0 !important; border-radius: 0 !important; background: transparent !important; }
       .day-accordion summary { 
@@ -261,6 +290,17 @@
       .day-accordion summary::after { content: "+ SCHEDULE"; opacity: 0.4; }
       .day-accordion[open] summary::after { content: "- CLOSE"; }
       .day-accordion .details-content { padding: 25px; border-top: 1px solid var(--line); }
+
+      /* Empty State */
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: #fcfcfc;
+        border-radius: 30px;
+        border: 1px dashed var(--line);
+        color: var(--muted);
+      }
+      .empty-state-icon { font-size: 2rem; margin-bottom: 15px; opacity: 0.3; }
 
       /* Utils */
       .hidden { display: none !important; }
@@ -382,23 +422,49 @@
       function renderCircleItem(item, category, destination) {
         const title = item.name || item.title || "정보 없음";
         const addr = item.address || item.addr1 || "정보 없음";
-        const img = item.image ? `<img src="${item.image}" alt="${escapeHtml(title)}" loading="lazy" />` : `<div style="display:grid; place-items:center; height:100%; color:#eee; font-size:0.6rem; font-weight:900;">NO IMAGE</div>`;
+        const tel = item.tel || "";
+        const img = item.image ? `<img src="${item.image}" alt="${escapeHtml(title)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';" />` : "";
+        const fallbackImg = `<div class="fallback-img" style="display:${item.image ? 'none' : 'grid'}; place-items:center; height:100%; color:#eee; font-size:0.6rem; font-weight:900; background:#fafafa;">NO IMAGE</div>`;
         
-        let searchUrl = `https://map.naver.com/v5/search/${encodeURIComponent(title)}`; 
+        // 메인 링크 결정
+        let mainUrl = `https://map.naver.com/v5/search/${encodeURIComponent(title)}`; 
+        let subLink = "";
+        
         if (category === "Stay" || category === "Lodging") {
-          // 숙박: 글로벌 예약 사이트(Agoda) 연동 시 '목적지 + 호텔명'으로 정확도 향상
-          const destStr = destination ? `${destination} ` : "";
-          searchUrl = `https://www.agoda.com/ko-kr/search?text=${encodeURIComponent(destStr + title)}`;
+          // 숙박: Agoda 정밀 검색 (목적지 + 이름 + 주소 일부 조합)
+          const shortAddr = addr.split(" ").slice(0, 2).join(" ");
+          mainUrl = `https://www.agoda.com/ko-kr/search?text=${encodeURIComponent(destination + " " + title + " " + shortAddr)}`;
+          subLink = `<a href="https://www.google.com/search?q=${encodeURIComponent(destination + " " + title + " 후기")}" target="_blank" style="font-size:0.65rem; color:var(--muted); text-decoration:underline;">리뷰 보기</a>`;
+        } else if (category === "Taste") {
+          // 맛집: 네이버 지도 + 캐치테이블/망고플레이트 검색 유도
+          mainUrl = `https://map.naver.com/v5/search/${encodeURIComponent(destination + " " + title)}`;
+          subLink = `<a href="https://www.google.com/search?q=${encodeURIComponent(destination + " " + title + " 맛집 후기")}" target="_blank" style="font-size:0.65rem; color:var(--muted); text-decoration:underline;">리뷰 보기</a>`;
+        } else {
+          // 관광/행사 등
+          subLink = `<a href="https://www.google.com/search?q=${encodeURIComponent(destination + " " + title + " 후기")}" target="_blank" style="font-size:0.65rem; color:var(--muted); text-decoration:underline;">정보 더보기</a>`;
         }
         
+        const telHtml = tel ? `<div class="item-meta" style="color:var(--accent); font-weight:500; margin-top:2px;">${escapeHtml(tel)}</div>` : "";
+        
         return `
-          <a href="${searchUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none; color:inherit; display:block;">
-            <div class="circle-item">
-              <div class="circle-mask">${img}</div>
-              <div class="item-title">${escapeHtml(title)}</div>
-              <div class="item-meta">${escapeHtml(addr)}</div>
-            </div>
-          </a>
+          <div class="circle-item">
+            <a href="${mainUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none; color:inherit; display:block;">
+              <div class="circle-mask" style="position:relative;">${img}${fallbackImg}</div>
+              <div class="item-title" title="${escapeHtml(title)}">${escapeHtml(title)}</div>
+              <div class="item-meta" title="${escapeHtml(addr)}">${escapeHtml(addr)}</div>
+            </a>
+            ${telHtml}
+            <div style="margin-top:5px;">${subLink}</div>
+          </div>
+        `;
+      }
+
+      function renderEmptyState(message) {
+        return `
+          <div class="empty-state">
+            <div class="empty-state-icon">○</div>
+            <p>${escapeHtml(message || "추천할 정보가 없습니다.")}</p>
+          </div>
         `;
       }
 
@@ -413,6 +479,8 @@
 
       function renderWeatherCard(res) {
         const daily = res.daily_forecast || [];
+        if (daily.length === 0) return `<article class="result-card"><h2>Weather</h2>${renderEmptyState("날씨 정보를 불러올 수 없습니다.")}</article>`;
+        
         const weatherHtml = `
           <div class="circle-grid" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px;">
             ${daily.map(d => `
@@ -441,6 +509,8 @@
 
       function renderTransportCard(res) {
         const routes = res.routes || [];
+        if (routes.length === 0) return `<article class="result-card"><h2>Transport</h2>${renderEmptyState("교통 경로 정보를 찾을 수 없습니다.")}</article>`;
+        
         const routesHtml = `<div class="timeline-list">${routes.map((r, i) => {
           const booking = getTransportBookingLink(r.method);
           return `
@@ -461,6 +531,8 @@
       }
 
       function renderGridCard(summary, items, category, destination) {
+        if (!items || items.length === 0) return `<article class="result-card"><h2>${category}</h2>${renderEmptyState(`${category} 추천 항목이 없습니다.`)}</article>`;
+        
         const gridHtml = `<div class="circle-grid">${(items||[]).map(i => renderCircleItem(i, category, destination)).join("")}</div>`;
         return `<article class="result-card"><h2>${category}</h2><p class="summary-text">${escapeHtml(summary)}</p>${renderAccordion(`Explore Recommended ${category}`, gridHtml)}</article>`;
       }

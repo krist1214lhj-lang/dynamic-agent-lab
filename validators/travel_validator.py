@@ -1,7 +1,10 @@
 from copy import deepcopy
+from datetime import datetime
 
 
 JEJU_TRANSPORT_ISSUE = "제주 목적지에 맞지 않는 KTX/고속버스 도시 간 이동 추천이 포함됨"
+PAST_EVENT_ISSUE = "이미 종료된 과거 행사가 포함됨"
+DUPLICATE_PLACE_ISSUE = "서로 다른 에이전트에서 동일한 장소가 중복 추천됨"
 
 
 def _destination(input_data):
@@ -89,13 +92,109 @@ def _correct_jeju_transport(input_data, agent_result):
     return corrected
 
 
+def _filter_past_events(agent_results):
+    """오늘 날짜를 기준으로 이미 종료된 이벤트를 필터링합니다."""
+    today = datetime.now().strftime("%Y%m%d")
+    corrected_results = []
+    issues_found = False
+
+    for result in agent_results:
+        if result.get("agent") == "travel_event_agent":
+            items = result.get("event_items", [])
+            valid_items = []
+            for item in items:
+                end_date = item.get("eventenddate")
+                if end_date and str(end_date) < today:
+                    issues_found = True
+                    continue
+                valid_items.append(item)
+            
+            if issues_found:
+                new_result = deepcopy(result)
+                new_result["event_items"] = valid_items
+                new_result["debug_info"]["validator_filtered_past_events"] = True
+                corrected_results.append(new_result)
+            else:
+                corrected_results.append(result)
+        else:
+            corrected_results.append(result)
+    
+    return corrected_results, issues_found
+
+
+def _deduplicate_places(agent_results):
+    """여러 에이전트에서 추천된 중복 장소를 제거합니다."""
+    seen_names = set()
+    corrected_results = []
+    issues_found = False
+
+    # 에이전트 우선순위: tour > event > food
+    priority_order = ["travel_tour_agent", "travel_event_agent", "travel_food_agent", "travel_lodging_agent"]
+    
+    results_map = {r.get("agent"): r for r in agent_results}
+    
+    for agent_name in priority_order:
+        if agent_name not in results_map:
+            continue
+        
+        result = results_map[agent_name]
+        items_key = None
+        if agent_name == "travel_tour_agent": items_key = "tour_items"
+        elif agent_name == "travel_event_agent": items_key = "event_items"
+        elif agent_name == "travel_food_agent": items_key = "food_items"
+        elif agent_name == "travel_lodging_agent": items_key = "lodging_items"
+        
+        if items_key and items_key in result:
+            items = result[items_key]
+            valid_items = []
+            for item in items:
+                name = item.get("name") or item.get("title")
+                if name in seen_names:
+                    issues_found = True
+                    continue
+                seen_names.add(name)
+                valid_items.append(item)
+            
+            if issues_found:
+                new_result = deepcopy(result)
+                new_result[items_key] = valid_items
+                new_result.setdefault("debug_info", {})["validator_deduplicated"] = True
+                results_map[agent_name] = new_result
+
+    # 원래 순서대로 다시 조합
+    for result in agent_results:
+        agent_name = result.get("agent")
+        if agent_name in results_map:
+            corrected_results.append(results_map[agent_name])
+        else:
+            corrected_results.append(result)
+            
+    return corrected_results, issues_found
+
+
 def validate_and_correct(input_data, agent_results):
-    corrected_agent_results = []
     validation_report = {
         "status": "ok",
         "issues": [],
         "corrections": [],
     }
+    
+    # 1. 과거 이벤트 필터링
+    agent_results, has_past_events = _filter_past_events(agent_results)
+    if has_past_events:
+        validation_report["status"] = "corrected"
+        validation_report["issues"].append(PAST_EVENT_ISSUE)
+        validation_report["corrections"].append("이미 종료된 과거 행사 데이터를 필터링했습니다.")
+
+    # 2. 중복 장소 제거
+    agent_results, has_duplicates = _deduplicate_places(agent_results)
+    if has_duplicates:
+        validation_report["status"] = "corrected"
+        validation_report["issues"].append(DUPLICATE_PLACE_ISSUE)
+        validation_report["corrections"].append("서로 다른 추천 항목 간 중복된 장소를 제거했습니다.")
+
+    # 3. 제주도 교통편 보정
+    corrected_agent_results = []
     is_jeju = _destination(input_data) == "제주"
 
     for agent_result in agent_results:
