@@ -38,7 +38,22 @@
         gap: 30px;
       }
 
-      /* Hero: Extreme Thinness & Brightness */
+      /* Auth UI */
+      .auth-nav { position: absolute; top: 30px; right: 40px; display: flex; gap: 15px; align-items: center; z-index: 100; }
+      .user-info { font-size: 0.85rem; font-weight: 700; color: var(--accent); }
+      .nav-btn { background: transparent; border: 1px solid var(--line); padding: 8px 20px; border-radius: 99px; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: all 0.3s; }
+      .nav-btn:hover { border-color: #000; background: #fafafa; }
+      
+      .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: none; place-items: center; z-index: 1000; backdrop-filter: blur(10px); }
+      .modal-content { background: #fff; width: min(400px, 90%); padding: 50px; border-radius: 40px; border: 1px solid var(--line); box-shadow: 0 30px 60px rgba(0,0,0,0.05); text-align: center; }
+      .modal-content h3 { font-size: 2rem; font-weight: 100; text-transform: uppercase; margin-bottom: 30px; }
+      .auth-form { display: grid; gap: 15px; }
+      .auth-form input { padding: 18px 25px; border-radius: 20px; border: 1px solid var(--line); font-family: inherit; font-size: 1rem; }
+      .auth-btn { background: #000; color: #fff; border: 0; padding: 18px; border-radius: 20px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: transform 0.3s; }
+      .auth-btn:hover { transform: translateY(-2px); }
+      .auth-toggle { margin-top: 25px; font-size: 0.85rem; color: var(--muted); cursor: pointer; text-decoration: underline; }
+
+      /* Hero */
       .hero-section { text-align: left; margin-bottom: 0px; }
       .hero-section h1 { 
         font-size: clamp(3rem, 10vw, 6rem); 
@@ -57,7 +72,7 @@
         line-height: 1.5;
       }
 
-      /* Control Deck: Minimalist White */
+      /* Control Deck */
       .control-panel {
         background: transparent;
         padding: 0;
@@ -109,7 +124,6 @@
 
       /* Tab System for Additional Conditions */
       .additional-conditions-row { margin-top: 35px; border-top: 1px solid var(--line); padding-top: 25px; }
-      .tab-container { margin-top: 15px; }
       .tab-header { display: flex; gap: 10px; margin-bottom: 15px; }
       .tab-btn {
         background: #fff;
@@ -128,8 +142,7 @@
       .tab-content { display: none; margin-top: 15px; }
       .tab-content.active { display: flex; flex-wrap: wrap; gap: 10px; }
 
-      /* Option Chips: Airy Outlines */
-      .options-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 25px; justify-content: flex-start; }
+      /* Option Chips */
       .checkbox-grid label { 
         background: #fff; 
         border: 1px solid var(--line); 
@@ -147,7 +160,6 @@
       .checkbox-grid label:hover { border-color: #000; color: #000; }
       .checkbox-grid label:has(input:checked) { background: var(--accent); color: #fff; border-color: var(--accent); }
       .checkbox-grid input { display: none; }
-      .feature-icon { font-size: 0.65rem; font-weight: 900; opacity: 0.3; }
 
       /* 취향 입력창 */
       .extra-request-row { margin-top: 25px; }
@@ -168,9 +180,8 @@
       textarea#user-request:focus { outline: none; border-color: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
       textarea#user-request::placeholder { color: #eee; }
 
-      /* Results: Maximum Brightness & Compact */
+      /* Results */
       .result-view { display: grid; gap: 40px; margin-top: 50px; }
-      .result-card { background: transparent; border: 0; padding: 0; }
       .result-card h2 { font-size: 2.4rem; font-weight: 100; margin-bottom: 15px; text-transform: uppercase; letter-spacing: -0.05em; color: var(--accent); }
       .summary-text { color: var(--text); font-size: 1.15rem; font-weight: 400; margin-bottom: 25px; line-height: 1.4; border-left: 2px solid var(--accent); padding-left: 20px; }
 
@@ -192,157 +203,61 @@
       .details-accordion[open] summary::after { content: "- CLOSE"; }
       .details-content { padding: 30px; }
 
-      /* Circle Objects */
-      .circle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 30px; }
-      .circle-item { text-align: center; }
-      .circle-mask {
-        width: 150px;
-        height: 150px;
-        border-radius: 50%;
-        overflow: hidden;
-        border: 1px solid var(--line);
-        background: #fafafa;
-        padding: 6px;
-        margin: 0 auto 15px;
-        transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
-      }
-      .circle-item:hover .circle-mask { transform: scale(1.05) rotate(-2deg); }
-      .circle-mask img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-      .item-title { 
-        font-size: 1.05rem; 
-        font-weight: 800; 
-        margin-bottom: 5px; 
-        white-space: nowrap; 
-        overflow: hidden; 
-        text-overflow: ellipsis; 
-        color: var(--text);
-      }
-      .item-meta { 
-        font-size: 0.85rem; 
-        color: var(--muted); 
-        font-weight: 300; 
-        white-space: nowrap; 
-        overflow: hidden; 
-        text-overflow: ellipsis; 
-      }
-
-      /* Timeline */
-      .day-group { margin-bottom: 40px; }
-      .day-title { font-size: 1.8rem; font-weight: 100; margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px; text-transform: uppercase; }
-      .timeline-list { display: grid; gap: 20px; position: relative; padding-left: 45px; }
-      .timeline-list::before { content: ""; position: absolute; left: 16px; top: 0; bottom: 0; width: 1px; background: #eee; }
-      .timeline-icon { position: absolute; left: -45px; top: 5px; width: 32px; height: 32px; background: #fff; border: 1px solid #eee; border-radius: 50%; display: grid; place-items: center; font-size: 0.65rem; font-weight: 900; color: #ddd; z-index: 1; }
-      .timeline-block { background: #fff; padding: 25px; border-radius: 25px; border: 1px solid var(--line); transition: transform 0.4s; }
-      .timeline-block:hover { transform: translateX(5px); border-color: var(--accent); }
-      .timeline-block strong { 
-        display: block; 
-        font-size: 1.1rem; 
-        font-weight: 700; 
-        margin-bottom: 6px; 
-        overflow: hidden; 
-        text-overflow: ellipsis; 
-        color: var(--text);
-      }
-
-      /* Info Center */
-      .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
-      .info-box { padding: 25px; background: #fff; border-radius: 25px; border: 1px solid var(--line); text-align: center; }
+      .item-title { font-size: 1.05rem; font-weight: 800; margin-bottom: 5px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .item-meta { font-size: 0.85rem; color: var(--muted); font-weight: 300; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .timeline-block strong { font-size: 1.1rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .info-label { font-size: 0.75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.1em; }
-      .info-value { font-size: 1.25rem; font-weight: 400; color: var(--accent); overflow: hidden; text-overflow: ellipsis; }
-
-      /* Horizontal Itinerary Grid */
-      .itinerary-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 25px;
-        margin-top: 40px;
-        align-items: start;
-      }
-
-      .day-card {
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 35px;
-        overflow: hidden;
-        transition: transform 0.3s;
-      }
-      .day-card:hover { transform: translateY(-5px); border-color: #000; }
-
-      .day-card-header {
-        padding: 25px;
-        background: #fbfbfb;
-        border-bottom: 1px solid var(--line);
-        text-align: center;
-      }
-      .day-card-header h3 { font-size: 1.8rem; font-weight: 100; text-transform: uppercase; }
-      .day-card-header p { 
-        font-size: 0.9rem; 
-        color: var(--muted); 
-        font-weight: 300; 
-        margin-top: 5px; 
-        white-space: nowrap; 
-        overflow: hidden; 
-        text-overflow: ellipsis; 
-      }
-
-      .day-accordion { border: 0 !important; border-radius: 0 !important; background: transparent !important; }
-      .day-accordion summary { 
-        padding: 15px 25px; 
-        font-size: 0.85rem; 
-        font-weight: 700; 
-        background: #fff; 
-        color: #000;
-        letter-spacing: 0.05em;
-      }
-      .day-accordion summary::after { content: "+ SCHEDULE"; opacity: 0.4; }
-      .day-accordion[open] summary::after { content: "- CLOSE"; }
-      .day-accordion .details-content { padding: 25px; border-top: 1px solid var(--line); }
-
-      /* Empty State */
-      .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        background: #fcfcfc;
-        border-radius: 30px;
-        border: 1px dashed var(--line);
-        color: var(--muted);
-      }
-      .empty-state-icon { font-size: 2rem; margin-bottom: 15px; opacity: 0.3; }
-
-      /* Utils */
-      .hidden { display: none !important; }
-      .loading-container { display: flex; flex-direction: column; align-items: center; padding: 150px 0; gap: 40px; }
-      .spinner { width: 70px; height: 70px; border: 1px solid #eee; border-top: 1px solid #000; border-radius: 50%; animation: spin 1.8s cubic-bezier(0.6, 0, 0.4, 1) infinite; }
-      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-      .archive-section { margin-top: 200px; padding-top: 60px; border-top: 1px solid var(--line); text-align: center; opacity: 0.4; transition: opacity 0.5s; }
-      .archive-section:hover { opacity: 1; }
+      .info-value { font-size: 1.25rem; font-weight: 400; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
       /* Review & Rating Section */
       .feedback-section { margin-top: 150px; padding-top: 60px; border-top: 1px solid var(--line); }
       .feedback-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 60px; text-align: left; }
-      
       .rating-box { padding: 40px; background: #fafafa; border-radius: 35px; border: 1px solid var(--line); }
       .rating-stars { display: flex; gap: 8px; margin: 20px 0; }
       .star-btn { font-size: 1.5rem; cursor: pointer; color: #ddd; transition: color 0.3s; background: none; border: 0; }
       .star-btn.active { color: #000; }
-      
       .comment-list { display: grid; gap: 20px; margin-top: 30px; }
       .comment-item { padding: 25px; border-bottom: 1px solid var(--line); }
       .comment-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.85rem; font-weight: 700; }
       .comment-content { font-size: 1rem; color: var(--text); font-weight: 300; line-height: 1.5; }
-      
       .input-group { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
-      .input-group input, .input-group textarea {
-        background: #fff; border: 1px solid var(--line); border-radius: 15px; padding: 15px 20px; font-family: inherit; font-size: 0.95rem;
-      }
-      .feedback-btn { 
-        background: #000; color: #fff; border: 0; padding: 15px 30px; border-radius: 99px; font-weight: 700; cursor: pointer; transition: transform 0.3s; align-self: flex-end;
-      }
+      .input-group input, .input-group textarea { background: #fff; border: 1px solid var(--line); border-radius: 15px; padding: 15px 20px; font-family: inherit; font-size: 0.95rem; }
+      .feedback-btn { background: #000; color: #fff; border: 0; padding: 15px 30px; border-radius: 99px; font-weight: 700; cursor: pointer; transition: transform 0.3s; align-self: flex-end; }
       .feedback-btn:hover { transform: translateY(-2px); }
+
+      /* Archive Item Controls */
+      .plan-controls { display: flex; gap: 10px; margin-top: 15px; justify-content: flex-end; }
+      .control-btn { background: transparent; border: 0; font-size: 0.75rem; font-weight: 800; cursor: pointer; opacity: 0.4; transition: opacity 0.3s; padding: 5px 10px; }
+      .control-btn:hover { opacity: 1; }
+      .control-btn.delete { color: #e53e3e; }
+
+      .archive-section { margin-top: 200px; padding-top: 60px; border-top: 1px solid var(--line); text-align: center; opacity: 0.4; transition: opacity 0.5s; }
+      .archive-section:hover { opacity: 1; }
+
+      .loading-container { display: flex; flex-direction: column; align-items: center; padding: 150px 0; gap: 40px; }
+      .spinner { width: 70px; height: 70px; border: 1px solid #eee; border-top: 1px solid #000; border-radius: 50%; animation: spin 1.8s cubic-bezier(0.6, 0, 0.4, 1) infinite; }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
   </head>
   <body>
+    <!-- Auth Nav -->
+    <nav class="auth-nav" id="auth-nav">
+      <button class="nav-btn" id="open-auth-modal">LOGIN / JOIN</button>
+    </nav>
+
+    <!-- Auth Modal -->
+    <div class="modal-overlay" id="auth-modal">
+      <div class="modal-content">
+        <h3 id="auth-title">Welcome</h3>
+        <div class="auth-form">
+          <input type="email" id="auth-email" placeholder="Email" />
+          <input type="password" id="auth-password" placeholder="Password" />
+          <button class="auth-btn" id="auth-submit-btn">SIGN IN</button>
+        </div>
+        <p class="auth-toggle" id="auth-toggle-mode">Don't have an account? Join us</p>
+      </div>
+    </div>
+
     <main class="app-shell">
       <section class="hero-section">
         <p style="font-weight: 900; font-size: 0.7rem; letter-spacing: 0.3em; opacity: 0.3; margin-bottom: 20px;">01. TRAVEL ARCHITECTURE</p>
@@ -359,9 +274,6 @@
                 <option value="강릉">강릉</option><option value="전주">전주</option><option value="대구">대구</option>
                 <option value="대전">대전</option><option value="광주">광주</option><option value="인천">인천</option>
                 <option value="여수">여수</option><option value="경주">경주</option><option value="속초">속초</option><option value="춘천">춘천</option>
-              </optgroup>
-              <optgroup label="해외 여행 (준비 중)">
-                <option value="도쿄">도쿄 (Tokyo)</option><option value="오사카">오사카 (Osaka)</option>
               </optgroup>
             </select>
           </label>
@@ -446,7 +358,6 @@
             <p style="font-weight:900; font-size:0.7rem; letter-spacing:0.3em; margin-bottom:15px; opacity:0.3;">WEB EVALUATION</p>
             <h3 style="font-size:1.8rem; font-weight:100; margin-bottom:10px;">How was your experience?</h3>
             <p style="color:var(--muted); font-size:0.9rem; font-weight:300;">당신의 소중한 평가가 AI Travel Lab을 성장시킵니다.</p>
-            
             <div class="rating-stars" id="rating-stars">
               <button class="star-btn" data-value="1">○</button>
               <button class="star-btn" data-value="2">○</button>
@@ -454,15 +365,11 @@
               <button class="star-btn" data-value="4">○</button>
               <button class="star-btn" data-value="5">○</button>
             </div>
-            
             <div class="input-group">
               <textarea id="rating-comment" placeholder="짧은 의견 한마디 (선택)" style="min-height:60px;"></textarea>
               <button class="feedback-btn" id="submit-rating">평가 제출</button>
             </div>
-
-            <div id="average-rating" style="margin-top:40px; border-top:1px solid var(--line); padding-top:20px; font-size:0.85rem; font-weight:700;">
-              평균 별점: 로딩 중...
-            </div>
+            <div id="average-rating" style="margin-top:40px; border-top:1px solid var(--line); padding-top:20px; font-size:0.85rem; font-weight:700;">평균 별점: 로딩 중...</div>
           </div>
 
           <div class="comments-box">
@@ -472,9 +379,7 @@
               <textarea id="comment-content" placeholder="이곳에 댓글을 남겨주세요." style="min-height:100px;"></textarea>
               <button class="feedback-btn" id="submit-comment">댓글 작성</button>
             </div>
-            <div class="comment-list" id="comment-list">
-              <!-- 댓글 로딩 영역 -->
-            </div>
+            <div class="comment-list" id="comment-list"></div>
           </div>
         </div>
       </section>
@@ -499,21 +404,13 @@
       const button = document.querySelector("#run-button");
       const result = document.querySelector("#result");
 
-      // 날짜 기본값 설정 (오늘 & 3일 뒤)
       const today = new Date();
       const defaultEnd = new Date();
       defaultEnd.setDate(today.getDate() + 2);
-
       startDateInput.value = today.toISOString().split('T')[0];
       endDateInput.value = defaultEnd.toISOString().split('T')[0];
 
-      function calculateDays(start, end) {
-        const s = new Date(start);
-        const e = new Date(end);
-        const diff = e.getTime() - s.getTime();
-        return Math.max(1, Math.ceil(diff / (1000 * 3600 * 24)) + 1);
-      }
-
+      function calculateDays(start, end) { const s = new Date(start); const e = new Date(end); const diff = e.getTime() - s.getTime(); return Math.max(1, Math.ceil(diff / (1000 * 3600 * 24)) + 1); }
       function escapeHtml(v) { return String(v||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
       function yesNo(v) { return v ? "있음" : "없음"; }
 
@@ -523,193 +420,78 @@
         const tel = item.tel || "";
         const img = item.image ? `<img src="${item.image}" alt="${escapeHtml(title)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';" />` : "";
         const fallbackImg = `<div class="fallback-img" style="display:${item.image ? 'none' : 'grid'}; place-items:center; height:100%; color:#eee; font-size:0.6rem; font-weight:900; background:#fafafa;">NO IMAGE</div>`;
-        
-        // 메인 링크 결정
         let mainUrl = `https://map.naver.com/v5/search/${encodeURIComponent(title)}`; 
         let subLink = "";
-        
         if (category === "Stay" || category === "Lodging") {
-          // 숙박: Agoda 정밀 검색 (목적지 + 이름 + 주소 일부 조합)
-          const shortAddr = addr.split(" ").slice(0, 2).join(" ");
-          mainUrl = `https://www.agoda.com/ko-kr/search?text=${encodeURIComponent(destination + " " + title + " " + shortAddr)}`;
-          subLink = `<a href="https://www.google.com/search?q=${encodeURIComponent(destination + " " + title + " 후기")}" target="_blank" style="font-size:0.65rem; color:var(--muted); text-decoration:underline;">리뷰 보기</a>`;
-        } else if (category === "Taste") {
-          // 맛집: 네이버 지도 + 캐치테이블/망고플레이트 검색 유도
-          mainUrl = `https://map.naver.com/v5/search/${encodeURIComponent(destination + " " + title)}`;
-          subLink = `<a href="https://www.google.com/search?q=${encodeURIComponent(destination + " " + title + " 맛집 후기")}" target="_blank" style="font-size:0.65rem; color:var(--muted); text-decoration:underline;">리뷰 보기</a>`;
+          const destStr = destination ? `${destination} ` : "";
+          mainUrl = `https://www.agoda.com/ko-kr/search?text=${encodeURIComponent(destStr + title)}`;
+          subLink = `<a href="https://www.google.com/search?q=${encodeURIComponent(destStr + title + " 후기")}" target="_blank" style="font-size:0.65rem; color:var(--muted); text-decoration:underline;">리뷰 보기</a>`;
         } else {
-          // 관광/행사 등
           subLink = `<a href="https://www.google.com/search?q=${encodeURIComponent(destination + " " + title + " 후기")}" target="_blank" style="font-size:0.65rem; color:var(--muted); text-decoration:underline;">정보 더보기</a>`;
         }
-        
         const telHtml = tel ? `<div class="item-meta" style="color:var(--accent); font-weight:500; margin-top:2px;">${escapeHtml(tel)}</div>` : "";
-        
-        return `
-          <div class="circle-item">
-            <a href="${mainUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none; color:inherit; display:block;">
-              <div class="circle-mask" style="position:relative;">${img}${fallbackImg}</div>
-              <div class="item-title" title="${escapeHtml(title)}">${escapeHtml(title)}</div>
-              <div class="item-meta" title="${escapeHtml(addr)}">${escapeHtml(addr)}</div>
-            </a>
-            ${telHtml}
-            <div style="margin-top:5px;">${subLink}</div>
-          </div>
-        `;
+        return `<div class="circle-item">
+          <a href="${mainUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none; color:inherit; display:block;">
+            <div class="circle-mask" style="position:relative;">${img}${fallbackImg}</div>
+            <div class="item-title" title="${escapeHtml(title)}">${escapeHtml(title)}</div>
+            <div class="item-meta" title="${escapeHtml(addr)}">${escapeHtml(addr)}</div>
+          </a>
+          ${telHtml}<div style="margin-top:5px;">${subLink}</div></div>`;
       }
 
-      function renderEmptyState(message) {
-        return `
-          <div class="empty-state">
-            <div class="empty-state-icon">○</div>
-            <p>${escapeHtml(message || "추천할 정보가 없습니다.")}</p>
-          </div>
-        `;
-      }
-
-      function renderAccordion(title, contentHtml) {
-        return `
-          <details class="details-accordion">
-            <summary>${title}</summary>
-            <div class="details-content">${contentHtml}</div>
-          </details>
-        `;
-      }
+      function renderEmptyState(message) { return `<div class="empty-state"><div class="empty-state-icon">○</div><p>${escapeHtml(message || "추천할 정보가 없습니다.")}</p></div>`; }
+      function renderAccordion(title, contentHtml) { return `<details class="details-accordion"><summary>${title}</summary><div class="details-content">${contentHtml}</div></details>`; }
 
       function renderWeatherCard(res) {
         const daily = res.daily_forecast || [];
         if (daily.length === 0) return `<article class="result-card"><h2>Weather</h2>${renderEmptyState("날씨 정보를 불러올 수 없습니다.")}</article>`;
-        
-        const weatherHtml = `
-          <div class="circle-grid" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px;">
-            ${daily.map(d => `
-              <div class="info-box" style="padding:20px; ${d.temperature === '추후 업데이트' ? 'opacity:0.6; background:#fcfcfc;' : ''}">
-                <p class="info-label">${escapeHtml(d.date)}</p>
-                <p class="info-value" style="font-size:1.2rem; font-weight:700; margin-bottom:5px;">${escapeHtml(d.condition)}</p>
-                <div style="font-size:0.85rem; color:var(--muted);">
-                  <span>기온: ${escapeHtml(d.temperature)}</span><br/>
-                  <span>강수: ${escapeHtml(d.rain_probability)}</span>
-                </div>
-              </div>
-            `).join("")}
-          </div>
-        `;
-        return `<article class="result-card"><h2>Weather</h2><p class="summary-text">${escapeHtml(res.summary)}</p>${renderAccordion("여행 기간 전체 날씨 확인", weatherHtml)}</article>`;
-      }
-
-      function getTransportBookingLink(method) {
-        if (!method) return { url: "https://map.naver.com/v5/directions/-/-/-/transit", label: "경로 검색" };
-        if (method.includes("KTX") || method.includes("기차")) return { url: "https://www.letskorail.com/", label: "코레일 예매" };
-        if (method.includes("고속") || method.includes("시외")) return { url: "https://www.kobus.co.kr/", label: "고속버스 예매" };
-        if (method.includes("항공")) return { url: "https://flight.naver.com/", label: "항공권 예매" };
-        if (method.includes("선박")) return { url: "https://island.haewoon.co.kr/", label: "승선권 예매" };
-        return { url: "https://map.naver.com/v5/directions/-/-/-/transit", label: "경로 검색" };
+        const weatherHtml = `<div class="circle-grid" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px;">
+          ${daily.map(d => `<div class="info-box" style="padding:20px; ${d.temperature === '추후 업데이트' ? 'opacity:0.6; background:#fcfcfc;' : ''}">
+            <p class="info-label">${escapeHtml(d.date)}</p><p class="info-value" style="font-size:1.2rem; font-weight:700; margin-bottom:5px;">${escapeHtml(d.condition)}</p>
+            <div style="font-size:0.85rem; color:var(--muted);"><span>기온: ${escapeHtml(d.temperature)}</span><br/><span>강수: ${escapeHtml(d.rain_probability)}</span></div></div>`).join("")}</div>`;
+        return `<article class="result-card"><h2>Weather</h2><p class="summary-text">${escapeHtml(res.summary)}</p>${renderAccordion("전체 날씨 확인", weatherHtml)}</article>`;
       }
 
       function renderTransportCard(res) {
         const routes = res.routes || [];
         if (routes.length === 0) return `<article class="result-card"><h2>Transport</h2>${renderEmptyState("교통 경로 정보를 찾을 수 없습니다.")}</article>`;
-        
-        const routesHtml = `<div class="timeline-list">${routes.map((r, i) => {
-          const booking = getTransportBookingLink(r.method);
-          return `
-          <div class="timeline-item">
-            <div class="timeline-icon">${i+1}</div>
+        const routesHtml = `<div class="timeline-list">${routes.map((r, i) => `
+          <div class="timeline-item"><div class="timeline-icon">${i+1}</div>
             <div class="timeline-block" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
-              <div>
-                <strong>${escapeHtml(r.method)}</strong>
-                <p>${escapeHtml(r.from)} → ${escapeHtml(r.to)} (${escapeHtml(r.estimated_time)})</p>
-              </div>
-              <a href="${booking.url}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:10px 20px; background:#000; color:#fff; text-decoration:none; border-radius:99px; font-size:0.85rem; font-weight:700; transition:transform 0.2s;">
-                ${booking.label} ↗
-              </a>
-            </div>
-          </div>`;
-        }).join("")}</div>`;
-        return `<article class="result-card"><h2>Transport</h2><p class="summary-text">${escapeHtml(res.summary)}</p>${renderAccordion("Review Optimized Routes", routesHtml)}</article>`;
+              <div><strong>${escapeHtml(r.method)}</strong><p>${escapeHtml(r.from)} → ${escapeHtml(r.to)} (${escapeHtml(r.estimated_time)})</p></div>
+              <a href="#" target="_blank" style="display:inline-block; padding:10px 20px; background:#000; color:#fff; text-decoration:none; border-radius:99px; font-size:0.85rem; font-weight:700;">예매 ↗</a>
+            </div></div>`).join("")}</div>`;
+        return `<article class="result-card"><h2>Transport</h2><p class="summary-text">${escapeHtml(res.summary)}</p>${renderAccordion("Optimized Routes", routesHtml)}</article>`;
       }
 
       function renderGridCard(summary, items, category, destination) {
         if (!items || items.length === 0) return `<article class="result-card"><h2>${category}</h2>${renderEmptyState(`${category} 추천 항목이 없습니다.`)}</article>`;
-        
         const gridHtml = `<div class="circle-grid">${(items||[]).map(i => renderCircleItem(i, category, destination)).join("")}</div>`;
-        return `<article class="result-card"><h2>${category}</h2><p class="summary-text">${escapeHtml(summary)}</p>${renderAccordion(`Explore Recommended ${category}`, gridHtml)}</article>`;
+        return `<article class="result-card"><h2>${category}</h2><p class="summary-text">${escapeHtml(summary)}</p>${renderAccordion(`Recommended ${category}`, gridHtml)}</article>`;
       }
 
       function renderScheduleCard(res) {
-        const strategy = res.duration_strategy || {};
-        const strategyHtml = `<div class="info-grid">
-          <div class="info-box"><p class="info-label">Pace</p><p class="info-value">${escapeHtml(strategy.pace)}</p></div>
-          <div class="info-box"><p class="info-label">Places</p><p class="info-value">${escapeHtml(strategy.recommended_tour_count)}</p></div>
-          <div class="info-box"><p class="info-label">Lodging</p><p class="info-value">${yesNo(strategy.lodging_required)}</p></div>
-        </div>`;
-        
-        const scheduleHtml = `
-          <div class="itinerary-grid">
-            ${(res.daily_itinerary||[]).map(day => `
-              <div class="day-card">
-                <div class="day-card-header">
-                  <h3>Day ${day.day}</h3>
-                  <p>${escapeHtml(day.title)}</p>
-                </div>
-                <details class="details-accordion day-accordion">
-                  <summary>View Timeline</summary>
-                  <div class="details-content">
-                    <div class="timeline-list" style="padding-left:30px;">
-                      ${(day.time_blocks||[]).map(b => `
-                        <div class="timeline-item">
-                          <div class="timeline-icon" style="width:28px; height:28px; left:-38px;">${escapeHtml(b.time.slice(0,2))}</div>
-                          <div class="timeline-block" style="padding:15px 20px; border-radius:25px;">
-                            <strong style="font-size:1rem;">${escapeHtml(b.title)}</strong>
-                            <p style="font-size:0.85rem; margin:0;">${escapeHtml(b.memo)}</p>
-                          </div>
-                        </div>`).join("")}
-                    </div>
-                  </div>
-                </details>
-              </div>`).join("")}
-          </div>`;
-
-        return `
-          <article class="result-card">
-            <h2>Itinerary</h2>
-            <p class="summary-text">${escapeHtml(res.summary || "Your curated journey flow.")}</p>
-            ${renderAccordion("View Strategy & Settings", strategyHtml)}
-            ${scheduleHtml}
-          </article>
-        `;
+        const scheduleHtml = `<div class="itinerary-grid">
+          ${(res.daily_itinerary||[]).map(day => `
+            <div class="day-card"><div class="day-card-header"><h3>Day ${day.day}</h3><p>${escapeHtml(day.title)}</p></div>
+              <details class="details-accordion day-accordion"><summary>Timeline</summary><div class="details-content">
+                <div class="timeline-list" style="padding-left:30px;">
+                  ${(day.time_blocks||[]).map(b => `
+                    <div class="timeline-item"><div class="timeline-icon" style="width:28px; height:28px; left:-38px;">${escapeHtml(b.time.slice(0,2))}</div>
+                      <div class="timeline-block" style="padding:15px 20px; border-radius:25px;"><strong style="font-size:1rem;">${escapeHtml(b.title)}</strong><p style="font-size:0.85rem; margin:0;">${escapeHtml(b.description || b.memo)}</p></div>
+                    </div>`).join("")}
+                </div></div></details></div>`).join("")}</div>`;
+        return `<article class="result-card"><h2>Itinerary</h2><p class="summary-text">${escapeHtml(res.summary)}</p>${scheduleHtml}</article>`;
       }
 
       function renderBudgetCard(res) {
         const budget = res.estimated_budget || {};
-        const tips = res.saving_tips || [];
-        
-        // 항목별 한글 명칭 매핑
-        const categoryMap = {
-          "transportation": "교통비",
-          "accommodation": "숙박비",
-          "food": "식비",
-          "activities": "활동비",
-          "buffer": "예비비"
-        };
-
-        const budgetHtml = `
-          <div class="info-grid" style="margin-bottom:30px;">
-            <div class="info-box">
-              <p class="info-label">Total Budget</p>
-              <p class="info-value" style="font-weight:700; color:#000;">${escapeHtml(budget.total || "계산 중")}</p>
-            </div>
-          </div>
-          <div style="display:grid; gap:12px; margin-bottom:30px;">
-            ${Object.entries(budget).filter(([k]) => k !== 'total').map(([key, value]) => `
-              <div style="display:flex; justify-content:space-between; padding:15px 25px; border-radius:20px; background:#f9f9f9; border:1px solid #eee;">
-                <span style="font-weight:600;">${escapeHtml(categoryMap[key] || key)}</span>
-                <span style="color:var(--muted);">${escapeHtml(value)}</span>
-              </div>
-            `).join("")}
-          </div>
-          ${renderList("Budget Tips", tips)}
-        `;
-        return `<article class="result-card"><h2>Budget</h2><p class="summary-text">${escapeHtml(res.summary)}</p>${renderAccordion("예산 산출 내역 상세 보기", budgetHtml)}</article>`;
+        const budgetHtml = `<div class="info-grid" style="margin-bottom:30px;"><div class="info-box"><p class="info-label">Total</p><p class="info-value" style="font-weight:700;">${escapeHtml(budget.total)}</p></div></div>
+          <div style="display:grid; gap:12px;">${Object.entries(budget).filter(([k]) => k !== 'total').map(([key, val]) => `
+            <div style="display:flex; justify-content:space-between; padding:15px 25px; border-radius:20px; background:#f9f9f9; border:1px solid #eee;">
+              <span style="font-weight:600; text-transform:capitalize;">${key}</span><span style="color:var(--muted);">${escapeHtml(val)}</span>
+            </div>`).join("")}</div>`;
+        return `<article class="result-card"><h2>Budget</h2><p class="summary-text">${escapeHtml(res.summary)}</p>${renderAccordion("Detailed Budget", budgetHtml)}</article>`;
       }
 
       function renderAgentResult(r) {
@@ -721,258 +503,169 @@
         if (r.agent === "travel_transport_agent") return renderTransportCard(r);
         if (r.agent === "travel_schedule_agent") return renderScheduleCard(r);
         if (r.agent === "travel_budget_agent") return renderBudgetCard(r);
-        return `<article class="result-card"><h2>${escapeHtml(r.agent.split("_")[1].toUpperCase()) || "INFO"}</h2><p class="summary-text">${escapeHtml(r.summary)}</p></article>`;
-      }
-
-      function renderList(title, items) {
-        if (!Array.isArray(items) || items.length === 0) return "";
-        return `
-          <div style="margin-top:20px;">
-            <p style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:var(--accent); margin-bottom:10px; letter-spacing:0.05em;">${escapeHtml(title)}</p>
-            <ul style="list-style:none; padding:0; display:grid; gap:8px;">
-              ${items.map(i => `<li style="font-size:0.95rem; color:var(--muted); padding-left:15px; position:relative;">
-                <span style="position:absolute; left:0; color:var(--accent);">•</span>${escapeHtml(i)}
-              </li>`).join("")}
-            </ul>
-          </div>
-        `;
-      }
-
-      // --- SAVED PLANS LOGIC ---
-      const savedPlansStorageKey = "saved_travel_plans";
-      const savedPlanLastViewedKey = "saved_travel_plans_last_viewed";
-      const savedPlanMaxCount = 30;
-      let currentWorkflowResult = null;
-      let savedPlansExpanded = false;
-
-      function generateSavedPlanId(createdAt) {
-        return `plan_${new Date(createdAt).getTime()}_${Math.random().toString(36).slice(2, 9)}`;
-      }
-
-      function readSavedPlans() {
-        try {
-          const raw = localStorage.getItem(savedPlansStorageKey);
-          return raw ? JSON.parse(raw) : [];
-        } catch { return []; }
-      }
-
-      function writeSavedPlans(plans) {
-        try {
-          localStorage.setItem(savedPlansStorageKey, JSON.stringify(plans.slice(0, savedPlanMaxCount)));
-          return true;
-        } catch { return false; }
-      }
-
-      function saveCurrentPlan() {
-        if (!currentWorkflowResult) return alert("저장할 플랜이 없습니다. 먼저 여정을 설계해 주세요.");
-        const plans = readSavedPlans();
-        const destination = currentWorkflowResult.input_data_summary?.destination || "Unknown";
-        const newPlan = {
-          id: generateSavedPlanId(new Date().toISOString()),
-          title: `JOURNEY TO ${destination.toUpperCase()}`,
-          created_at: new Date().toISOString(),
-          result: currentWorkflowResult
-        };
-        plans.unshift(newPlan);
-        if (writeSavedPlans(plans)) {
-          alert("여정이 성공적으로 보관되었습니다.");
-          renderSavedPlans();
-        }
-      }
-
-      function renderSavedPlans() {
-        const plans = readSavedPlans();
-        const listContainer = document.querySelector("#saved-plan-list");
-        if (!savedPlansExpanded) {
-          listContainer.innerHTML = "";
-          return;
-        }
-        if (plans.length === 0) {
-          listContainer.innerHTML = `<p style="padding:40px; text-align:center; color:var(--muted); font-weight:300;">보관된 여정이 없습니다.</p>`;
-          return;
-        }
-        listContainer.innerHTML = `
-          <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:20px; margin-top:30px;">
-            ${plans.map(p => `
-              <div class="timeline-block" style="cursor:pointer; text-align:left;" onclick="loadSavedPlan('${p.id}')">
-                <p style="font-size:0.7rem; font-weight:900; opacity:0.3; margin-bottom:5px;">${new Date(p.created_at).toLocaleDateString()}</p>
-                <strong>${escapeHtml(p.title)}</strong>
-                <p style="font-size:0.85rem;">클릭하여 다시 보기</p>
-              </div>
-            `).join("")}
-          </div>
-        `;
-      }
-
-      function loadSavedPlan(id) {
-        const plans = readSavedPlans();
-        const plan = plans.find(p => p.id === id);
-        if (plan) {
-          currentWorkflowResult = plan.result;
-          displayWorkflowResult(plan.result);
-          window.scrollTo({ top: result.offsetTop - 50, behavior: 'smooth' });
-        }
+        return `<article class="result-card"><h2>${escapeHtml(r.agent.split("_")[1].toUpperCase())}</h2><p class="summary-text">${escapeHtml(r.summary)}</p></article>`;
       }
 
       function displayWorkflowResult(data) {
-        const destination = data.input_data_summary?.destination || data.input_data?.destination || "Unknown";
-        const filteredResults = data.agent_results.filter(r => r.agent !== "travel_planning_agent" && r.agent !== "travel_destination_agent");
-        result.innerHTML = `<h1 style="font-weight:100; font-size:6rem; margin-bottom:120px; text-transform:uppercase; letter-spacing:-0.06em; text-align:center;">PLAN FOR<br/>${escapeHtml(destination)}</h1>` + 
-                          filteredResults.map(renderAgentResult).join("");
+        const dest = data.input_data?.destination || "Destination";
+        const filtered = data.agent_results.filter(r => r.agent !== "travel_planning_agent" && r.agent !== "travel_destination_agent");
+        result.innerHTML = `<h1 style="font-weight:100; font-size:6rem; margin-bottom:120px; text-transform:uppercase; letter-spacing:-0.06em; text-align:center;">PLAN FOR<br/>${escapeHtml(dest)}</h1>` + filtered.map(renderAgentResult).join("");
       }
 
-      document.querySelector("#save-plan-button").addEventListener("click", saveCurrentPlan);
-      document.querySelector("#toggle-saved-plans-button").addEventListener("click", () => {
-        savedPlansExpanded = !savedPlansExpanded;
-        document.querySelector("#toggle-saved-plans-button").textContent = savedPlansExpanded ? "보관함 닫기" : "보관함 열기";
-        renderSavedPlans();
+      // --- SAVED PLANS LOGIC & AUTH ---
+      const savedPlansStorageKey = "saved_travel_plans";
+      let currentWorkflowResult = null;
+      let savedPlansExpanded = false;
+      let currentUser = null;
+      let authMode = "login";
+
+      const authModal = document.querySelector("#auth-modal");
+      const authTitle = document.querySelector("#auth-title");
+      const authEmail = document.querySelector("#auth-email");
+      const authPassword = document.querySelector("#auth-password");
+      const authSubmitBtn = document.querySelector("#auth-submit-btn");
+      const authToggleMode = document.querySelector("#auth-toggle-mode");
+      const authNav = document.querySelector("#auth-nav");
+
+      const storedUser = localStorage.getItem("onesown_user");
+      if (storedUser) { currentUser = JSON.parse(storedUser); updateAuthUI(); }
+
+      function updateAuthUI() {
+        if (currentUser) {
+          authNav.innerHTML = `<span class="user-info">${currentUser.email}</span><button class="nav-btn" onclick="logout()">LOGOUT</button>`;
+          authModal.style.display = "none";
+        } else {
+          authNav.innerHTML = `<button class="nav-btn" onclick="showAuthModal()">LOGIN / JOIN</button>`;
+        }
+        if (savedPlansExpanded) renderSavedPlans();
+      }
+
+      function showAuthModal() { authModal.style.display = "grid"; }
+      function logout() { currentUser = null; localStorage.removeItem("onesown_user"); updateAuthUI(); alert("Logged out."); }
+
+      authModal.addEventListener("click", (e) => { if (e.target === authModal) authModal.style.display = "none"; });
+      authToggleMode.addEventListener("click", () => {
+        authMode = authMode === "login" ? "signup" : "login";
+        authTitle.textContent = authMode === "login" ? "Welcome" : "Join Us";
+        authSubmitBtn.textContent = authMode === "login" ? "SIGN IN" : "CREATE ACCOUNT";
+        authToggleMode.textContent = authMode === "login" ? "Don't have an account? Join us" : "Already have an account? Sign in";
       });
 
-      // 탭 전환 로직
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-          
-          btn.classList.add('active');
-          document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
-        });
-      });
-
-      async function runWorkflow() {
-        const days = calculateDays(startDateInput.value, endDateInput.value);
-        
-        // 추가 조건 수집
-        const companions = Array.from(document.querySelectorAll('input[name="companion"]:checked')).map(c => c.value);
-        const themes = Array.from(document.querySelectorAll('input[name="theme"]:checked')).map(c => c.value);
-        const priority = document.querySelector('input[name="priority"]:checked')?.value || "";
-
-        const payload = {
-          user_request: textarea.value,
-          destination: destinationSelect.value,
-          origin: originSelect.value,
-          days: days,
-          budget_level: budgetSelect.value,
-          requested_features: Array.from(document.querySelectorAll('input[name="feature"]:checked')).map(c => c.value),
-          additional_conditions: {
-            companions,
-            themes,
-            priority
-          }
-        };
-
-        result.innerHTML = `
-          <div class="loading-container">
-            <div class="spinner"></div>
-            <p style="font-weight:900; font-size:2rem; letter-spacing:0.3em; margin-top:20px; color:#000;">CURATING YOUR JOURNEY</p>
-          </div>`;
-        
+      authSubmitBtn.addEventListener("click", async () => {
+        const email = authEmail.value; const password = authPassword.value;
+        if (!email || !password) return alert("Please fill in all fields.");
+        const endpoint = authMode === "login" ? "/auth/login" : "/auth/signup";
         try {
-          const resp = await fetch("/run-workflow", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-          if (!resp.ok) {
-            const errData = await resp.json().catch(() => ({}));
-            throw new Error(errData.detail || `Server error: ${resp.status}`);
-          }
-          
+          const resp = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
           const data = await resp.json();
-          if (!data || !Array.isArray(data.agent_results)) {
-            throw new Error("올바른 설계 데이터를 받지 못했습니다.");
-          }
+          if (!resp.ok) throw new Error(data.detail || "Auth failed");
+          if (authMode === "login") {
+            currentUser = data.user; localStorage.setItem("onesown_user", JSON.stringify(currentUser));
+            await migrateLocalPlans(); updateAuthUI();
+          } else { alert("Account created. Please sign in."); authToggleMode.click(); }
+        } catch (e) { alert(e.message); }
+      });
 
-          currentWorkflowResult = data; // 저장 기능을 위해 결과 보관
-          displayWorkflowResult(data);
-          
-          window.scrollTo({ top: result.offsetTop - 50, behavior: 'smooth' });
-        } catch (e) {
-          console.error("Workflow Error:", e);
-          result.innerHTML = `<div class="result-card" style="text-align:center;"><p style="color:#e53e3e; font-weight:900; margin-bottom:10px; font-size:1.5rem;">죄송합니다. 여정을 설계하는 중에 문제가 발생했습니다.</p><p style="color:#000; font-size:1.1rem; font-weight:700;">사유: ${escapeHtml(e.message)}</p></div>`;
+      async function migrateLocalPlans() {
+        const localPlans = readSavedPlans(); if (localPlans.length === 0) return;
+        for (const plan of localPlans) {
+          try { await fetch(`/api/plans?user_id=${currentUser.id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: plan.title, destination: plan.result.input_data?.destination || "Unknown", content_json: plan.result }) }); }
+          catch (e) { console.error(e); }
+        }
+        localStorage.removeItem(savedPlansStorageKey);
+      }
+
+      function generateSavedPlanId(createdAt) { return `plan_${new Date(createdAt).getTime()}_${Math.random().toString(36).slice(2, 9)}`; }
+      function readSavedPlans() { try { const raw = localStorage.getItem(savedPlansStorageKey); return raw ? JSON.parse(raw) : []; } catch { return []; } }
+      function writeSavedPlans(plans) { try { localStorage.setItem(savedPlansStorageKey, JSON.stringify(plans.slice(0, 30))); return true; } catch { return false; } }
+
+      async function saveCurrentPlan() {
+        if (!currentWorkflowResult) return alert("저장할 플랜이 없습니다.");
+        const dest = currentWorkflowResult.input_data?.destination || "Unknown";
+        const title = prompt("여행 계획의 제목을 입력하세요:", `JOURNEY TO ${dest.toUpperCase()}`);
+        if (!title) return;
+        if (currentUser) {
+          try {
+            const resp = await fetch(`/api/plans?user_id=${currentUser.id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, destination: dest, content_json: currentWorkflowResult }) });
+            if (resp.ok) { alert("서버에 보관되었습니다."); renderSavedPlans(); }
+          } catch (e) { alert("저장 실패"); }
+        } else {
+          const plans = readSavedPlans(); plans.unshift({ id: generateSavedPlanId(new Date().toISOString()), title, created_at: new Date().toISOString(), result: currentWorkflowResult });
+          writeSavedPlans(plans); alert("브라우저에 임시 보관되었습니다."); renderSavedPlans();
         }
       }
 
-      button.addEventListener("click", runWorkflow);
+      async function deletePlan(planId, isLocal) {
+        if (!confirm("정말 삭제하시겠습니까?")) return;
+        if (isLocal) { const plans = readSavedPlans().filter(p => p.id !== planId); writeSavedPlans(plans); renderSavedPlans(); }
+        else { try { const resp = await fetch(`/api/plans/${planId}?user_id=${currentUser.id}`, { method: "DELETE" }); if (resp.ok) renderSavedPlans(); } catch (e) { alert("삭제 실패"); } }
+      }
+
+      async function editPlanTitle(planId, oldTitle, isLocal) {
+        const newTitle = prompt("새 제목:", oldTitle); if (!newTitle || newTitle === oldTitle) return;
+        if (isLocal) { const plans = readSavedPlans(); const plan = plans.find(p => p.id === planId); if (plan) { plan.title = newTitle; writeSavedPlans(plans); renderSavedPlans(); } }
+        else { try { const resp = await fetch(`/api/plans/${planId}?user_id=${currentUser.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: newTitle }) }); if (resp.ok) renderSavedPlans(); } catch (e) { alert("수정 실패"); } }
+      }
+
+      async function renderSavedPlans() {
+        const listContainer = document.querySelector("#saved-plan-list");
+        if (!savedPlansExpanded) { listContainer.innerHTML = ""; return; }
+        let plans = [], isServer = false;
+        if (currentUser) {
+          try { const resp = await fetch(`/api/plans?user_id=${currentUser.id}`); plans = await resp.json(); isServer = true; } 
+          catch (e) { plans = readSavedPlans(); }
+        } else { plans = readSavedPlans(); }
+        if (plans.length === 0) { listContainer.innerHTML = `<p style="padding:40px; text-align:center; color:var(--muted);">보관된 여정이 없습니다.</p>`; return; }
+        listContainer.innerHTML = `<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:20px; margin-top:30px;">
+          ${plans.map(p => {
+            const res = isServer ? p.content_json : p.result;
+            return `<div class="timeline-block" style="text-align:left;">
+              <div style="cursor:pointer;" onclick='loadSavedPlanData(${JSON.stringify(res).replace(/'/g, "&apos;")})'>
+                <p style="font-size:0.7rem; font-weight:900; opacity:0.3; margin-bottom:5px;">${new Date(p.created_at).toLocaleDateString()}</p>
+                <strong>${escapeHtml(p.title)}</strong>
+              </div>
+              <div class="plan-controls">
+                <button class="control-btn" onclick="editPlanTitle('${p.id}', '${escapeHtml(p.title)}', ${!isServer})">EDIT</button>
+                <button class="control-btn delete" onclick="deletePlan('${p.id}', ${!isServer})">DELETE</button>
+              </div></div>`;
+          }).join("")}</div>`;
+      }
+
+      function loadSavedPlanData(data) { currentWorkflowResult = data; displayWorkflowResult(data); window.scrollTo({ top: result.offsetTop - 50, behavior: 'smooth' }); }
 
       // --- FEEDBACK & COMMENTS LOGIC ---
-      let currentRating = 0;
-      const stars = document.querySelectorAll(".star-btn");
-      const commentList = document.querySelector("#comment-list");
-      const averageRating = document.querySelector("#average-rating");
+      let currentRating = 0; const stars = document.querySelectorAll(".star-btn");
+      const commentList = document.querySelector("#comment-list"); const averageRating = document.querySelector("#average-rating");
+      stars.forEach(s => { s.addEventListener("click", () => { currentRating = parseInt(s.dataset.value); stars.forEach(btn => { btn.classList.toggle("active", parseInt(btn.dataset.value) <= currentRating); btn.textContent = parseInt(btn.dataset.value) <= currentRating ? "●" : "○"; }); }); });
+      document.querySelector("#submit-rating").addEventListener("click", async () => { if (currentRating === 0) return alert("별점을 선택해 주세요."); const comment = document.querySelector("#rating-comment").value; try { const resp = await fetch("/ratings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ score: currentRating, comment }) }); if (resp.ok) { alert("평가가 제출되었습니다."); loadRatings(); document.querySelector("#rating-comment").value = ""; } } catch (e) { console.error(e); } });
+      document.querySelector("#submit-comment").addEventListener("click", async () => { const user_name = document.querySelector("#comment-user").value || "익명"; const content = document.querySelector("#comment-content").value; if (!content) return alert("댓글 내용을 입력해 주세요."); try { const resp = await fetch("/comments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_name, content }) }); if (resp.ok) { loadComments(); document.querySelector("#comment-content").value = ""; } } catch (e) { console.error(e); } });
+      async function loadComments() { try { const resp = await fetch("/comments"); const data = await resp.json(); commentList.innerHTML = data.reverse().map(c => `<div class="comment-item"><div class="comment-header"><span>${escapeHtml(c.user_name)}</span><span style="opacity:0.3; font-weight:300;">${new Date(c.created_at).toLocaleDateString()}</span></div><div class="comment-content">${escapeHtml(c.content)}</div></div>`).join(""); } catch (e) { console.error(e); } }
+      async function loadRatings() { try { const resp = await fetch("/ratings"); const data = await resp.json(); averageRating.innerHTML = `평균 별점: ● ${data.average} / 5.0 (${data.count}명 참여)`; } catch (e) { console.error(e); } }
 
-      // 별점 선택
-      stars.forEach(s => {
-        s.addEventListener("click", () => {
-          currentRating = parseInt(s.dataset.value);
-          stars.forEach(btn => {
-            btn.classList.toggle("active", parseInt(btn.dataset.value) <= currentRating);
-            btn.textContent = parseInt(btn.dataset.value) <= currentRating ? "●" : "○";
-          });
-        });
-      });
+      // 탭 전환 로직
+      document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); btn.classList.add('active'); document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active'); }); });
 
-      // 평가 제출
-      document.querySelector("#submit-rating").addEventListener("click", async () => {
-        if (currentRating === 0) return alert("별점을 선택해 주세요.");
-        const comment = document.querySelector("#rating-comment").value;
-        
+      async function runWorkflow() {
+        const days = calculateDays(startDateInput.value, endDateInput.value);
+        const companions = Array.from(document.querySelectorAll('input[name="companion"]:checked')).map(c => c.value);
+        const themes = Array.from(document.querySelectorAll('input[name="theme"]:checked')).map(c => c.value);
+        const priority = document.querySelector('input[name="priority"]:checked')?.value || "";
+        const payload = { user_request: textarea.value, destination: destinationSelect.value, origin: originSelect.value, days, budget_level: budgetSelect.value, requested_features: Array.from(document.querySelectorAll('input[name="feature"]:checked')).map(c => c.value), additional_conditions: { companions, themes, priority } };
+        result.innerHTML = `<div class="loading-container"><div class="spinner"></div><p style="font-weight:900; font-size:2rem; letter-spacing:0.3em; margin-top:20px;">CURATING YOUR JOURNEY</p></div>`;
         try {
-          const resp = await fetch("/ratings", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ score: currentRating, comment })
-          });
-          if (resp.ok) {
-            alert("평가가 제출되었습니다. 감사합니다!");
-            loadRatings();
-            document.querySelector("#rating-comment").value = "";
-          }
-        } catch (e) { console.error(e); }
-      });
-
-      // 댓글 제출
-      document.querySelector("#submit-comment").addEventListener("click", async () => {
-        const user_name = document.querySelector("#comment-user").value || "익명";
-        const content = document.querySelector("#comment-content").value;
-        if (!content) return alert("댓글 내용을 입력해 주세요.");
-
-        try {
-          const resp = await fetch("/comments", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_name, content })
-          });
-          if (resp.ok) {
-            loadComments();
-            document.querySelector("#comment-content").value = "";
-          }
-        } catch (e) { console.error(e); }
-      });
-
-      async function loadComments() {
-        try {
-          const resp = await fetch("/comments");
-          const data = await resp.json();
-          commentList.innerHTML = data.reverse().map(c => `
-            <div class="comment-item">
-              <div class="comment-header">
-                <span>${escapeHtml(c.user_name)}</span>
-                <span style="opacity:0.3; font-weight:300;">${new Date(c.created_at).toLocaleDateString()}</span>
-              </div>
-              <div class="comment-content">${escapeHtml(c.content)}</div>
-            </div>
-          `).join("");
-        } catch (e) { console.error(e); }
+          const resp = await fetch("/run-workflow", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+          const data = await resp.json(); if (!resp.ok) throw new Error(data.detail || "Server error");
+          currentWorkflowResult = data; displayWorkflowResult(data); window.scrollTo({ top: result.offsetTop - 50, behavior: 'smooth' });
+        } catch (e) { result.innerHTML = `<div class="result-card" style="text-align:center;"><p style="color:#e53e3e; font-weight:900; font-size:1.5rem;">죄송합니다. 오류가 발생했습니다.</p><p style="font-size:1.1rem;">사유: ${escapeHtml(e.message)}</p></div>`; }
       }
 
-      async function loadRatings() {
-        try {
-          const resp = await fetch("/ratings");
-          const data = await resp.json();
-          averageRating.innerHTML = `평균 별점: ● ${data.average} / 5.0 (${data.count}명 참여)`;
-        } catch (e) { console.error(e); }
-      }
+      button.addEventListener("click", runWorkflow);
+      document.querySelector("#save-plan-button").addEventListener("click", saveCurrentPlan);
+      document.querySelector("#toggle-saved-plans-button").addEventListener("click", () => {
+        savedPlansExpanded = !savedPlansExpanded; document.querySelector("#toggle-saved-plans-button").textContent = savedPlansExpanded ? "보관함 닫기" : "보관함 열기"; renderSavedPlans();
+      });
 
-      // 초기 로딩
-      loadComments();
-      loadRatings();
+      loadComments(); loadRatings();
     </script>
   </body>
 </html>

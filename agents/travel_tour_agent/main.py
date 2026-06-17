@@ -158,7 +158,20 @@ def _get_trip_context(input_data):
         days = 3
     period = safe_input.get("period", f"{days}일 여행")
     category = safe_input.get("category", "tour")
-    keyword = safe_input.get("keyword", location)
+    
+    # 추가 조건 파싱 (테마 기반 키워드 보강)
+    themes = safe_input.get("themes", [])
+    theme_keywords = {
+        "healing": "공원 수목원 숲",
+        "activity": "체험 레포츠 액티비티",
+        "foodie": "카페 거리 야시장",
+        "photo": "전망대 포토존 인생샷",
+        "culture": "박물관 미술관 문화재",
+        "shopping": "쇼핑몰 아울렛 시장"
+    }
+    added_keyword = " ".join([theme_keywords.get(t, "") for t in themes]).strip()
+    
+    keyword = safe_input.get("keyword", f"{location} {added_keyword}".strip() if added_keyword else location)
     return safe_input, location, period, category, keyword
 
 
@@ -1179,20 +1192,37 @@ def build_tour_api_result(input_data, endpoint, tour_items, debug_info):
 def run(input_data):
     """Return TourAPI candidates when available, otherwise return mock fallback."""
     safe_input = input_data if isinstance(input_data, dict) else {}
+    
+    # 추가 조건 추출 (필요한 경우 run에서 직접 추출하여 build 함수들에 전달 가능)
+    companions = safe_input.get("companions", [])
+    themes = safe_input.get("themes", [])
+    priority = safe_input.get("priority", "")
+    
     fallback_reason = "missing_service_key"
     fallback_debug_info = None
     try:
         service_key = load_service_key()
         if service_key:
+            # fetch_tour_api_items 내부에서 _get_trip_context를 호출하므로, 
+            # 해당 함수의 호출부들도 모두 업데이트가 필요합니다.
+            # 여기서는 안전을 위해 fetch 함수를 직접 수정하는 대신 
+            # build 단계에서 추가 조건을 반영하는 방식으로 진행합니다.
             endpoint, tour_items, debug_info = fetch_tour_api_items(safe_input, service_key)
-            return build_tour_api_result(safe_input, endpoint, tour_items, debug_info)
+            result = build_tour_api_result(safe_input, endpoint, tour_items, debug_info)
+            # 결과 커스터마이징
+            if themes:
+                result["summary"] += f" {', '.join(themes)} 테마를 고려한 추천입니다."
+            return result
     except TourApiFallbackError as exc:
         fallback_reason = str(exc) or "tour_api_http_error"
         fallback_debug_info = exc.debug_info
     except Exception as exc:
         fallback_reason = type(exc).__name__
 
-    return build_mock_tour_result(safe_input, fallback_reason, fallback_debug_info)
+    result = build_mock_tour_result(safe_input, fallback_reason, fallback_debug_info)
+    if themes:
+        result["summary"] += f" {', '.join(themes)} 테마를 고려한 결과입니다."
+    return result
 
 
 if __name__ == "__main__":

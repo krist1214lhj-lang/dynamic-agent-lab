@@ -5,24 +5,134 @@ import re
 import sys
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, List, Optional
 
 from dotenv import load_dotenv
-
-BASE_DIR = Path(__file__).resolve().parent
-load_dotenv(BASE_DIR / ".env", override=True)
-
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from datetime import datetime
 
+try:
+    from supabase import create_client, Client
+except ImportError:
+    Client = Any
+    create_client = None
+
 from validators.travel_validator import validate_and_correct
 
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env", override=True)
 
 app = FastAPI(title="dynamic-agent-lab")
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# --- Supabase 설정 ---
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
+
+supabase: Optional[Client] = None
+if SUPABASE_URL and SUPABASE_ANON_KEY and create_client:
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+    except Exception as e:
+        print(f"Supabase connection error: {e}")
+
+# --- 데이터 모델 정의 ---
+class Comment(BaseModel):
+    user_name: str = "Anonymous"
+    content: str
+    created_at: str | None = None
+
+class Rating(BaseModel):
+    score: int = Field(ge=1, le=5)
+    comment: str | None = ""
+    created_at: str | None = None
+
+class SignupRequest(BaseModel):
+    email: str
+    password: str
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class TravelPlanSaveRequest(BaseModel):
+    title: str
+    destination: str
+    content_json: dict
+
+class TravelPlanUpdateRequest(BaseModel):
+    title: Optional[str] = None
+    content_json: Optional[dict] = None
+
+# --- 인증 및 계획 관리 API ---
+@app.post("/auth/signup")
+async def signup(req: SignupRequest):
+    if not supabase: raise HTTPException(status_code=500, detail="Supabase not configured")
+    try:
+        res = supabase.auth.sign_up({"email": req.email, "password": req.password})
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/auth/login")
+async def login(req: LoginRequest):
+    if not supabase: raise HTTPException(status_code=500, detail="Supabase not configured")
+    try:
+        res = supabase.auth.sign_in_with_password({"email": req.email, "password": req.password})
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/api/plans")
+async def get_plans(user_id: str):
+    if not supabase: return []
+    try:
+        res = supabase.table("travel_plans").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
+        return res.data
+    except Exception as e:
+        print(f"Error fetching plans: {e}")
+        return []
+
+@app.post("/api/plans")
+async def save_plan(user_id: str, plan: TravelPlanSaveRequest):
+    if not supabase: raise HTTPException(status_code=500, detail="Supabase not configured")
+    data = {
+        "user_id": user_id,
+        "title": plan.title,
+        "destination": plan.destination,
+        "content_json": plan.content_json
+    }
+    try:
+        res = supabase.table("travel_plans").insert(data).execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.patch("/api/plans/{plan_id}")
+async def update_plan(plan_id: str, user_id: str, plan: TravelPlanUpdateRequest):
+    if not supabase: raise HTTPException(status_code=500, detail="Supabase not configured")
+    data = {}
+    if plan.title: data["title"] = plan.title
+    if plan.content_json: data["content_json"] = plan.content_json
+    data["updated_at"] = datetime.now().isoformat()
+    
+    try:
+        res = supabase.table("travel_plans").update(data).eq("id", plan_id).eq("user_id", user_id).execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.delete("/api/plans/{plan_id}")
+async def delete_plan(plan_id: str, user_id: str):
+    if not supabase: raise HTTPException(status_code=500, detail="Supabase not configured")
+    try:
+        supabase.table("travel_plans").delete().eq("id", plan_id).eq("user_id", user_id).execute()
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 # --- 댓글 및 평가 데이터 저장 경로 ---
 COMMENTS_FILE = BASE_DIR / "comments.json"
@@ -88,6 +198,7 @@ class WorkflowRequest(BaseModel):
     days: int | None = None
     budget_level: str | None = None
     requested_features: list[str] = Field(default_factory=list)
+    additional_conditions: dict[str, Any] = Field(default_factory=dict)
 
 
 class WorkflowResponse(BaseModel):
@@ -308,6 +419,13 @@ def build_input_data(payload: WorkflowRequest) -> dict[str, Any]:
     origin = payload.origin or ("현재 위치" if destination == "서울" else "서울")
     days = payload.days or extract_days(user_request)
     budget_level = payload.budget_level or ("low" if "저렴" in user_request else "medium")
+    
+    # 추가 조건 추출 (동행인, 테마, 우선순위)
+    add_cond = payload.additional_conditions or {}
+    companions = add_cond.get("companions", [])
+    themes = add_cond.get("themes", [])
+    priority = add_cond.get("priority", "")
+
     input_data: dict[str, Any] = {
         "user_request": user_request,
         "destination": destination,
@@ -319,6 +437,10 @@ def build_input_data(payload: WorkflowRequest) -> dict[str, Any]:
         "budget_level": budget_level,
         "budget": budget_level,
         "requested_features": payload.requested_features,
+        "additional_conditions": add_cond,
+        "companions": companions,
+        "themes": themes,
+        "priority": priority
     }
 
     return input_data
