@@ -12,10 +12,11 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env", override=True)
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from datetime import datetime
 
 from validators.travel_validator import validate_and_correct
 
@@ -23,7 +24,62 @@ from validators.travel_validator import validate_and_correct
 app = FastAPI(title="dynamic-agent-lab")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# --- 댓글 및 평가 데이터 저장 경로 ---
+COMMENTS_FILE = BASE_DIR / "comments.json"
+RATINGS_FILE = BASE_DIR / "ratings.json"
 
+class Comment(BaseModel):
+    user_name: str = "Anonymous"
+    content: str
+    created_at: str | None = None
+
+class Rating(BaseModel):
+    score: int = Field(ge=1, le=5)
+    comment: str | None = ""
+    created_at: str | None = None
+
+def load_json_file(file_path: Path, default_value: list | dict):
+    if not file_path.exists():
+        return default_value
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return default_value
+
+def save_json_file(file_path: Path, data: Any):
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+@app.get("/comments")
+def get_comments():
+    return load_json_file(COMMENTS_FILE, [])
+
+@app.post("/comments")
+def add_comment(comment: Comment):
+    comments = load_json_file(COMMENTS_FILE, [])
+    comment.created_at = datetime.now().isoformat()
+    comments.append(comment.dict())
+    save_json_file(COMMENTS_FILE, comments)
+    return {"status": "success", "comment": comment}
+
+@app.get("/ratings")
+def get_ratings():
+    ratings = load_json_file(RATINGS_FILE, [])
+    if not ratings:
+        return {"average": 0, "count": 0, "ratings": []}
+    avg = sum(r["score"] for r in ratings) / len(ratings)
+    return {"average": round(avg, 1), "count": len(ratings), "ratings": ratings}
+
+@app.post("/ratings")
+def add_rating(rating: Rating):
+    ratings = load_json_file(RATINGS_FILE, [])
+    rating.created_at = datetime.now().isoformat()
+    ratings.append(rating.dict())
+    save_json_file(RATINGS_FILE, ratings)
+    return {"status": "success", "rating": rating}
+
+# --- 기존 워크플로우 클래스 및 엔드포인트 ---
 class WorkflowRequest(BaseModel):
     user_request: str
     destination: str | None = None

@@ -11,7 +11,7 @@
         --panel: rgba(255, 255, 255, 0.9);
         --text: #111111;
         --muted: #94a3b8;
-        --line: rgba(0, 0, 0, 0.04);
+        --line: rgba(0, 0, 0, 0.05);
         --accent: #000000;
         --card-bg: #ffffff;
       }
@@ -71,7 +71,9 @@
         margin-bottom: 20px;
       }
 
-      .search-field input[type="date"] {
+      .search-field { display: flex; flex-direction: column; gap: 8px; color: var(--accent); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.8; }
+      
+      .search-field input[type="date"], .search-field select {
         background: #fff;
         border: 1px solid var(--line);
         color: var(--accent);
@@ -81,32 +83,14 @@
         cursor: pointer;
         font-family: inherit;
         transition: all 0.4s;
+        font-weight: 400;
       }
-      .search-field input[type="date"]:hover { border-color: #000; }
+      .search-field input[type="date"]:hover, .search-field select:hover { border-color: #000; }
 
       @media (max-width: 900px) {
         .search-bar-row { grid-template-columns: 1fr 1fr; gap: 12px; }
         .search-bar-row button#run-button { grid-column: span 2; }
       }
-
-      .search-field { display: flex; flex-direction: column; gap: 8px; color: var(--accent); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.8; }
-      .search-field select {
-        background: #fff;
-        border: 1px solid var(--line);
-        color: var(--accent);
-        padding: 14px 20px;
-        border-radius: 18px;
-        font-size: 1rem;
-        cursor: pointer;
-        font-weight: 400;
-        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23bbb'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='1' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 15px center;
-        background-size: 16px;
-      }
-      .search-field select:hover { border-color: #000; transform: translateY(-2px); }
 
       button#run-button {
         background: var(--accent);
@@ -123,9 +107,29 @@
       }
       button#run-button:hover { transform: scale(1.02) translateY(-2px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); }
 
+      /* Tab System for Additional Conditions */
+      .additional-conditions-row { margin-top: 35px; border-top: 1px solid var(--line); padding-top: 25px; }
+      .tab-container { margin-top: 15px; }
+      .tab-header { display: flex; gap: 10px; margin-bottom: 15px; }
+      .tab-btn {
+        background: #fff;
+        border: 1px solid var(--line);
+        padding: 8px 24px;
+        border-radius: 999px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        color: var(--muted);
+      }
+      .tab-btn:hover { border-color: #000; color: #000; }
+      .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+      
+      .tab-content { display: none; margin-top: 15px; }
+      .tab-content.active { display: flex; flex-wrap: wrap; gap: 10px; }
+
       /* Option Chips: Airy Outlines */
       .options-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 25px; justify-content: flex-start; }
-      .checkbox-grid { display: contents; }
       .checkbox-grid label { 
         background: #fff; 
         border: 1px solid var(--line); 
@@ -167,8 +171,8 @@
       /* Results: Maximum Brightness & Compact */
       .result-view { display: grid; gap: 40px; margin-top: 50px; }
       .result-card { background: transparent; border: 0; padding: 0; }
-      .result-card h2 { font-size: 2.4rem; font-weight: 100; margin-bottom: 15px; text-transform: uppercase; letter-spacing: -0.05em; }
-      .summary-text { color: var(--muted); font-size: 1.15rem; font-weight: 300; margin-bottom: 25px; line-height: 1.4; border-left: 1px solid #000; padding-left: 20px; }
+      .result-card h2 { font-size: 2.4rem; font-weight: 100; margin-bottom: 15px; text-transform: uppercase; letter-spacing: -0.05em; color: var(--accent); }
+      .summary-text { color: var(--text); font-size: 1.15rem; font-weight: 400; margin-bottom: 25px; line-height: 1.4; border-left: 2px solid var(--accent); padding-left: 20px; }
 
       /* Details Accordion */
       .details-accordion { margin-top: 20px; border-radius: 20px; background: #fff; border: 1px solid var(--line); overflow: hidden; }
@@ -182,6 +186,7 @@
         align-items: center; 
         background: #fbfbfb;
         font-size: 0.95rem;
+        color: var(--text);
       }
       .details-accordion summary::after { content: "+ VIEW DETAILS"; font-size: 0.6rem; font-weight: 900; opacity: 0.3; letter-spacing: 0.2em; }
       .details-accordion[open] summary::after { content: "- CLOSE"; }
@@ -210,6 +215,7 @@
         white-space: nowrap; 
         overflow: hidden; 
         text-overflow: ellipsis; 
+        color: var(--text);
       }
       .item-meta { 
         font-size: 0.85rem; 
@@ -227,7 +233,7 @@
       .timeline-list::before { content: ""; position: absolute; left: 16px; top: 0; bottom: 0; width: 1px; background: #eee; }
       .timeline-icon { position: absolute; left: -45px; top: 5px; width: 32px; height: 32px; background: #fff; border: 1px solid #eee; border-radius: 50%; display: grid; place-items: center; font-size: 0.65rem; font-weight: 900; color: #ddd; z-index: 1; }
       .timeline-block { background: #fff; padding: 25px; border-radius: 25px; border: 1px solid var(--line); transition: transform 0.4s; }
-      .timeline-block:hover { transform: translateX(5px); border-color: #000; }
+      .timeline-block:hover { transform: translateX(5px); border-color: var(--accent); }
       .timeline-block strong { 
         display: block; 
         font-size: 1.1rem; 
@@ -235,6 +241,7 @@
         margin-bottom: 6px; 
         overflow: hidden; 
         text-overflow: ellipsis; 
+        color: var(--text);
       }
 
       /* Info Center */
@@ -310,6 +317,29 @@
 
       .archive-section { margin-top: 200px; padding-top: 60px; border-top: 1px solid var(--line); text-align: center; opacity: 0.4; transition: opacity 0.5s; }
       .archive-section:hover { opacity: 1; }
+
+      /* Review & Rating Section */
+      .feedback-section { margin-top: 150px; padding-top: 60px; border-top: 1px solid var(--line); }
+      .feedback-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 60px; text-align: left; }
+      
+      .rating-box { padding: 40px; background: #fafafa; border-radius: 35px; border: 1px solid var(--line); }
+      .rating-stars { display: flex; gap: 8px; margin: 20px 0; }
+      .star-btn { font-size: 1.5rem; cursor: pointer; color: #ddd; transition: color 0.3s; background: none; border: 0; }
+      .star-btn.active { color: #000; }
+      
+      .comment-list { display: grid; gap: 20px; margin-top: 30px; }
+      .comment-item { padding: 25px; border-bottom: 1px solid var(--line); }
+      .comment-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.85rem; font-weight: 700; }
+      .comment-content { font-size: 1rem; color: var(--text); font-weight: 300; line-height: 1.5; }
+      
+      .input-group { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+      .input-group input, .input-group textarea {
+        background: #fff; border: 1px solid var(--line); border-radius: 15px; padding: 15px 20px; font-family: inherit; font-size: 0.95rem;
+      }
+      .feedback-btn { 
+        background: #000; color: #fff; border: 0; padding: 15px 30px; border-radius: 99px; font-weight: 700; cursor: pointer; transition: transform 0.3s; align-self: flex-end;
+      }
+      .feedback-btn:hover { transform: translateY(-2px); }
     </style>
   </head>
   <body>
@@ -331,12 +361,7 @@
                 <option value="여수">여수</option><option value="경주">경주</option><option value="속초">속초</option><option value="춘천">춘천</option>
               </optgroup>
               <optgroup label="해외 여행 (준비 중)">
-                <option value="도쿄">도쿄 (Tokyo)</option>
-                <option value="오사카">오사카 (Osaka)</option>
-                <option value="방콕">방콕 (Bangkok)</option>
-                <option value="파리">파리 (Paris)</option>
-                <option value="뉴욕">뉴욕 (New York)</option>
-                <option value="다낭">다낭 (Da Nang)</option>
+                <option value="도쿄">도쿄 (Tokyo)</option><option value="오사카">오사카 (Osaka)</option>
               </optgroup>
             </select>
           </label>
@@ -361,25 +386,98 @@
         </div>
 
         <div class="options-row">
-          <div class="checkbox-grid">
-            <label><input type="checkbox" name="feature" value="destination" checked /><span class="feature-icon">○</span>여행지</label>
-            <label><input type="checkbox" name="feature" value="budget" checked /><span class="feature-icon">○</span>예산</label>
-            <label><input type="checkbox" name="feature" value="food" checked /><span class="feature-icon">○</span>맛집</label>
-            <label><input type="checkbox" name="feature" value="event" checked /><span class="feature-icon">○</span>행사</label>
-            <label><input type="checkbox" name="feature" value="schedule" checked /><span class="feature-icon">○</span>일정</label>
-            <label><input type="checkbox" name="feature" value="weather" checked /><span class="feature-icon">○</span>날씨</label>
-            <label><input type="checkbox" name="feature" value="tour" checked /><span class="feature-icon">○</span>관광지</label>
-            <label><input type="checkbox" name="feature" value="transport" checked /><span class="feature-icon">○</span>교통</label>
-            <label><input type="checkbox" name="feature" value="lodging" checked /><span class="feature-icon">○</span>숙박</label>
+          <p class="search-field">포함할 정보</p>
+          <div class="checkbox-grid" style="display: flex; flex-wrap: wrap; gap: 10px; width: 100%;">
+            <label><input type="checkbox" name="feature" value="destination" checked />여행지</label>
+            <label><input type="checkbox" name="feature" value="budget" checked />예산</label>
+            <label><input type="checkbox" name="feature" value="food" checked />맛집</label>
+            <label><input type="checkbox" name="feature" value="event" checked />행사</label>
+            <label><input type="checkbox" name="feature" value="schedule" checked />일정</label>
+            <label><input type="checkbox" name="feature" value="weather" checked />날씨</label>
+            <label><input type="checkbox" name="feature" value="tour" checked />관광지</label>
+            <label><input type="checkbox" name="feature" value="transport" checked />교통</label>
+            <label><input type="checkbox" name="feature" value="lodging" checked />숙박</label>
+          </div>
+        </div>
+
+        <div class="additional-conditions-row">
+          <p class="search-field">여행 추가 조건 (탭)</p>
+          <div class="tab-container">
+            <div class="tab-header">
+              <button class="tab-btn active" data-tab="companion">동행인</button>
+              <button class="tab-btn" data-tab="theme">여행 테마</button>
+              <button class="tab-btn" data-tab="priority">우선순위</button>
+            </div>
+            <div class="tab-content checkbox-grid active" id="tab-companion">
+              <label><input type="checkbox" name="companion" value="alone" />나홀로</label>
+              <label><input type="checkbox" name="companion" value="couple" />커플/부부</label>
+              <label><input type="checkbox" name="companion" value="family" />아이와 함께</label>
+              <label><input type="checkbox" name="companion" value="parents" />부모님과 함께</label>
+              <label><input type="checkbox" name="companion" value="friends" />친구와 함께</label>
+            </div>
+            <div class="tab-content checkbox-grid" id="tab-theme">
+              <label><input type="checkbox" name="theme" value="healing" />힐링/휴식</label>
+              <label><input type="checkbox" name="theme" value="activity" />액티비티</label>
+              <label><input type="checkbox" name="theme" value="foodie" />맛집탐방</label>
+              <label><input type="checkbox" name="theme" value="photo" />인생샷/SNS</label>
+              <label><input type="checkbox" name="theme" value="culture" />역사/문화</label>
+              <label><input type="checkbox" name="theme" value="shopping" />쇼핑</label>
+            </div>
+            <div class="tab-content checkbox-grid" id="tab-priority">
+              <label><input type="radio" name="priority" value="cost" />가성비 중시</label>
+              <label><input type="radio" name="priority" value="quality" />퀄리티 중시</label>
+              <label><input type="radio" name="priority" value="distance" />이동 최소화</label>
+              <label><input type="radio" name="priority" value="popularity" />인기 명소 위주</label>
+            </div>
           </div>
         </div>
 
         <div class="extra-request-row">
-          <textarea id="user-request" placeholder="당신만이 아는 특별한 취향이 있다면 적어주세요."></textarea>
+          <p class="search-field">특별한 취향 (직접 입력)</p>
+          <textarea id="user-request" placeholder="예: '조용한 북카페 위주로', '생선 요리 못 먹어요', '걷기 좋은 길 추천'"></textarea>
         </div>
       </section>
 
       <section class="result-view" id="result"></section>
+
+      <section class="feedback-section">
+        <div class="feedback-grid">
+          <div class="rating-box">
+            <p style="font-weight:900; font-size:0.7rem; letter-spacing:0.3em; margin-bottom:15px; opacity:0.3;">WEB EVALUATION</p>
+            <h3 style="font-size:1.8rem; font-weight:100; margin-bottom:10px;">How was your experience?</h3>
+            <p style="color:var(--muted); font-size:0.9rem; font-weight:300;">당신의 소중한 평가가 AI Travel Lab을 성장시킵니다.</p>
+            
+            <div class="rating-stars" id="rating-stars">
+              <button class="star-btn" data-value="1">○</button>
+              <button class="star-btn" data-value="2">○</button>
+              <button class="star-btn" data-value="3">○</button>
+              <button class="star-btn" data-value="4">○</button>
+              <button class="star-btn" data-value="5">○</button>
+            </div>
+            
+            <div class="input-group">
+              <textarea id="rating-comment" placeholder="짧은 의견 한마디 (선택)" style="min-height:60px;"></textarea>
+              <button class="feedback-btn" id="submit-rating">평가 제출</button>
+            </div>
+
+            <div id="average-rating" style="margin-top:40px; border-top:1px solid var(--line); padding-top:20px; font-size:0.85rem; font-weight:700;">
+              평균 별점: 로딩 중...
+            </div>
+          </div>
+
+          <div class="comments-box">
+            <p style="font-weight:900; font-size:0.7rem; letter-spacing:0.3em; margin-bottom:15px; opacity:0.3;">COMMUNITY COMMENTS</p>
+            <div class="input-group" style="background:#fff; padding:30px; border-radius:30px; border:1px solid var(--line); margin-bottom:40px;">
+              <input type="text" id="comment-user" placeholder="이름 (익명)" />
+              <textarea id="comment-content" placeholder="이곳에 댓글을 남겨주세요." style="min-height:100px;"></textarea>
+              <button class="feedback-btn" id="submit-comment">댓글 작성</button>
+            </div>
+            <div class="comment-list" id="comment-list">
+              <!-- 댓글 로딩 영역 -->
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section class="archive-section">
         <p style="font-weight: 900; font-size: 0.7rem; letter-spacing: 0.4em; margin-bottom: 30px;">STORED ARCHIVE</p>
@@ -630,10 +728,10 @@
         if (!Array.isArray(items) || items.length === 0) return "";
         return `
           <div style="margin-top:20px;">
-            <p style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#000; margin-bottom:10px; letter-spacing:0.05em;">${escapeHtml(title)}</p>
+            <p style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:var(--accent); margin-bottom:10px; letter-spacing:0.05em;">${escapeHtml(title)}</p>
             <ul style="list-style:none; padding:0; display:grid; gap:8px;">
               ${items.map(i => `<li style="font-size:0.95rem; color:var(--muted); padding-left:15px; position:relative;">
-                <span style="position:absolute; left:0; color:#000;">•</span>${escapeHtml(i)}
+                <span style="position:absolute; left:0; color:var(--accent);">•</span>${escapeHtml(i)}
               </li>`).join("")}
             </ul>
           </div>
@@ -730,21 +828,43 @@
         renderSavedPlans();
       });
 
+      // 탭 전환 로직
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          
+          btn.classList.add('active');
+          document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+        });
+      });
+
       async function runWorkflow() {
         const days = calculateDays(startDateInput.value, endDateInput.value);
+        
+        // 추가 조건 수집
+        const companions = Array.from(document.querySelectorAll('input[name="companion"]:checked')).map(c => c.value);
+        const themes = Array.from(document.querySelectorAll('input[name="theme"]:checked')).map(c => c.value);
+        const priority = document.querySelector('input[name="priority"]:checked')?.value || "";
+
         const payload = {
           user_request: textarea.value,
           destination: destinationSelect.value,
           origin: originSelect.value,
           days: days,
           budget_level: budgetSelect.value,
-          requested_features: Array.from(document.querySelectorAll('input[name="feature"]:checked')).map(c => c.value)
+          requested_features: Array.from(document.querySelectorAll('input[name="feature"]:checked')).map(c => c.value),
+          additional_conditions: {
+            companions,
+            themes,
+            priority
+          }
         };
 
         result.innerHTML = `
           <div class="loading-container">
             <div class="spinner"></div>
-            <p style="font-weight:200; font-size:1.8rem; letter-spacing:0.3em; margin-top:20px;">CURATING YOUR JOURNEY</p>
+            <p style="font-weight:900; font-size:2rem; letter-spacing:0.3em; margin-top:20px; color:#000;">CURATING YOUR JOURNEY</p>
           </div>`;
         
         try {
@@ -765,11 +885,94 @@
           window.scrollTo({ top: result.offsetTop - 50, behavior: 'smooth' });
         } catch (e) {
           console.error("Workflow Error:", e);
-          result.innerHTML = `<div class="result-card" style="text-align:center;"><p style="color:#e53e3e; font-weight:600; margin-bottom:10px;">죄송합니다. 여정을 설계하는 중에 문제가 발생했습니다.</p><p style="color:var(--muted); font-size:0.9rem;">사유: ${escapeHtml(e.message)}</p></div>`;
+          result.innerHTML = `<div class="result-card" style="text-align:center;"><p style="color:#e53e3e; font-weight:900; margin-bottom:10px; font-size:1.5rem;">죄송합니다. 여정을 설계하는 중에 문제가 발생했습니다.</p><p style="color:#000; font-size:1.1rem; font-weight:700;">사유: ${escapeHtml(e.message)}</p></div>`;
         }
       }
 
       button.addEventListener("click", runWorkflow);
+
+      // --- FEEDBACK & COMMENTS LOGIC ---
+      let currentRating = 0;
+      const stars = document.querySelectorAll(".star-btn");
+      const commentList = document.querySelector("#comment-list");
+      const averageRating = document.querySelector("#average-rating");
+
+      // 별점 선택
+      stars.forEach(s => {
+        s.addEventListener("click", () => {
+          currentRating = parseInt(s.dataset.value);
+          stars.forEach(btn => {
+            btn.classList.toggle("active", parseInt(btn.dataset.value) <= currentRating);
+            btn.textContent = parseInt(btn.dataset.value) <= currentRating ? "●" : "○";
+          });
+        });
+      });
+
+      // 평가 제출
+      document.querySelector("#submit-rating").addEventListener("click", async () => {
+        if (currentRating === 0) return alert("별점을 선택해 주세요.");
+        const comment = document.querySelector("#rating-comment").value;
+        
+        try {
+          const resp = await fetch("/ratings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ score: currentRating, comment })
+          });
+          if (resp.ok) {
+            alert("평가가 제출되었습니다. 감사합니다!");
+            loadRatings();
+            document.querySelector("#rating-comment").value = "";
+          }
+        } catch (e) { console.error(e); }
+      });
+
+      // 댓글 제출
+      document.querySelector("#submit-comment").addEventListener("click", async () => {
+        const user_name = document.querySelector("#comment-user").value || "익명";
+        const content = document.querySelector("#comment-content").value;
+        if (!content) return alert("댓글 내용을 입력해 주세요.");
+
+        try {
+          const resp = await fetch("/comments", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_name, content })
+          });
+          if (resp.ok) {
+            loadComments();
+            document.querySelector("#comment-content").value = "";
+          }
+        } catch (e) { console.error(e); }
+      });
+
+      async function loadComments() {
+        try {
+          const resp = await fetch("/comments");
+          const data = await resp.json();
+          commentList.innerHTML = data.reverse().map(c => `
+            <div class="comment-item">
+              <div class="comment-header">
+                <span>${escapeHtml(c.user_name)}</span>
+                <span style="opacity:0.3; font-weight:300;">${new Date(c.created_at).toLocaleDateString()}</span>
+              </div>
+              <div class="comment-content">${escapeHtml(c.content)}</div>
+            </div>
+          `).join("");
+        } catch (e) { console.error(e); }
+      }
+
+      async function loadRatings() {
+        try {
+          const resp = await fetch("/ratings");
+          const data = await resp.json();
+          averageRating.innerHTML = `평균 별점: ● ${data.average} / 5.0 (${data.count}명 참여)`;
+        } catch (e) { console.error(e); }
+      }
+
+      // 초기 로딩
+      loadComments();
+      loadRatings();
     </script>
   </body>
 </html>
