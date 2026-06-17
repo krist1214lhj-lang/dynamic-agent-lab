@@ -1,0 +1,11 @@
+{
+  "name": "travel_recommender_agent",
+  "description": "총 예산·인원·일수·테마를 입력받아 적합한 목적지 후보를 예상 총비용과 함께 추천하는 에이전트입니다.",
+  "role": "예산/테마 기반 목적지 추천",
+  "inputs": ["budget_total", "people", "days", "themes", "origin", "candidates"],
+  "outputs": ["summary", "recommendations", "data_source", "debug_info"],
+  "env_vars": [],
+  "version": "0.1.0",
+  "entrypoint": "main.py",
+  "function": "run"
+}
