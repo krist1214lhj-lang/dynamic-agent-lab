@@ -55,3 +55,10 @@ def test_calm_selection_color_present():
 def test_no_preset_emoji():
     for emoji in ["🍞", "🏕️", "♨️", "📸", "🎏", "🚄", "⚙️"]:
         assert emoji not in HTML, f"preset emoji still present: {emoji}"
+
+
+def test_recommend_section_matches_form_style():
+    # budget-finder uses the same control-panel layout and chip style as the rest
+    assert 'class="control-panel" id="recommend-section"' in HTML
+    assert 'id="rec-themes" class="checkbox-grid"' in HTML
+    assert 'class="archive-section" id="recommend-section"' not in HTML
