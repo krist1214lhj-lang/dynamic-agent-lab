@@ -122,6 +122,9 @@ class WorkflowRequest(BaseModel):
     origin: str | None = None
     days: int | None = None
     people: int = 1
+    travel_format: str = "자유여행"
+    transport_mode: str | None = None
+    pace: str = "보통"
     budget_level: str | None = None
     requested_features: list[str] = Field(default_factory=list)
     additional_conditions: dict[str, Any] = Field(default_factory=dict)
@@ -223,6 +226,8 @@ def run_workflow_endpoint(payload: WorkflowRequest):
     req = payload.user_request
     dest = payload.destination or next((d for d in SUPPORTED_DESTINATIONS if d in req), "서울")
     days = payload.days or 3
+    if payload.travel_format == "당일치기":
+        days = 1
     features = payload.requested_features or ["planning", "destination", "weather", "transport", "budget", "food", "tour", "schedule", "lodging"]
 
     # 순서 고정 및 에이전트 선별 (연결성 보장)
@@ -238,9 +243,16 @@ def run_workflow_endpoint(payload: WorkflowRequest):
     input_data = {
         "user_request": req, "destination": dest, "origin": payload.origin or "서울", "days": days,
         "duration_days": days, "people": max(payload.people, 1), "budget_level": payload.budget_level or "medium", "requested_features": features,
+        "travel_format": payload.travel_format, "transport_mode": payload.transport_mode, "pace": payload.pace,
         **payload.additional_conditions
     }
-    
+
+    if "family_kids" in (input_data.get("themes") or []):
+        _comps = list(input_data.get("companions") or [])
+        if "family" not in _comps:
+            _comps.append("family")
+        input_data["companions"] = _comps
+
     results, loaded = [], []
     for name in selected:
         try:
