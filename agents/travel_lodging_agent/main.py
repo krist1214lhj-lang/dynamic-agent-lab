@@ -24,7 +24,8 @@ def run(input_data):
     companions = input_data.get("companions", [])
     themes = input_data.get("themes", [])
     priority = input_data.get("priority", "")
-    
+    travel_format = input_data.get("travel_format", "자유여행")
+
     if days == 1:
         return {
             "agent": "travel_lodging_agent",
@@ -44,6 +45,21 @@ def run(input_data):
     
     if not recommendations:
         recommendations.append(f"{destination} 시내 접근성이 좋은 숙소 위주로 구성했습니다.")
+
+    if travel_format == "캠핑/차박":
+        lodging_items = [
+            {"name": f"{destination} 오토캠핑장", "address": f"{destination} 인근 캠핑장", "category": "캠핑장",
+             "reason": "차박/캠핑에 적합한 사이트입니다."},
+            {"name": f"{destination} 글램핑 사이트", "address": f"{destination} 자연 인근", "category": "글램핑",
+             "reason": "장비 없이 즐기는 캠핑 옵션입니다."},
+        ]
+        return {
+            "agent": "travel_lodging_agent", "data_source": "mock_plus_conditions",
+            "destination": destination, "days": days, "lodging_items": lodging_items,
+            "recommendations": ["캠핑/차박 형태에 맞춰 캠핑장·글램핑 위주로 구성했습니다."],
+            "summary": f"{destination} {days}일 캠핑/차박 숙박 추천입니다.",
+            "debug_info": {"companions": companions, "themes": themes, "priority": priority, "travel_format": travel_format},
+        }
 
     # Mock 데이터 (조건에 따른 동적 생성)
     lodging_items = [
