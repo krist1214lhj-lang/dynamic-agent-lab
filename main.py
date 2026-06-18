@@ -18,6 +18,7 @@ from datetime import datetime
 
 from validators.travel_validator import validate_and_correct
 from validators.travel_verifier import verify_results
+from workflow_critic import critique
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env", override=True)
@@ -271,20 +272,23 @@ def run_workflow_endpoint(payload: WorkflowRequest):
     
     res, report = validate_and_correct(input_data, results)
     kept, excluded = verify_results(input_data, res)
+    conditions = {k: input_data.get(k) for k in
+                  ("destination", "origin", "days", "budget_level", "travel_format", "transport_mode", "pace", "themes")}
+    final, dropped, critic_summary, engine = critique(conditions, kept)
     verification_report = {
-        "engine": "rule_only",
-        "excluded": excluded,
-        "kept": [{"agent": k["agent"], "verification": k.get("verification")} for k in kept],
-        "summary": (f"{len(excluded)}개 항목을 조건·정합성 기준으로 제외했습니다." if excluded
-                    else "모든 항목이 조건에 정합합니다."),
+        "engine": engine,
+        "excluded": excluded + dropped,
+        "kept": [{"agent": k["agent"], "verification": k.get("verification")} for k in final],
+        "summary": (critic_summary or (f"{len(excluded) + len(dropped)}개 항목을 조건·정합성 기준으로 제외했습니다."
+                                       if (excluded or dropped) else "모든 항목이 조건에 정합합니다.")),
     }
-    res = kept
+    res = final
     input_data_summary = {"destination": dest, "days": days, "budget_level": input_data["budget_level"]}
     
     return {
         "user_request": req, "input_data": input_data, "input_data_summary": input_data_summary, 
         "selected_agents": selected, "loaded_agents": loaded, "agent_results": res, 
-        "validation_report": report, "final_summary": f"{dest} 여행 여정 설계 완료",
+        "validation_report": report, "final_summary": critic_summary or f"{dest} 여행 여정 설계 완료",
         "verification_report": verification_report
     }
 

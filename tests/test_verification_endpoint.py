@@ -24,3 +24,9 @@ def test_day_trip_excludes_lodging_card():
     d = _run(travel_format="당일치기", days=3)
     assert all("lodging" not in r["agent"] for r in d["agent_results"])
     assert any(e["reason"] == "day_trip_no_lodging" for e in d["verification_report"]["excluded"])
+
+
+def test_engine_rule_only_without_key():
+    # conftest가 키를 제거하므로 항상 rule_only
+    d = _run()
+    assert d["verification_report"]["engine"] == "rule_only"

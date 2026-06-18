@@ -48,10 +48,11 @@ def _parse_critique(raw, valid_agents):
             "final_summary": data.get("final_summary", ""), "match_notes": data.get("match_notes", [])}
 
 
-def critique(conditions, results, _caller=_call_anthropic):
+def critique(conditions, results, _caller=None):
     """(final_results, dropped, final_summary, engine). engine 'rule+llm' 성공, 'rule_only' fallback."""
+    caller = _caller or _call_anthropic  # 모듈 전역을 호출 시점에 조회(테스트에서 monkeypatch 가능)
     valid = {r.get("agent") for r in results}
-    parsed = _parse_critique(_caller(_build_prompt(conditions, results)), valid)
+    parsed = _parse_critique(caller(_build_prompt(conditions, results)), valid)
     if not parsed:
         return results, [], "", "rule_only"
     keep = set(parsed["keep"]) or valid
