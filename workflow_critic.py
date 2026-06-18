@@ -3,6 +3,9 @@ import os
 
 MODEL = "claude-haiku-4-5"
 
+# 비평이 드롭하면 안 되는 인프라 카드(사용자에게는 안 보이지만 다운스트림이 의존).
+PROTECTED_AGENTS = {"travel_planning_agent"}
+
 
 def _build_prompt(conditions, results):
     cards = [{"agent": r.get("agent"), "summary": r.get("summary", ""), "verification": r.get("verification")}
@@ -55,7 +58,7 @@ def critique(conditions, results, _caller=None):
     parsed = _parse_critique(caller(_build_prompt(conditions, results)), valid)
     if not parsed:
         return results, [], "", "rule_only"
-    keep = set(parsed["keep"]) or valid
+    keep = (set(parsed["keep"]) or valid) | (PROTECTED_AGENTS & valid)
     final = [r for r in results if r.get("agent") in keep]
     reasons = {d["agent"]: d.get("reason", "") for d in parsed["drop"]}
     dropped = [{"agent": r.get("agent"), "stage": "llm", "reason": reasons.get(r.get("agent"), "조건 관련성 낮음")}
