@@ -121,6 +121,7 @@ class WorkflowRequest(BaseModel):
     location: str | None = None
     origin: str | None = None
     days: int | None = None
+    people: int = 1
     budget_level: str | None = None
     requested_features: list[str] = Field(default_factory=list)
     additional_conditions: dict[str, Any] = Field(default_factory=dict)
@@ -234,10 +235,10 @@ def run_workflow_endpoint(payload: WorkflowRequest):
         if name in selected_from_features and name not in selected: selected.append(name)
     if "travel_schedule_agent" in selected_from_features or "schedule" in features: selected.append("travel_schedule_agent")
     
-    input_data = { 
-        "user_request": req, "destination": dest, "origin": payload.origin or "서울", "days": days, 
-        "duration_days": days, "budget_level": payload.budget_level or "medium", "requested_features": features, 
-        **payload.additional_conditions 
+    input_data = {
+        "user_request": req, "destination": dest, "origin": payload.origin or "서울", "days": days,
+        "duration_days": days, "people": max(payload.people, 1), "budget_level": payload.budget_level or "medium", "requested_features": features,
+        **payload.additional_conditions
     }
     
     results, loaded = [], []

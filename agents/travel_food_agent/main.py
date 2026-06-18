@@ -34,6 +34,16 @@ MOCK_FOOD_ITEMS = {
     ]
 }
 
+
+def _generic_food_items(destination):
+    # 등록되지 않은 목적지는 서울로 폴백하지 않고 목적지 기반 일반 항목을 만든다.
+    # 카테고리는 동행/우선순위 필터가 동작하도록 기존 체계(가족친화/인기명소/한식)를 유지.
+    return [
+        {"name": f"{destination} 대표 맛집", "address": f"{destination} 시내", "category": "인기명소", "menu_hint": "지역 별미", "meal_time": "점심/저녁"},
+        {"name": f"{destination} 현지인 식당", "address": f"{destination} 일대", "category": "한식", "menu_hint": "백반/한식", "meal_time": "점심"},
+        {"name": f"{destination} 가족 식당", "address": f"{destination} 인근", "category": "가족친화", "menu_hint": "한상차림", "meal_time": "저녁"},
+    ]
+
 def run(input_data):
     safe_input = input_data if isinstance(input_data, dict) else {}
     destination = safe_input.get("destination") or "서울"
@@ -53,7 +63,7 @@ def run(input_data):
         summary += "가성비 좋은 현지인 맛집을 중심으로 선별했습니다."
 
     # 데이터 선별 (가짜 필터링)
-    base_items = MOCK_FOOD_ITEMS.get(destination, MOCK_FOOD_ITEMS["서울"])
+    base_items = MOCK_FOOD_ITEMS.get(destination) or _generic_food_items(destination)
     food_items = []
     
     # 조건에 따른 정렬/필터링 시뮬레이션

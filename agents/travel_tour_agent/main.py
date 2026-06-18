@@ -1027,7 +1027,7 @@ def build_mock_tour_result(input_data, fallback_reason="mock_fallback", fallback
                 "mapy": "35.153170"
             }
         ]
-    else:
+    elif location == "서울":
         tour_items = [
             {
                 "title": "경복궁",
@@ -1054,6 +1054,12 @@ def build_mock_tour_result(input_data, fallback_reason="mock_fallback", fallback
                 "mapy": "37.582604"
             }
         ]
+    else:
+        tour_items = [
+            {"title": f"{location} 대표 관광지", "addr": f"{location} 일대", "category": "관광지", "image": "", "mapx": "", "mapy": ""},
+            {"title": f"{location} 자연/힐링 명소", "addr": f"{location} 인근", "category": "자연", "image": "", "mapx": "", "mapy": ""},
+            {"title": f"{location} 문화/거리", "addr": f"{location} 시내", "category": "문화/거리", "image": "", "mapx": "", "mapy": ""},
+        ]
     if area_code:
         lookup_message = (
             f"{area_name or location} 지역코드(areaCode={area_code})를 인식해 TourAPI를 조회했습니다."
@@ -1067,10 +1073,16 @@ def build_mock_tour_result(input_data, fallback_reason="mock_fallback", fallback
             "해변 일정은 날씨와 바람 영향을 받으므로 실내 대체 관광지를 함께 준비하세요.",
             "향후 TourAPI 연결 후에는 부산 지역 코드, 콘텐츠 타입, 이미지 유무 기준으로 후보를 필터링하세요."
         ]
-    else:
+    elif location == "서울":
         recommendations = [
             "동선은 경복궁과 북촌한옥마을을 같은 날에 묶으면 이동 부담을 줄일 수 있습니다.",
             "남산서울타워는 날씨가 맑은 날 오후나 야간 일정으로 배치하는 것이 좋습니다.",
+            "향후 TourAPI 연결 후에는 지역 코드, 콘텐츠 타입, 이미지 유무 기준으로 후보를 필터링하세요."
+        ]
+    else:
+        recommendations = [
+            f"{location} 대표 관광지를 중심으로 인근 명소를 묶어 이동 부담을 줄이세요.",
+            f"{location}의 자연/힐링 명소는 날씨가 맑은 시간대에 배치하는 것이 좋습니다.",
             "향후 TourAPI 연결 후에는 지역 코드, 콘텐츠 타입, 이미지 유무 기준으로 후보를 필터링하세요."
         ]
 
