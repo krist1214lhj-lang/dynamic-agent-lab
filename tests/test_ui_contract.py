@@ -34,3 +34,11 @@ def test_runworkflow_payload_includes_axes():
     assert "travel_format:" in HTML
     assert "transport_mode:" in HTML
     assert "pace:" in HTML
+
+
+def test_presets_defined():
+    for label in ["미식 자유여행", "캠핑 자연", "가족 휴양", "인생샷 도시", "축제·이벤트", "기차 여유", "직접 설정"]:
+        assert label in HTML, f"missing preset: {label}"
+    assert 'id="preset-grid"' in HTML
+    assert "function applyPreset" in HTML
+    assert "function renderPresets" in HTML

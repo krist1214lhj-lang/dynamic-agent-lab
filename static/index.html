@@ -121,6 +121,12 @@
       .control-btn.edit { color: #2b6cb0; }
       .control-btn.delete { color: #e53e3e; }
       .customized-label { font-size: 0.6rem; vertical-align: middle; margin-left: 15px; padding: 4px 12px; background: #000; color: #fff; border-radius: 99px; font-weight: 700; letter-spacing: 0.1em; }
+      .preset-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 15px; }
+      .preset-card { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 16px 22px; cursor: pointer; transition: all 0.3s; display: flex; flex-direction: column; gap: 4px; min-width: 130px; align-items: flex-start; }
+      .preset-card:hover { border-color: #000; transform: translateY(-2px); }
+      .preset-card.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+      .preset-emoji { font-size: 1.6rem; }
+      .preset-label { font-weight: 700; font-size: 0.9rem; }
     </style>
   </head>
   <body>
@@ -167,6 +173,10 @@
         </div>
         <div style="text-align:center;"><button id="rec-button" class="nav-btn" style="height:50px; padding:0 35px;">추천받기</button></div>
         <div id="rec-result"></div>
+      </section>
+      <section class="control-panel" id="preset-section">
+        <p class="search-field">여행 방식 프리셋</p>
+        <div class="preset-grid" id="preset-grid"></div>
       </section>
       <section class="control-panel">
         <div class="search-bar-row">
@@ -321,7 +331,7 @@
       document.addEventListener("DOMContentLoaded", () => {
         const storedUser = localStorage.getItem("onesown_user");
         if (storedUser) currentUser = JSON.parse(storedUser);
-        updateAuthUI(); initAuthLogic(); initTabs(); initRating(); loadComments(); loadRatings();
+        updateAuthUI(); initAuthLogic(); initTabs(); initRating(); loadComments(); loadRatings(); renderPresets();
         const today = new Date(); const next = new Date(); next.setDate(today.getDate() + 2);
         document.querySelector("#start-date").value = today.toISOString().split('T')[0];
         document.querySelector("#end-date").value = next.toISOString().split('T')[0];
@@ -471,6 +481,29 @@
       function loadSavedPlanData(data) { currentWorkflowResult = data; displayWorkflowResult(data); window.scrollTo({ top: document.querySelector("#result").offsetTop - 50, behavior: 'smooth' }); }
       async function deletePlan(id) { if (confirm("삭제?")) { await fetch(`/api/plans/${id}`, { method: "DELETE", headers: authHeaders() }); renderSavedPlans(); } }
       function initTabs() { document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); btn.classList.add('active'); document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active'); }); }); }
+      const PRESETS = [
+        { id:"foodie-free", emoji:"🍞", label:"미식 자유여행", travel_format:"자유여행", transport_mode:"기차/KTX", themes:["gourmet","foodie"], pace:"여유" },
+        { id:"camping-nature", emoji:"🏕️", label:"캠핑 자연", travel_format:"캠핑/차박", transport_mode:"자가용", themes:["nature","activity"], pace:"여유" },
+        { id:"family-rest", emoji:"♨️", label:"가족 휴양", travel_format:"자유여행", transport_mode:"자가용", themes:["wellness","family_kids"], pace:"여유" },
+        { id:"photo-city", emoji:"📸", label:"인생샷 도시", travel_format:"자유여행", transport_mode:"대중교통", themes:["photo","culture"], pace:"빡빡" },
+        { id:"festival", emoji:"🎏", label:"축제·이벤트", travel_format:"자유여행", transport_mode:"기차/KTX", themes:["festival","culture"], pace:"보통" },
+        { id:"train-relax", emoji:"🚄", label:"기차 여유", travel_format:"기차여행", transport_mode:"기차/KTX", themes:["healing","nature"], pace:"여유" },
+        { id:"custom", emoji:"⚙️", label:"직접 설정", travel_format:"자유여행", transport_mode:"", themes:[], pace:"보통" },
+      ];
+      function renderPresets() {
+        const grid = document.querySelector("#preset-grid");
+        grid.innerHTML = PRESETS.map(p => `<div class="preset-card" data-preset-id="${p.id}"><span class="preset-emoji">${p.emoji}</span><span class="preset-label">${escapeHtml(p.label)}</span></div>`).join("");
+        grid.querySelectorAll(".preset-card").forEach(el => el.addEventListener("click", () => applyPreset(PRESETS.find(x => x.id === el.dataset.presetId))));
+      }
+      function applyPreset(p) {
+        if (!p) return;
+        document.querySelector("#travel-format-select").value = p.travel_format;
+        document.querySelector("#transport-mode-select").value = p.transport_mode;
+        document.querySelector("#pace-select").value = p.pace;
+        document.querySelectorAll('input[name="theme"]').forEach(c => { c.checked = p.themes.includes(c.value); });
+        document.querySelector('.tab-btn[data-tab="theme"]').click();
+        document.querySelectorAll("#preset-grid .preset-card").forEach(el => el.classList.toggle("active", el.dataset.presetId === p.id));
+      }
       function initRating() {
         let cur = 0; const stars = document.querySelectorAll(".star-btn");
         stars.forEach(s => { s.addEventListener("click", () => { cur = parseInt(s.dataset.value); stars.forEach(b => { b.textContent = parseInt(b.dataset.value) <= cur ? "●" : "○"; b.classList.toggle("active", parseInt(b.dataset.value) <= cur); }); }); });
