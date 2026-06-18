@@ -33,12 +33,14 @@ def run(input_data):
         "healing": "전시회 정원 산책",
         "foodie": "축제 먹거리 페스티벌",
         "culture": "전통 공연 역사",
+        "festival": "축제 페스티벌 불꽃축제",
     }
     added_keyword = " ".join([theme_keywords.get(t, "") for t in themes]).strip()
     
     summary = f"{destination} {days}일 여정 동안 즐기기 좋은 행사입니다. "
     if "family" in companions: summary += "아이와 함께 안전하고 유익하게 즐길 수 있는 체험 위주로 선정했습니다. "
     if "activity" in themes: summary += "역동적인 활동과 체험 중심의 행사를 추천합니다."
+    if "festival" in themes: summary += "지역 축제·페스티벌 일정을 우선 반영했습니다."
 
     # Mock 데이터 (조건 반영 시뮬레이션)
     event_items = [

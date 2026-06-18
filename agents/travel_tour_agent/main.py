@@ -167,7 +167,12 @@ def _get_trip_context(input_data):
         "foodie": "카페 거리 야시장",
         "photo": "전망대 포토존 인생샷",
         "culture": "박물관 미술관 문화재",
-        "shopping": "쇼핑몰 아울렛 시장"
+        "shopping": "쇼핑몰 아울렛 시장",
+        "nature": "자연 수목원 숲 해변",
+        "wellness": "온천 스파 휴양",
+        "festival": "축제 거리 행사",
+        "family_kids": "체험 동물원 테마파크",
+        "gourmet": "맛집 베이커리 미식",
     }
     added_keyword = " ".join([theme_keywords.get(t, "") for t in themes]).strip()
     

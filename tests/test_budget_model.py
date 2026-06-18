@@ -50,3 +50,22 @@ def test_jeju_uses_air_premium_from_other_origin():
 def test_explicit_seoul_busan_transport_preserved():
     # 명시 테이블 보존: long_dist 120000 + 현지교통 20000*3
     assert _transport("서울", "부산") == 120000 + 20000 * 3
+
+
+def test_transport_mode_changes_cost():
+    base = estimate_budget("서울", "대전", days=3, level="medium", people=1)["estimated_budget"]["transportation"]
+    air = estimate_budget("서울", "대전", days=3, level="medium", people=1, transport_mode="항공")["estimated_budget"]["transportation"]
+    transit = estimate_budget("서울", "대전", days=3, level="medium", people=1, transport_mode="대중교통")["estimated_budget"]["transportation"]
+    assert air > base > transit
+
+
+def test_transport_mode_none_is_legacy():
+    a = estimate_budget("서울", "대전", days=3, level="medium", people=1)["estimated_budget"]["transportation"]
+    b = estimate_budget("서울", "대전", days=3, level="medium", people=1, transport_mode=None)["estimated_budget"]["transportation"]
+    assert a == b
+
+
+def test_gourmet_theme_raises_food():
+    plain = estimate_budget("서울", "대전", days=3, level="medium", people=1)["estimated_budget"]["food"]
+    gourmet = estimate_budget("서울", "대전", days=3, level="medium", people=1, themes=["gourmet"])["estimated_budget"]["food"]
+    assert gourmet > plain

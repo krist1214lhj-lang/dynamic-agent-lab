@@ -27,6 +27,8 @@ JEJU_AIR_DEFAULT = {"low": 110000, "medium": 200000, "high": 330000}
 TRANSPORT_FLOOR = {"low": 15000, "medium": 25000, "high": 40000}
 # 서울-부산 실거리(약 325km)를 선형 스케일 기준점으로 사용.
 SEOUL_BUSAN_KM = 325.0
+# 이동수단별 도시 간 교통비 계수. None(미지정)은 1.0과 동일(기존 동작 보존).
+TRANSPORT_MODE_COEFF = {"대중교통": 0.7, "기차/KTX": 1.0, "렌터카": 1.1, "자가용": 0.8, "항공": 1.8}
 
 
 def _haversine_km(a, b):
@@ -38,11 +40,11 @@ def _haversine_km(a, b):
     return 2 * 6371.0 * math.asin(math.sqrt(h))
 
 
-def _intercity_transport(origin, destination, level):
+def _intercity_transport(origin, destination, level, transport_mode=None):
     # 명시 테이블이 있으면 그대로 사용(서울-부산/제주, 부산-제주 기존 값 보존).
     explicit = LONG_DISTANCE_TRANSPORT.get((origin, destination)) or LONG_DISTANCE_TRANSPORT.get((destination, origin))
     if explicit:
-        return explicit[level]
+        return _round_krw(explicit[level] * TRANSPORT_MODE_COEFF.get(transport_mode, 1.0))
     # 제주가 끼면 항공 프리미엄.
     if "제주" in (origin, destination):
         return JEJU_AIR_DEFAULT[level]
@@ -56,7 +58,8 @@ def _intercity_transport(origin, destination, level):
     # 서울-부산 값을 거리에 선형 비례시켜 목적지별로 차등.
     anchor = LONG_DISTANCE_TRANSPORT[("서울", "부산")][level]
     raw = anchor * km / SEOUL_BUSAN_KM
-    return _round_krw(max(raw, TRANSPORT_FLOOR[level]))
+    coeff = TRANSPORT_MODE_COEFF.get(transport_mode, 1.0)
+    return _round_krw(max(raw * coeff, TRANSPORT_FLOOR[level]))
 
 
 def _safe_int(value, default):
@@ -70,7 +73,7 @@ def _round_krw(amount):
     return int(round(float(amount) / 1000) * 1000)
 
 
-def estimate_budget(origin, destination, days, level, people=1, themes=None, companions=None, priority=None):
+def estimate_budget(origin, destination, days, level, people=1, themes=None, companions=None, priority=None, transport_mode=None):
     """예상 경비를 정수(원)로 반환. people 기본 1 → 기존 1인 셈법과 동일."""
     themes = themes or []
     companions = companions or []
@@ -83,6 +86,8 @@ def estimate_budget(origin, destination, days, level, people=1, themes=None, com
     unit = BUDGET_UNIT_PRICES[level].copy()
     if "activity" in themes:
         unit["tour_event_per_day"] *= 1.5
+    if "gourmet" in themes:
+        unit["meal_per_count"] *= 1.3
     if "family" in companions:
         unit["buffer_rate"] += 0.05
     if priority == "quality":
@@ -92,7 +97,7 @@ def estimate_budget(origin, destination, days, level, people=1, themes=None, com
     meal_count = days * 3 - 1 if days > 1 else 2
     rooms = math.ceil(people / 2)
 
-    long_dist = _intercity_transport(origin, destination, level)
+    long_dist = _intercity_transport(origin, destination, level, transport_mode)
 
     transport = _round_krw((long_dist + unit["local_transport_per_day"] * days) * people)
     lodging = _round_krw(unit["lodging_per_night"] * nights * rooms)

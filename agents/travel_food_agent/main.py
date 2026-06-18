@@ -61,6 +61,8 @@ def run(input_data):
         summary += "줄을 서더라도 만족도가 높은 소문난 핫플레이스 위주로 구성했습니다."
     elif priority == "cost":
         summary += "가성비 좋은 현지인 맛집을 중심으로 선별했습니다."
+    if "gourmet" in themes:
+        summary += "베이커리·파인다이닝·미슐랭급 맛집을 우선 선별했습니다."
 
     # 데이터 선별 (가짜 필터링)
     base_items = MOCK_FOOD_ITEMS.get(destination) or _generic_food_items(destination)
