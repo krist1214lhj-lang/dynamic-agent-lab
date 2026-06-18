@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 
 from validators.travel_validator import validate_and_correct
+from validators.travel_verifier import verify_results
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env", override=True)
@@ -131,6 +132,7 @@ class WorkflowRequest(BaseModel):
 
 class WorkflowResponse(BaseModel):
     user_request: str; input_data: dict[str, Any]; input_data_summary: dict[str, Any]; selected_agents: list[str]; loaded_agents: list[dict[str, Any]]; agent_results: list[dict[str, Any]]; validation_report: dict[str, Any]; final_summary: str
+    verification_report: dict[str, Any] = Field(default_factory=dict)
 
 # --- 인증 토큰 처리 ---
 def _bearer_token(authorization: Optional[str]) -> str:
@@ -268,12 +270,22 @@ def run_workflow_endpoint(payload: WorkflowRequest):
             results.append({"agent": name, "summary": f"설계 오류: {e}", "data_source": "error"})
     
     res, report = validate_and_correct(input_data, results)
+    kept, excluded = verify_results(input_data, res)
+    verification_report = {
+        "engine": "rule_only",
+        "excluded": excluded,
+        "kept": [{"agent": k["agent"], "verification": k.get("verification")} for k in kept],
+        "summary": (f"{len(excluded)}개 항목을 조건·정합성 기준으로 제외했습니다." if excluded
+                    else "모든 항목이 조건에 정합합니다."),
+    }
+    res = kept
     input_data_summary = {"destination": dest, "days": days, "budget_level": input_data["budget_level"]}
     
     return {
         "user_request": req, "input_data": input_data, "input_data_summary": input_data_summary, 
         "selected_agents": selected, "loaded_agents": loaded, "agent_results": res, 
-        "validation_report": report, "final_summary": f"{dest} 여행 여정 설계 완료"
+        "validation_report": report, "final_summary": f"{dest} 여행 여정 설계 완료",
+        "verification_report": verification_report
     }
 
 @app.post("/recommend")
