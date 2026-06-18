@@ -195,6 +195,34 @@
           </label>
           <button id="run-button" type="button">여정 그리기</button>
         </div>
+        <div class="travel-style-row" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-top:15px;">
+          <label class="search-field">여행 형태
+            <select id="travel-format-select">
+              <option value="자유여행" selected>자유여행</option>
+              <option value="당일치기">당일치기</option>
+              <option value="캠핑/차박">캠핑/차박</option>
+              <option value="기차여행">기차여행</option>
+              <option value="패키지">패키지</option>
+            </select>
+          </label>
+          <label class="search-field">이동수단
+            <select id="transport-mode-select">
+              <option value="" selected>상관없음</option>
+              <option value="자가용">자가용</option>
+              <option value="기차/KTX">기차/KTX</option>
+              <option value="항공">항공</option>
+              <option value="대중교통">대중교통</option>
+              <option value="렌터카">렌터카</option>
+            </select>
+          </label>
+          <label class="search-field">여행 페이스
+            <select id="pace-select">
+              <option value="빡빡">빡빡하게</option>
+              <option value="보통" selected>보통</option>
+              <option value="여유">여유롭게</option>
+            </select>
+          </label>
+        </div>
         <div class="options-row">
           <p class="search-field">포함할 정보</p>
           <div class="checkbox-grid" style="display: flex; flex-wrap: wrap; gap: 10px; width: 100%;">
@@ -344,6 +372,9 @@
           days: Math.max(1, Math.ceil((new Date(document.querySelector("#end-date").value) - new Date(document.querySelector("#start-date").value)) / (1000 * 3600 * 24)) + 1),
           people: Math.max(1, parseInt(opts.people) || 1),
           budget_level: document.querySelector("#budget-select").value,
+          travel_format: document.querySelector("#travel-format-select").value,
+          transport_mode: document.querySelector("#transport-mode-select").value || null,
+          pace: document.querySelector("#pace-select").value,
           requested_features: Array.from(document.querySelectorAll('input[name="feature"]:checked')).map(c => c.value),
           additional_conditions: {
             companions: Array.from(document.querySelectorAll('input[name="companion"]:checked')).map(c => c.value),
