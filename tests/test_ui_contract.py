@@ -42,3 +42,16 @@ def test_presets_defined():
     assert 'id="preset-grid"' in HTML
     assert "function applyPreset" in HTML
     assert "function renderPresets" in HTML
+
+
+def test_radius_token_defined():
+    assert "--radius:" in HTML
+
+
+def test_calm_selection_color_present():
+    assert "#f1f5f9" in HTML
+
+
+def test_no_preset_emoji():
+    for emoji in ["🍞", "🏕️", "♨️", "📸", "🎏", "🚄", "⚙️"]:
+        assert emoji not in HTML, f"preset emoji still present: {emoji}"
