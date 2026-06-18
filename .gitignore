@@ -28,3 +28,6 @@ Thumbs.db
 .gstack/
 
 .vercel
+
+# Brainstorming visual companion (local only)
+.superpowers/
