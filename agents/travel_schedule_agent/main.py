@@ -102,7 +102,9 @@ def run(input_data):
     companions = safe_input.get("companions", [])
     themes = safe_input.get("themes", [])
     priority = safe_input.get("priority", "")
-    
+    pace = safe_input.get("pace", "보통")
+    blocks_per_day = {"빡빡": 4, "보통": 3, "여유": 2}.get(pace, 3)
+
     results = _result_by_agent(input_data)
     food = _items_from_result(results.get("travel_food_agent"), ["food_items"], 5)
     tour = _items_from_result(results.get("travel_tour_agent"), ["tour_items"], 5)
@@ -120,7 +122,12 @@ def run(input_data):
             blocks.append(_block("오전", "tour", _pick(tour, d, "오전 산책/관광"), "여유로운 오전 일정을 시작합니다."))
             blocks.append(_block("점심", "food", _pick(food, d, "추천 식당"), "근처 맛집에서 점심을 해결합니다."))
             blocks.append(_block("오후", "tour", _pick(tour, d+1, "테마 관광"), f"{', '.join(themes)} 테마에 맞춘 일정을 즐깁니다."))
-        
+        # 페이스 반영: 여유=오후 일정 축소(2블록), 빡빡=저녁 일정 추가(4블록)
+        if blocks_per_day <= 2 and len(blocks) > 2:
+            blocks = blocks[:2]
+        elif blocks_per_day >= 4:
+            blocks.append(_block("저녁", "food", _pick(food, d+2, "저녁 맛집"), "하루를 마무리하는 저녁 일정입니다."))
+
         daily_itinerary.append({
             "day": d,
             "title": f"{destination} {d}일차 일정",
@@ -140,7 +147,8 @@ def run(input_data):
         "debug_info": {
             "companions": companions,
             "themes": themes,
-            "priority": priority
+            "priority": priority,
+            "pace": pace
         }
     }
 
