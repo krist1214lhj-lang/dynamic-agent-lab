@@ -27,3 +27,26 @@ def test_rooms_ceil_half_people():
 def test_invalid_level_falls_back_medium():
     r = estimate_budget("서울", "부산", days=1, level="bogus", people=1)
     assert r["total"] > 0
+
+
+def _transport(origin, dest, **kw):
+    return estimate_budget(origin, dest, days=3, level="medium", people=1, **kw)["estimated_budget"]["transportation"]
+
+
+def test_transport_differs_by_destination():
+    # 서울 출발, 동일 조건이면 가까운 대전 < 먼 광주 (더 이상 동일하지 않다)
+    daejeon = _transport("서울", "대전")
+    gwangju = _transport("서울", "광주")
+    sokcho = _transport("서울", "속초")
+    assert len({daejeon, gwangju, sokcho}) == 3
+    assert daejeon < gwangju
+
+
+def test_jeju_uses_air_premium_from_other_origin():
+    # 대구->제주(항공)는 대구->부산(육지)보다 비싸야 한다
+    assert _transport("대구", "제주") > _transport("대구", "부산")
+
+
+def test_explicit_seoul_busan_transport_preserved():
+    # 명시 테이블 보존: long_dist 120000 + 현지교통 20000*3
+    assert _transport("서울", "부산") == 120000 + 20000 * 3
