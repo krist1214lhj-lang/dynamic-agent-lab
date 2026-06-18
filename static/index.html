@@ -53,8 +53,8 @@
       .control-panel { background: transparent; padding: 0; }
       .search-bar-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr auto; gap: 12px; align-items: end; margin-bottom: 20px; }
       .search-field { display: flex; flex-direction: column; gap: 8px; color: var(--accent); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.8; }
-      .search-field input[type="date"], .search-field select { background: #fff; border: 1px solid var(--line); color: var(--accent); padding: 14px 18px; border-radius: var(--radius); font-size: 0.95rem; cursor: pointer; font-family: inherit; transition: all 0.4s; font-weight: 400; }
-      .search-field input[type="date"]:hover, .search-field select:hover { border-color: #000; }
+      .search-field input[type="date"], .search-field input[type="number"], .search-field select { background: #fff; border: 1px solid var(--line); color: var(--accent); padding: 14px 18px; border-radius: var(--radius); font-size: 0.95rem; cursor: pointer; font-family: inherit; transition: all 0.4s; font-weight: 400; width: 100%; }
+      .search-field input[type="date"]:hover, .search-field input[type="number"]:hover, .search-field select:hover { border-color: #000; }
       button#run-button { background: var(--accent); color: #fff; border: 0; height: 56px; padding: 0 40px; border-radius: 999px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1); letter-spacing: 0.1em; }
       button#run-button:hover { transform: scale(1.02) translateY(-2px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); }
       .additional-conditions-row { margin-top: 35px; border-top: 1px solid var(--line); padding-top: 25px; }
@@ -148,30 +148,30 @@
         <h1>ONE'S OWN<br/>Travel Lab</h1>
         <p class="hero-subtitle">데이터의 정교함과 당신의 고유한 감각이 만나는 지점. 가장 맑은 시선으로 여정을 그립니다.</p>
       </section>
-      <section class="archive-section" id="recommend-section">
-        <p style="font-weight: 900; font-size: 0.7rem; letter-spacing: 0.4em; margin-bottom: 30px;">예산으로 여행 찾기</p>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:15px; max-width:760px; margin:0 auto 25px;">
-          <div style="display:flex; flex-direction:column; gap:6px;">
-            <label for="rec-budget" style="font-size:0.8rem; color:var(--muted); padding-left:4px;">총 예산(원)</label>
-            <input id="rec-budget" type="number" placeholder="예: 1500000" style="padding:14px 18px; border-radius:16px; border:1px solid var(--line); width:100%; box-sizing:border-box;" />
-          </div>
-          <div style="display:flex; flex-direction:column; gap:6px;">
-            <label for="rec-people" style="font-size:0.8rem; color:var(--muted); padding-left:4px;">인원수(명)</label>
-            <input id="rec-people" type="number" placeholder="예: 2" min="1" value="2" style="padding:14px 18px; border-radius:16px; border:1px solid var(--line); width:100%; box-sizing:border-box;" />
-          </div>
-          <div style="display:flex; flex-direction:column; gap:6px;">
-            <label for="rec-days" style="font-size:0.8rem; color:var(--muted); padding-left:4px;">여행일수(일)</label>
-            <input id="rec-days" type="number" placeholder="예: 3" min="1" value="3" style="padding:14px 18px; border-radius:16px; border:1px solid var(--line); width:100%; box-sizing:border-box;" />
+      <section class="control-panel" id="recommend-section">
+        <p class="search-field">예산으로 여행 찾기</p>
+        <div class="search-bar-row" style="grid-template-columns:repeat(3, 1fr); align-items:end; margin-bottom:0;">
+          <label class="search-field">총 예산(원)
+            <input id="rec-budget" type="number" placeholder="예: 1500000" />
+          </label>
+          <label class="search-field">인원수(명)
+            <input id="rec-people" type="number" min="1" value="2" />
+          </label>
+          <label class="search-field">여행일수(일)
+            <input id="rec-days" type="number" min="1" value="3" />
+          </label>
+        </div>
+        <div class="options-row" style="margin-top:20px;">
+          <p class="search-field">테마</p>
+          <div id="rec-themes" class="checkbox-grid" style="display:flex; flex-wrap:wrap; gap:10px; width:100%;">
+            <label><input type="checkbox" name="rec-theme" value="healing" />힐링</label>
+            <label><input type="checkbox" name="rec-theme" value="activity" />액티비티</label>
+            <label><input type="checkbox" name="rec-theme" value="foodie" />미식</label>
+            <label><input type="checkbox" name="rec-theme" value="photo" />사진</label>
+            <label><input type="checkbox" name="rec-theme" value="culture" />문화</label>
           </div>
         </div>
-        <div id="rec-themes" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:25px;">
-          <label><input type="checkbox" name="rec-theme" value="healing" /> 힐링</label>
-          <label><input type="checkbox" name="rec-theme" value="activity" /> 액티비티</label>
-          <label><input type="checkbox" name="rec-theme" value="foodie" /> 미식</label>
-          <label><input type="checkbox" name="rec-theme" value="photo" /> 사진</label>
-          <label><input type="checkbox" name="rec-theme" value="culture" /> 문화</label>
-        </div>
-        <div style="text-align:center;"><button id="rec-button" class="nav-btn" style="height:50px; padding:0 35px;">추천받기</button></div>
+        <div style="margin-top:20px;"><button id="rec-button" class="nav-btn" style="height:50px; padding:0 35px;">추천받기</button></div>
         <div id="rec-result"></div>
       </section>
       <section class="control-panel" id="preset-section">
