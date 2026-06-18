@@ -15,13 +15,15 @@ def run(input_data):
     days = safe_input.get("days", 3)
     budget_level = str(safe_input.get("budget_level") or "medium").lower()
     people = safe_input.get("people", 1)
+    transport_mode = safe_input.get("transport_mode")
 
     companions = safe_input.get("companions", [])
     themes = safe_input.get("themes", [])
     priority = safe_input.get("priority", "")
 
     result = estimate_budget(origin, destination, days, budget_level,
-                             people=people, themes=themes, companions=companions, priority=priority)
+                             people=people, themes=themes, companions=companions, priority=priority,
+                             transport_mode=transport_mode)
     eb = result["estimated_budget"]
     total = result["total"]
 
