@@ -57,6 +57,11 @@ def test_no_preset_emoji():
         assert emoji not in HTML, f"preset emoji still present: {emoji}"
 
 
+def test_ui_renders_verification_report():
+    assert "verification_report" in HTML
+    assert "function renderVerificationReport" in HTML
+
+
 def test_recommend_section_matches_form_style():
     # budget-finder uses the same control-panel layout and chip style as the rest
     assert 'class="control-panel" id="recommend-section"' in HTML

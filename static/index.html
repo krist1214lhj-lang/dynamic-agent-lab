@@ -402,9 +402,19 @@
         } catch (e) { resultArea.innerHTML = `<p style="text-align:center; padding:50px; color:#e53e3e;">오류: ${e.message}</p>`; }
       }
       document.querySelector("#run-button").addEventListener("click", () => runWorkflow());
+      function renderVerificationReport(vr) {
+        if (!vr || !vr.summary) return "";
+        const excluded = vr.excluded || [];
+        const exHtml = excluded.length
+          ? `<details class="details-accordion" style="margin-top:12px;"><summary>제외된 항목 ${excluded.length}건</summary><div class="details-content">${excluded.map(e => `<p style="font-size:0.9rem;">• ${escapeHtml(e.agent)} <span style="color:var(--muted);">(${escapeHtml(e.stage)})</span> — ${escapeHtml(e.reason)}</p>`).join("")}</div></details>`
+          : "";
+        const engineLabel = vr.engine === "rule+llm" ? "규칙 + AI 비평" : "규칙 검증";
+        return `<div style="border:1px solid var(--line); border-radius:var(--radius); padding:20px 25px; margin-bottom:40px; background:#fbfbfb;"><p class="search-field" style="margin-bottom:8px;">검증 요약 · ${escapeHtml(engineLabel)}</p><p style="font-size:1rem;">${escapeHtml(vr.summary)}</p>${exHtml}</div>`;
+      }
       function displayWorkflowResult(data) {
         const area = document.querySelector("#result");
         area.innerHTML = `<h1 style="font-weight:100; font-size:6rem; margin-bottom:120px; text-transform:uppercase; letter-spacing:-0.06em; text-align:center;">${escapeHtml(data.input_data.destination)}<br/>여행 설계</h1>` +
+                         renderVerificationReport(data.verification_report) +
                          data.agent_results.filter(r => !r.agent.includes("planning")).map(renderAgentResult).join("");
       }
       function escapeHtml(v) { return String(v||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
@@ -412,7 +422,9 @@
       function renderAgentResult(r) {
         let items = r.food_items || r.tour_items || r.event_items || r.lodging_items || [];
         const isP = r.debug_info && ((r.debug_info.companions?.length > 0) || (r.debug_info.themes?.length > 0) || r.debug_info.priority);
-        const label = isP ? `<span class="customized-label">CUSTOMIZED</span>` : "";
+        const vmap = { verified: "✓ 검증", estimated: "⚠ 추정" };
+        const vbadge = r.verification ? `<span class="customized-label" style="background:#f1f5f9; color:var(--text);">${vmap[r.verification] || escapeHtml(r.verification)}</span>` : "";
+        const label = (isP ? `<span class="customized-label">CUSTOMIZED</span>` : "") + vbadge;
         if (r.agent.includes("weather")) return renderWeatherCard(r, label);
         if (r.agent.includes("transport")) return renderTransportCard(r, label);
         if (r.agent.includes("budget")) return renderBudgetCard(r, label);
