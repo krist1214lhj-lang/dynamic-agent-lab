@@ -51,6 +51,13 @@ def test_login_endpoint_400_on_bad_credentials(client, monkeypatch):
     assert r.status_code == 400
 
 
+def test_signup_endpoint_400_on_auth_failure(client, monkeypatch):
+    # 중복 가입 등 자격증명 실패도 502가 아닌 400으로 유지된다.
+    monkeypatch.setattr(main.requests, "post", lambda *a, **k: _Resp(False, 400, {"msg": "already registered"}))
+    r = client.post("/auth/signup", json={"email": "a@b.c", "password": "pw"})
+    assert r.status_code == 400
+
+
 def test_no_pydantic_v1_dict_calls():
     # Pydantic v2: deprecated .dict() 대신 model_dump() 사용.
     src = Path(main.__file__).read_text(encoding="utf-8")
