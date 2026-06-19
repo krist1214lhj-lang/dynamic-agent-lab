@@ -93,6 +93,29 @@ def test_delete_success_returns_status(monkeypatch):
     assert _table().delete("1") == {"status": "success"}
 
 
+# --- F-3: id 값은 PostgREST 쿼리스트링에 URL 인코딩되어 들어가야 한다 ---
+def test_patch_url_encodes_id(monkeypatch):
+    captured = {}
+    def fake_patch(url, **kwargs):
+        captured["url"] = url
+        return _Resp(True, 200, [{"id": "1"}])
+    monkeypatch.setattr(main.requests, "patch", fake_patch)
+    _table().patch("a&b", {"title": "t"})
+    assert "id=eq.a&b" not in captured["url"]
+    assert "a%26b" in captured["url"]
+
+
+def test_delete_url_encodes_id(monkeypatch):
+    captured = {}
+    def fake_delete(url, **kwargs):
+        captured["url"] = url
+        return _Resp(True, 204, None)
+    monkeypatch.setattr(main.requests, "delete", fake_delete)
+    _table().delete("a&b")
+    assert "id=eq.a&b" not in captured["url"]
+    assert "a%26b" in captured["url"]
+
+
 # --- reads: connection error still surfaces as 502, content errors stay [] ---
 def test_select_all_raises_502_on_connection_error(monkeypatch):
     monkeypatch.setattr(main.requests, "get", _boom)
