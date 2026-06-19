@@ -67,3 +67,27 @@ def test_recommend_section_matches_form_style():
     assert 'class="control-panel" id="recommend-section"' in HTML
     assert 'id="rec-themes" class="checkbox-grid"' in HTML
     assert 'class="archive-section" id="recommend-section"' not in HTML
+
+
+def test_local_plans_helper_present():
+    assert "onesown_local_plans" in HTML
+    assert "const LocalPlans" in HTML
+    assert "crypto.randomUUID" in HTML
+
+
+def test_guest_save_branch_present():
+    assert "LocalPlans.save" in HTML
+    assert "이 기기에 저장됨" in HTML
+
+
+def test_local_plan_controls_present():
+    assert "function planCardHtml" in HTML
+    assert "function renameLocalPlan" in HTML
+    assert "function deleteLocalPlan" in HTML
+    assert "LocalPlans.list()" in HTML
+
+
+def test_migration_present():
+    assert "async function migrateLocalPlans" in HTML
+    assert "계정으로 옮길까요" in HTML
+    assert "await migrateLocalPlans()" in HTML
