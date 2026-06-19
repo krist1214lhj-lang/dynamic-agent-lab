@@ -73,3 +73,8 @@ def test_local_plans_helper_present():
     assert "onesown_local_plans" in HTML
     assert "const LocalPlans" in HTML
     assert "crypto.randomUUID" in HTML
+
+
+def test_guest_save_branch_present():
+    assert "LocalPlans.save" in HTML
+    assert "이 기기에 저장됨" in HTML

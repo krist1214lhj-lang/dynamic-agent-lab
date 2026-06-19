@@ -490,10 +490,16 @@
       }
       function renderAccordion(title, html) { return `<details class="details-accordion"><summary>${title}</summary><div class="details-content">${html}</div></details>`; }
       async function saveCurrentPlan() {
-        if (!currentWorkflowResult || !currentUser) return alert("설계 결과가 없거나 로그인 안됨");
+        if (!currentWorkflowResult) return alert("설계 결과가 없습니다");
         const title = prompt("제목:", `${currentWorkflowResult.input_data.destination} 여행`); if (!title) return;
-        const resp = await fetch(`/api/plans`, { method: "POST", headers: authHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ title, destination: currentWorkflowResult.input_data.destination, content_json: currentWorkflowResult }) });
-        if (resp.ok) { alert("저장됨"); renderSavedPlans(); }
+        const dest = currentWorkflowResult.input_data.destination;
+        if (currentUser) {
+          const resp = await fetch(`/api/plans`, { method: "POST", headers: authHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ title, destination: dest, content_json: currentWorkflowResult }) });
+          if (resp.ok) { alert("저장됨"); renderSavedPlans(); }
+        } else {
+          LocalPlans.save({ title, destination: dest, content_json: currentWorkflowResult });
+          alert("이 기기에 저장됨 (로그인하면 계정으로 옮길 수 있어요)"); renderSavedPlans();
+        }
       }
       async function renderSavedPlans() {
         const list = document.querySelector("#saved-plan-list"); if (!savedPlansExpanded || !currentUser) { list.innerHTML = ""; return; }
