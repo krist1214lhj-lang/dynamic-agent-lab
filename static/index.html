@@ -328,6 +328,21 @@
     </main>
     <script>
       let currentUser = null; let authMode = "login"; let currentWorkflowResult = null; let savedPlansExpanded = false;
+      const LocalPlans = {
+        KEY: "onesown_local_plans",
+        _read() { try { return JSON.parse(localStorage.getItem(this.KEY) || "[]"); } catch (e) { return []; } },
+        _write(arr) { localStorage.setItem(this.KEY, JSON.stringify(arr)); },
+        list() { return this._read(); },
+        save(plan) {
+          const arr = this._read();
+          const id = "local-" + ((window.crypto && crypto.randomUUID && crypto.randomUUID()) || (Date.now() + "-" + Math.random().toString(16).slice(2)));
+          arr.unshift({ id, title: plan.title, destination: plan.destination, content_json: plan.content_json, created_at: new Date().toISOString() });
+          this._write(arr); return id;
+        },
+        rename(id, title) { const arr = this._read(); const p = arr.find(x => x.id === id); if (p) { p.title = title; this._write(arr); } },
+        remove(id) { this._write(this._read().filter(x => x.id !== id)); },
+        clear() { localStorage.removeItem(this.KEY); }
+      };
       document.addEventListener("DOMContentLoaded", () => {
         const storedUser = localStorage.getItem("onesown_user");
         if (storedUser) currentUser = JSON.parse(storedUser);

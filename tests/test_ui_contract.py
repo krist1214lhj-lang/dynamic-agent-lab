@@ -67,3 +67,9 @@ def test_recommend_section_matches_form_style():
     assert 'class="control-panel" id="recommend-section"' in HTML
     assert 'id="rec-themes" class="checkbox-grid"' in HTML
     assert 'class="archive-section" id="recommend-section"' not in HTML
+
+
+def test_local_plans_helper_present():
+    assert "onesown_local_plans" in HTML
+    assert "const LocalPlans" in HTML
+    assert "crypto.randomUUID" in HTML
