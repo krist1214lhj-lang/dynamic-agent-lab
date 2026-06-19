@@ -384,6 +384,7 @@
               currentUser = data.user; localStorage.setItem("onesown_user", JSON.stringify(currentUser));
               localStorage.setItem("onesown_token", data.access_token || "");
               updateAuthUI(); alert(`${currentUser.email}님 환영합니다!`);
+              await migrateLocalPlans(); renderSavedPlans();
             } else { alert("가입 성공! 로그인 하세요."); toggleBtn.click(); }
           } catch (e) { alert(e.message); }
         });
@@ -522,6 +523,19 @@
       }
       function deleteLocalPlan(id) {
         if (confirm("삭제?")) { LocalPlans.remove(id); renderSavedPlans(); }
+      }
+      async function migrateLocalPlans() {
+        const locals = LocalPlans.list();
+        if (!locals.length) return;
+        if (!confirm(`이 기기에 저장된 플랜 ${locals.length}개를 계정으로 옮길까요?`)) return;
+        let failed = 0;
+        for (const p of locals) {
+          try {
+            const resp = await fetch(`/api/plans`, { method: "POST", headers: authHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ title: p.title, destination: p.destination, content_json: p.content_json }) });
+            if (resp.ok) { LocalPlans.remove(p.id); } else { failed++; }
+          } catch (e) { failed++; }
+        }
+        if (failed > 0) alert(`${failed}개는 옮기지 못해 이 기기에 남겨둡니다.`);
       }
       async function renamePlan(id, currentTitle) {
         const title = prompt("새 제목:", currentTitle); if (title === null || !title.trim()) return;

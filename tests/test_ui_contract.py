@@ -85,3 +85,9 @@ def test_local_plan_controls_present():
     assert "function renameLocalPlan" in HTML
     assert "function deleteLocalPlan" in HTML
     assert "LocalPlans.list()" in HTML
+
+
+def test_migration_present():
+    assert "async function migrateLocalPlans" in HTML
+    assert "계정으로 옮길까요" in HTML
+    assert "await migrateLocalPlans()" in HTML
