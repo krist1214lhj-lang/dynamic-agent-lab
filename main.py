@@ -7,6 +7,7 @@ import sys
 import uuid
 from pathlib import Path
 from typing import Any, List, Optional
+from urllib.parse import quote
 
 import requests
 from dotenv import load_dotenv
@@ -89,12 +90,12 @@ class SupabaseTable:
         try: return resp.json()
         except ValueError: return {"status": "success"}
     def patch(self, plan_id, data):
-        resp = _sb_call(requests.patch, f"{self.table_url}?id=eq.{plan_id}", headers=self.headers, json=data)
+        resp = _sb_call(requests.patch, f"{self.table_url}?id=eq.{quote(str(plan_id), safe='')}", headers=self.headers, json=data)
         _sb_raise_for_status(resp)
         try: return resp.json()
         except ValueError: return {"status": "success"}
     def delete(self, item_id):
-        resp = _sb_call(requests.delete, f"{self.table_url}?id=eq.{item_id}", headers=self.headers)
+        resp = _sb_call(requests.delete, f"{self.table_url}?id=eq.{quote(str(item_id), safe='')}", headers=self.headers)
         _sb_raise_for_status(resp)
         return {"status": "success"}
 
@@ -246,10 +247,12 @@ def run_workflow_endpoint(payload: WorkflowRequest):
     if "travel_schedule_agent" in selected_from_features or "schedule" in features: selected.append("travel_schedule_agent")
     
     input_data = {
+        # 사용자 추가 조건(themes/companions/priority 등)을 먼저 펼치되,
+        # 아래 확정 입력이 마지막에 이겨 destination/days/people 등을 덮어쓰지 못하게 한다.
+        **payload.additional_conditions,
         "user_request": req, "destination": dest, "origin": payload.origin or "서울", "days": days,
         "duration_days": days, "people": max(payload.people, 1), "budget_level": payload.budget_level or "medium", "requested_features": features,
         "travel_format": payload.travel_format, "transport_mode": payload.transport_mode, "pace": payload.pace,
-        **payload.additional_conditions
     }
 
     if "family_kids" in (input_data.get("themes") or []):
