@@ -78,3 +78,10 @@ def test_local_plans_helper_present():
 def test_guest_save_branch_present():
     assert "LocalPlans.save" in HTML
     assert "이 기기에 저장됨" in HTML
+
+
+def test_local_plan_controls_present():
+    assert "function planCardHtml" in HTML
+    assert "function renameLocalPlan" in HTML
+    assert "function deleteLocalPlan" in HTML
+    assert "LocalPlans.list()" in HTML

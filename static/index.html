@@ -501,10 +501,27 @@
           alert("이 기기에 저장됨 (로그인하면 계정으로 옮길 수 있어요)"); renderSavedPlans();
         }
       }
+      function planCardHtml(p, isLocal) {
+        const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString() : "";
+        const badge = isLocal ? ` <span class="customized-label" style="background:#f1f5f9; color:var(--text);">이 기기</span>` : "";
+        const renameCall = isLocal ? `renameLocalPlan('${p.id}', '${escapeHtml(p.title).replace(/'/g, "&#39;")}')` : `renamePlan('${p.id}', '${escapeHtml(p.title).replace(/'/g, "&#39;")}')`;
+        const deleteCall = isLocal ? `deleteLocalPlan('${p.id}')` : `deletePlan('${p.id}')`;
+        return `<div class="timeline-block" style="text-align:left;"><div style="cursor:pointer;" onclick='loadSavedPlanData(${JSON.stringify(p.content_json).replace(/'/g, "&apos;")})'><p style="font-size:0.75rem; font-weight:900; opacity:0.3;">${dateStr}${badge}</p><strong>${escapeHtml(p.title)}</strong></div><div class="plan-controls"><button class="control-btn edit" onclick="${renameCall}">수정</button><button class="control-btn delete" onclick="${deleteCall}">삭제</button></div></div>`;
+      }
       async function renderSavedPlans() {
-        const list = document.querySelector("#saved-plan-list"); if (!savedPlansExpanded || !currentUser) { list.innerHTML = ""; return; }
-        const resp = await fetch(`/api/plans`, { headers: authHeaders() }); const plans = await resp.json();
-        list.innerHTML = `<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:25px; margin-top:40px;">${plans.map(p => `<div class="timeline-block" style="text-align:left;"><div style="cursor:pointer;" onclick='loadSavedPlanData(${JSON.stringify(p.content_json).replace(/'/g, "&apos;")})'><p style="font-size:0.75rem; font-weight:900; opacity:0.3;">${new Date(p.created_at).toLocaleDateString()}</p><strong>${escapeHtml(p.title)}</strong></div><div class="plan-controls"><button class="control-btn edit" onclick="renamePlan('${p.id}', '${escapeHtml(p.title).replace(/'/g, "&#39;")}')">수정</button><button class="control-btn delete" onclick="deletePlan('${p.id}')">삭제</button></div></div>`).join("")}</div>`;
+        const list = document.querySelector("#saved-plan-list"); if (!savedPlansExpanded) { list.innerHTML = ""; return; }
+        let plans, isLocal;
+        if (currentUser) { const resp = await fetch(`/api/plans`, { headers: authHeaders() }); plans = await resp.json(); isLocal = false; }
+        else { plans = LocalPlans.list(); isLocal = true; }
+        if (!Array.isArray(plans) || !plans.length) { list.innerHTML = `<p style="text-align:center; color:var(--muted); margin-top:40px;">저장된 여정이 없습니다.</p>`; return; }
+        list.innerHTML = `<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:25px; margin-top:40px;">${plans.map(p => planCardHtml(p, isLocal)).join("")}</div>`;
+      }
+      function renameLocalPlan(id, currentTitle) {
+        const title = prompt("새 제목:", currentTitle); if (title === null || !title.trim()) return;
+        LocalPlans.rename(id, title.trim()); renderSavedPlans();
+      }
+      function deleteLocalPlan(id) {
+        if (confirm("삭제?")) { LocalPlans.remove(id); renderSavedPlans(); }
       }
       async function renamePlan(id, currentTitle) {
         const title = prompt("새 제목:", currentTitle); if (title === null || !title.trim()) return;
