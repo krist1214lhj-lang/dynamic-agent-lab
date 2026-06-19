@@ -61,11 +61,11 @@ class SupabaseClient:
             return {"apikey": self.key, "Authorization": f"Bearer {user_token}", "Content-Type": "application/json"}
         return self.headers
     def signup(self, email, password):
-        resp = requests.post(f"{self.url}/auth/v1/signup", headers=self.headers, json={"email": email, "password": password})
+        resp = _sb_call(requests.post, f"{self.url}/auth/v1/signup", headers=self.headers, json={"email": email, "password": password})
         if not resp.ok: raise Exception(resp.json().get("msg") or resp.text)
         return resp.json()
     def login(self, email, password):
-        resp = requests.post(f"{self.url}/auth/v1/token?grant_type=password", headers=self.headers, json={"email": email, "password": password})
+        resp = _sb_call(requests.post, f"{self.url}/auth/v1/token?grant_type=password", headers=self.headers, json={"email": email, "password": password})
         if not resp.ok: raise Exception(resp.json().get("error_description") or resp.text)
         return resp.json()
     def table(self, table_name, user_token=None): return SupabaseTable(self, table_name, user_token)
@@ -158,12 +158,14 @@ def _user_id_from_token(token: str) -> str:
 async def signup(req: SignupRequest):
     if not sb: raise HTTPException(status_code=500, detail="Supabase Not Configured")
     try: return sb.signup(req.email, req.password)
+    except HTTPException: raise  # 연결오류(502) 등은 그대로 표면화
     except Exception as e: raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/auth/login")
 async def login(req: LoginRequest):
     if not sb: raise HTTPException(status_code=500, detail="Supabase Not Configured")
     try: return sb.login(req.email, req.password)
+    except HTTPException: raise  # 연결오류(502) 등은 그대로 표면화
     except Exception as e: raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/api/plans")
@@ -195,7 +197,7 @@ async def delete_plan(plan_id: str, authorization: Optional[str] = Header(defaul
 @app.get("/comments")
 def get_comments(): return sb.table("comments").select_all() if sb else []
 @app.post("/comments")
-def add_comment(c: Comment): return sb.table("comments").insert(c.dict()) if sb else {}
+def add_comment(c: Comment): return sb.table("comments").insert(c.model_dump()) if sb else {}
 @app.get("/ratings")
 def get_ratings():
     if not sb: return {"average": 0, "count": 0}
@@ -204,7 +206,7 @@ def get_ratings():
     avg = round(sum(i["score"] for i in items)/len(items), 1)
     return {"average": avg, "count": len(items)}
 @app.post("/ratings")
-def add_rating(r: Rating): return sb.table("ratings").insert(r.dict()) if sb else {}
+def add_rating(r: Rating): return sb.table("ratings").insert(r.model_dump()) if sb else {}
 
 # --- 워크플로우 엔진 (RESTORED FROM e9a30ef) ---
 SUPPORTED_DESTINATIONS = ["서울", "부산", "제주", "강릉", "전주", "대구", "대전", "광주", "인천", "여수", "경주", "속초", "춘천"]
@@ -303,7 +305,7 @@ def recommend_endpoint(payload: RecommendRequest):
         "origin": payload.origin or "서울",
         "candidates": SUPPORTED_DESTINATIONS,
     })
-    return {"input_echo": payload.dict(), **result}
+    return {"input_echo": payload.model_dump(), **result}
 
 @app.get("/agent-library")
 def lib(): return {"agents": [{"name": d.name, "status": "available"} for d in INTERNAL_AGENT_LIBRARY.iterdir() if d.is_dir()], "available_count": 10, "total_agents": 10}

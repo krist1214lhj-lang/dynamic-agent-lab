@@ -99,3 +99,39 @@ def test_select_all_raises_502_on_connection_error(monkeypatch):
     with pytest.raises(HTTPException) as exc:
         _table().select_all()
     assert exc.value.status_code == 502
+
+
+# --- auth: signup/login standardized like the table layer ---
+def _client():
+    return main.SupabaseClient("http://example.test", "key")
+
+
+def test_signup_raises_502_on_connection_error(monkeypatch):
+    monkeypatch.setattr(main.requests, "post", _boom)
+    with pytest.raises(HTTPException) as exc:
+        _client().signup("a@b.c", "pw")
+    assert exc.value.status_code == 502
+
+
+def test_login_raises_502_on_connection_error(monkeypatch):
+    monkeypatch.setattr(main.requests, "post", _boom)
+    with pytest.raises(HTTPException) as exc:
+        _client().login("a@b.c", "pw")
+    assert exc.value.status_code == 502
+
+
+def test_signup_auth_failure_is_not_502(monkeypatch):
+    # 잘못된/중복 자격증명은 연결오류(502)와 구분되어야 한다(현행 동작 유지).
+    monkeypatch.setattr(main.requests, "post", lambda *a, **k: _Resp(False, 400, {"msg": "already registered"}))
+    with pytest.raises(Exception) as exc:
+        _client().signup("a@b.c", "pw")
+    assert not isinstance(exc.value, HTTPException)
+    assert "already registered" in str(exc.value)
+
+
+def test_login_auth_failure_is_not_502(monkeypatch):
+    monkeypatch.setattr(main.requests, "post", lambda *a, **k: _Resp(False, 400, {"error_description": "bad creds"}))
+    with pytest.raises(Exception) as exc:
+        _client().login("a@b.c", "pw")
+    assert not isinstance(exc.value, HTTPException)
+    assert "bad creds" in str(exc.value)
